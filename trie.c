@@ -1,3 +1,9 @@
+/*
+	Procedures that work with trie.
+
+*/
+
+
 TrieNode*
 trienode_new(char byte, char eow) {
 	TrieNode* node = (TrieNode*)memalloc(sizeof(TrieNode));

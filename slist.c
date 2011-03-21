@@ -1,6 +1,7 @@
+#define LISTITEM_data struct ListItem* __next;
+
 typedef struct ListItem {
-	void* data;
-	struct ListItem* next;
+	LISTITEM_data;
 } ListItem;
 
 
@@ -11,10 +12,9 @@ typedef struct {
 
 
 ListItem*
-list_item_new(void* data) {
-	ListItem* item = (ListItem*)memalloc(sizeof(ListItem));
-	item->data = data;
-	item->next = 0;
+list_item_new(const size_t size) {
+	ListItem* item = (ListItem*)memalloc(size);
+	item->__next = 0;
 	return item;
 }
 
@@ -41,7 +41,7 @@ list_delete(List* list) {
 	ListItem* tmp;
 	while (item) {
 		tmp = item;
-		item = item->next;
+		item = item->__next;
 		memfree(tmp);
 	}
 
@@ -51,13 +51,12 @@ list_delete(List* list) {
 
 
 ListItem*
-list_append(List* list, void* data) {
+list_append(List* list, ListItem* item) {
 	ASSERT(list);
 
-	struct ListItem* item = list_item_new(data);
 	if (item) {
 		if (list->last) {
-			list->last->next = item;	// append
+			list->last->__next = item;	// append
 			list->last = item;			// set as last node
 		}
 		else
@@ -68,22 +67,34 @@ list_append(List* list, void* data) {
 }
 
 
-void*
+ListItem*
+list_push_front(List* list, ListItem* item) {
+	ASSERT(list);
+
+	if (list->head) {
+		item->__next = list->last;
+		list->head = item;
+	}
+	else
+		list->head = list->last = item;
+
+	return item;
+}
+
+
+ListItem*
 list_pop_first(List* list) {
 	ASSERT(list);
 	ListItem* item;
-	void* data;
 	
 	if (list->head) {
 		item = list->head;
-		list->head = item->next;
+		list->head = item->__next;
 
 		if (!list->head)
 			list->last = 0;
 
-		data = item->data;
-		memfree(item);
-		return data;
+		return item;
 	}
 	else
 		return NULL;

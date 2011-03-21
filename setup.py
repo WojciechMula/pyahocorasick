@@ -3,7 +3,13 @@ from distutils.core import setup, Extension
 module1 = Extension(
 	'ahocorasick',
 	sources = ['pyahocorasick.c'],
-	depends = ['trie.c', 'slist.c', 'utils.c']
+	depends = [
+		'Automaton.c',
+		'AutomatonKeysIter.c',
+		'trie.c',
+		'slist.c',
+		'utils.c'
+	]
 )
 
 setup(

@@ -77,7 +77,7 @@ return_output:
 	else
 		iter->index += 1;
 
-	while (iter->index <= iter->end) {
+	while (iter->index < iter->end) {
 		if (iter->is_unicode) {
 #ifndef Py_UNICODE_WIDE
 			// UCS-2 - process 1 or 2 bytes

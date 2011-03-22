@@ -462,15 +462,16 @@ automaton_search_all(PyObject* self, PyObject* args) {
 		return NULL;
 	}
 
-	start = 0;
-	end   = wordlen-1;
+	// parse start/end
+	if (pymod_parse_start_end(args, 2, 3, 0, wordlen, &start, &end))
+		return NULL;
 
 	ssize_t i;
 	TrieNode* state;
 	TrieNode* tmp;
 
 	state = automaton->root;
-	for (i=start; i <= end; i++) {
+	for (i=start; i < end; i++) {
 		state = tmp = ahocorasick_next(state, word[i]);
 
 		while (tmp and tmp->output) {
@@ -576,6 +577,9 @@ automaton_iter(PyObject* self, PyObject* args) {
 		}
 	}
 	else
+		return NULL;
+
+	if (pymod_parse_start_end(args, 1, 2, start, end, &start, &end))
 		return NULL;
 
 	return automaton_search_iter_new(

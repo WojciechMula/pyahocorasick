@@ -24,7 +24,7 @@ for w in a.items():
 s = b"he rshershidamanza "
 
 a.make_automaton()
-for item in a.iter(s):
+for item in a.iter(s, 2, 8):
 	print(item)
 
 print("==")
@@ -32,5 +32,4 @@ print("==")
 def callback(index, item):
 	print(index, item)
 
-a.search_all(s, callback)
-print("x")
+a.search_all(s, callback, 2, 11)

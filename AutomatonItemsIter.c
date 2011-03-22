@@ -110,14 +110,9 @@ automaton_items_iter_next(PyObject* self) {
 						val = (PyObject*)iter->state->output;
 						PyTuple_SET_ITEM(it, 0, key);
 						PyTuple_SET_ITEM(it, 1, val);
-
-						Py_XDECREF(key);
-
-						return it;
 					}
 
-					// in case of error
-					return NULL;
+					return it;
 			}
 		}
 	}

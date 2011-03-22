@@ -136,7 +136,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 		return NULL;
 
 	if (wordlen > 0) {
-		bool new_word;
+		bool new_word = false;
 		TrieNode* node = trie_add_word(automaton, word, wordlen, &new_word);
 		Py_DECREF(py_word);
 		if (node) {
@@ -341,26 +341,41 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 
 	list_init(&queue);
 
-	// 1. setup root
+	// 1. setup nodes at 1-st level
 	ASSERT(automaton->root);
+	TrieNode** root_next;
+
+	// since this implementation do not allow
+	// to directly make loop (on root), we build
+	// aside table and set it manually later
+	root_next = memalloc(256*sizeof(TrieNode*));
+	if (not root_next)
+		goto no_mem;
+
 	for (i=0; i < 256; i++) {
 		TrieNode* child = trienode_get_next(automaton->root, i);
 		if (child) {
 			// fail edges go to root
 			child->fail = automaton->root;
+			root_next[i] = child;
 
 			item = (AutomatonQueueItem*)list_item_new(sizeof(AutomatonQueueItem));
-			item->node = child;
-			if (item)
+			if (item) {
+				item->node = child;
 				list_append(&queue, (ListItem*)item);
+			}
 			else
 				goto no_mem;
 		}
 		else
 			// loop on root
-			if (not trienode_set_next(automaton->root, i, automaton->root))
-				goto no_mem;
+			root_next[i] = automaton->root;
 	}
+
+	// copy root_next
+	memfree(automaton->root->next);
+	automaton->root->next = root_next;
+	automaton->root->n = 256;
 
 	// 2. make links
 	TrieNode* node;
@@ -431,7 +446,6 @@ automaton_search_all(PyObject* self, PyObject* args) {
 	PyObject* py_word;
 	PyObject* callback;
 	PyObject* callback_ret;
-	PyObject* tmp;
 
 	// arg 1
 	py_word = pymod_get_string(args, 0, &word, &wordlen);
@@ -451,57 +465,14 @@ automaton_search_all(PyObject* self, PyObject* args) {
 	start = 0;
 	end   = wordlen-1;
 
-	// arg 3 - optional
-	tmp = PyTuple_GetItem(args, 2);
-	if (tmp) {
-		start = PyLong_AsSsize_t(tmp);
-		if (start == -1 and PyErr_Occurred())
-			return NULL;
-
-		// arg 3 - optional
-		tmp = PyTuple_GetItem(args, 3);
-		if (tmp) {
-			end = PyLong_AsSsize_t(tmp);
-			if (end == -1 and PyErr_Occurred())
-				return NULL;
-		}
-
-		// process start/end values
-		if (start < 0)
-			start = wordlen + start;
-
-		if (start < 0) {
-			PyErr_SetString(PyExc_ValueError, "start too small");
-			return NULL;
-		}
-		else
-		if (start > wordlen - 1) {
-			PyErr_SetString(PyExc_ValueError, "start too large");
-			return NULL;
-		}
-		
-	}
-	PyErr_Clear();
-
-	// process start/end
-
 	ssize_t i;
 	TrieNode* state;
+	TrieNode* tmp;
 
 	state = automaton->root;
 	for (i=start; i <= end; i++) {
-		while (state != automaton->root and\
-			   not trienode_get_next(state, word[i])) {
+		state = tmp = ahocorasick_next(state, word[i]);
 
-			state = state->fail;
-			ASSERT(state);
-		}
-
-		state = trienode_get_next(state, word[i]);
-		if (state == NULL)
-			state = automaton->root;
-
-		TrieNode* tmp = state;
 		while (tmp and tmp->output) {
 			callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output);
 			if (callback_ret == NULL)
@@ -569,6 +540,55 @@ automaton_items(PyObject* self, PyObject* args) {
 }
 
 
+#define automaton_iter_doc \
+	"iter(string|buffer, [start, [end]])"
+
+static PyObject*
+automaton_iter(PyObject* self, PyObject* args) {
+#define automaton ((Automaton*)self)
+
+	if (automaton->kind != AHOCORASICK) {
+		PyErr_SetString(PyExc_AttributeError, "not an automaton yet; add some words and call make_automaton");
+		return NULL;
+	}
+
+	PyObject* object;
+	bool is_unicode;
+	ssize_t start;
+	ssize_t end;
+
+	object = PyTuple_GetItem(args, 0);
+	if (object) {
+		if (PyUnicode_Check(object)) {
+			is_unicode = true;
+			start	= 0;
+			end		= PyUnicode_GET_SIZE(object) - 1;
+		}
+		else
+		if (PyBytes_Check(object)) {
+			is_unicode = false;
+			start 	= 0;
+			end		= PyBytes_GET_SIZE(object) - 1;
+		}
+		else {
+			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
+			return NULL;
+		}
+	}
+	else
+		return NULL;
+
+	return automaton_search_iter_new(
+		automaton,
+		object,
+		start,
+		end,
+		is_unicode
+	);
+#undef automaton
+}
+
+
 #define method(name, kind) {#name, automaton_##name, kind, automaton_##name##_doc}
 static
 PyMethodDef automaton_methods[] = {
@@ -582,6 +602,7 @@ PyMethodDef automaton_methods[] = {
 	method(keys,			METH_NOARGS),
 	method(values,			METH_NOARGS),
 	method(items,			METH_NOARGS),
+	method(iter,			METH_VARARGS),
 
 	{NULL, NULL, 0, NULL}
 };

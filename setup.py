@@ -6,6 +6,7 @@ module1 = Extension(
 	depends = [
 		'Automaton.c',
 		'AutomatonKeysIter.c',
+		'AutomatonSearchIter.c',
 		'trie.c',
 		'slist.c',
 		'utils.c'

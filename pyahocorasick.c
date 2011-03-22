@@ -106,9 +106,9 @@ typedef struct Automaton {
 	PyObject_HEAD
 
 	AutomatonKind	kind;	///< current kind of automaton
-	KeysStore		store;
-	int				count;
-	TrieNode* root;
+	KeysStore		store;	///< type of values: copy of string, bare integer, python  object
+	int				count;	///< number of distinct words
+	TrieNode*		root;	///< root of a trie
 } Automaton;
 
 
@@ -119,8 +119,14 @@ typedef struct AutomatonSearchIter {
 	PyObject_HEAD
 
 	Automaton*	automaton;
-	TrieNode* 	state;
-	bool		return_all;
+	PyObject*	object;		///< unicode or buffer
+	void*		data;		///< Py_UNICODE or char*
+	TrieNode*	state;		///< current state of automaton
+	TrieNode*	output;		///< current node, i.e. yielded value
+	
+	int			index;		///< current index
+	int			end;		///< end index
+	bool		is_unicode;	///< is data unicode or bytes
 } AutomatonSearchIter;
 
 
@@ -154,6 +160,7 @@ static PyTypeObject automaton_items_iter_type;
 #include "utils.c"
 #include "trie.c"
 #include "AutomatonItemsIter.c"
+#include "AutomatonSearchIter.c"
 #include "Automaton.c"
 
 

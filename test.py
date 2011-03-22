@@ -1,0 +1,36 @@
+import ahocorasick
+
+print(dir(ahocorasick))
+
+a = ahocorasick.Automaton()
+words = b"he e hers his she hi him man he".split()
+for i,w in enumerate(words):
+	a.add_word(w, (i, w))
+
+#print(len(a), len(set(words)))
+#print(a.get(b"hea", 1))
+
+"""
+for w in a.keys():
+	print(w)
+
+for w in a.values():
+	print(w)
+
+for w in a.items():
+	print(w)
+"""
+
+s = b"he rshershidamanza "
+
+a.make_automaton()
+for item in a.iter(s):
+	print(item)
+
+print("==")
+
+def callback(index, item):
+	print(index, item)
+
+a.search_all(s, callback)
+print("x")

@@ -78,30 +78,32 @@ return_output:
 		iter->index += 1;
 
 	while (iter->index < iter->end) {
+#define NEXT(byte) ahocorasick_next(iter->state, iter->automaton->root, (byte))
 		if (iter->is_unicode) {
 #ifndef Py_UNICODE_WIDE
 			// UCS-2 - process 1 or 2 bytes
 			const uint16_t w = ((uint16_t*)iter->data)[iter->index];
-			iter->state = ahocorasick_next(iter->state, w & 0xff);
+			iter->state = NEXT(w & 0xff);
 			if (w > 0x00ff)
-				iter->state = ahocorasick_next(iter->state, (w >> 8) & 0xff);
+				iter->state = NEXT((w >> 8) & 0xff);
 #else
 			// UCS-4 - process 1, 2, 3 or 4 bytes
 			const uint32_t w = ((uint32_t*)iter->data)[iter->index];
-			iter->state = ahocorasick_next(iter->state, w & 0xff);
+			iter->state = NEXT(w & 0xff);
 			if (w < 0x00010000)
-				iter->state = ahocorasick_next(iter->state, (w >> 8) & 0xff);
+				iter->state = NEXT((w >> 8) & 0xff);
 			if (w < 0x01000000)
-				iter->state = ahocorasick_next(iter->state, (w >> 16) & 0xff);
+				iter->state = NEXT((w >> 16) & 0xff);
 			if (w > 0x00ffffff)
-				iter->state = ahocorasick_next(iter->state, (w >> 24) & 0xff);
+				iter->state = NEXT((w >> 24) & 0xff);
 #endif
 		}
 		else {
 			// process single char
 			const uint8_t w = ((uint8_t*)(iter->data))[iter->index];
-			iter->state = ahocorasick_next(iter->state, w);
+			iter->state = NEXT(w);
 		}
+#undef NEXT
 
 		ASSERT(iter->state);
 

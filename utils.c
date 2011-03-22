@@ -1,5 +1,5 @@
 static PyObject*
-pymod_get_string(PyObject* args, int index, char** word, ssize_t* wordlen) {
+pymod_get_string(PyObject* args, int index, char** word, ssize_t* wordlen, bool* unicode) {
 	PyObject* obj;
 
 	obj = PyTuple_GetItem(args, index);
@@ -7,15 +7,21 @@ pymod_get_string(PyObject* args, int index, char** word, ssize_t* wordlen) {
 		return NULL;
 
 	if (PyBytes_Check(obj)) {
-		if (PyBytes_AsStringAndSize(obj, word, wordlen))
-			return NULL;
-		else {
-			Py_INCREF(obj);
-			return obj;
-		}
+		*word = (char*)PyBytes_AS_STRING(obj);
+		*wordlen = PyBytes_GET_SIZE(obj);
+		Py_INCREF(obj);
+		*unicode = false;
+		return obj;
+	}
+	else if (PyUnicode_Check(obj)) {
+		*word = (char*)PyUnicode_AS_UNICODE(obj);
+		*wordlen = PyUnicode_GET_SIZE(obj);
+		Py_INCREF(obj);
+		*unicode = true;
+		return obj;
 	}
 	else {
-		PyErr_SetString(PyExc_ValueError, "bytes expected");
+		PyErr_SetString(PyExc_ValueError, "string or bytes object expected");
 		return NULL;
 	}
 }
@@ -30,7 +36,7 @@ pymod_parse_start_end(
 	const ssize_t min, const ssize_t max,
 	ssize_t* Start, ssize_t* End
 ) {
-	PyObject* tmp;
+	PyObject* obj;
 #define start (*Start)
 #define end (*End)
 
@@ -38,17 +44,17 @@ pymod_parse_start_end(
 	end		= max;
 
 	// first argument
-	tmp = PyTuple_GetItem(args, idx_start);
-	if (tmp == NULL) {
+	obj = PyTuple_GetItem(args, idx_start);
+	if (obj == NULL) {
 		PyErr_Clear();
 		return 0;
 	}
 
-	tmp = PyNumber_Index(tmp);
-	if (tmp == NULL)
+	obj = PyNumber_Index(obj);
+	if (obj == NULL)
 		return -1;
 
-	start = PyNumber_AsSsize_t(tmp, PyExc_IndexError);
+	start = PyNumber_AsSsize_t(obj, PyExc_IndexError);
 	if (start == -1 and PyErr_Occurred())
 		return -1;
 
@@ -61,17 +67,17 @@ pymod_parse_start_end(
 	}
 
 	// second argument
-	tmp = PyTuple_GetItem(args, idx_end);
-	if (tmp == NULL) {
+	obj = PyTuple_GetItem(args, idx_end);
+	if (obj == NULL) {
 		PyErr_Clear();
 		return 0;
 	}
 
-	tmp = PyNumber_Index(tmp);
-	if (tmp == NULL)
+	obj = PyNumber_Index(obj);
+	if (obj == NULL)
 		return -1;
 
-	end = PyNumber_AsSsize_t(tmp, PyExc_IndexError);
+	end = PyNumber_AsSsize_t(obj, PyExc_IndexError);
 	if (end == -1 and PyErr_Occurred())
 		return -1;
 

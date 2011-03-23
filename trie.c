@@ -3,27 +3,18 @@
 
 */
 
-/*
-Note on trie implementation
-===========================
-
-Each node remembers edge label, thus making loops on self is
-not possible. But such loops appear only at root node, so this
-case is resolved manually in Automaton.c:make_automaton function.
-
-*/
-
 static TrieNode*
 trienode_new(char byte, char eow) {
 	TrieNode* node = (TrieNode*)memalloc(sizeof(TrieNode));
 	if (node) {
-		node->output	= NULL;
+		node->output.integer = 0;
 		node->fail		= NULL;
 
 		node->n		= 0;
 		node->byte	= byte;
 		node->eow	= eow;
 		node->next	= NULL;
+		node->hasoutput = 0;
 	}
 
 	return node;

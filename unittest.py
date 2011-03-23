@@ -148,7 +148,32 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 		self.assertEqual(set(L), set(I))
 
 
-class TestAutomaton(unittest.TestCase):
+class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
+	def helper(self, method):
+		A = self.A
+		for i, w in enumerate(self.words):
+			A.add_word(w, i+1)
+
+		it = method()
+		w  = next(it)
+		A.add_word("should fail", 1)
+		with self.assertRaises(ValueError):
+			w = next(it)
+			
+
+	def test_keys(self):
+		self.helper(self.A.keys)
+
+
+	def test_values(self):
+		self.helper(self.A.values)
+
+
+	def test_items(self):
+		self.helper(self.A.items)
+
+
+class TestAutomatonBase(unittest.TestCase):
 	def setUp(self):
 		self.A = ahocorasick.Automaton();
 		self.words  = b"he her hers she".split()
@@ -164,6 +189,17 @@ class TestAutomaton(unittest.TestCase):
 			(10, b'he')
 		]
 
+	def add_words(self):
+		for word in self.words:
+			self.A.add_word(word, word)
+
+
+	def add_words_and_make_automaton(self):
+		self.add_words()
+		self.A.make_automaton()
+
+
+class TestAutomatonConstruction(TestAutomatonBase):
 
 	def test_make_automaton1(self):
 		A = self.A
@@ -177,8 +213,7 @@ class TestAutomaton(unittest.TestCase):
 		A = self.A
 		self.assertEqual(A.kind, ahocorasick.EMPTY)
 
-		for w in self.words:
-			A.add_word(w, None)
+		self.add_words()
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 
 		A.make_automaton()
@@ -189,8 +224,7 @@ class TestAutomaton(unittest.TestCase):
 		A = self.A
 		self.assertEqual(A.kind, ahocorasick.EMPTY)
 
-		for w in self.words:
-			A.add_word(w, None)
+		self.add_words()
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 
 		A.make_automaton()
@@ -200,6 +234,8 @@ class TestAutomaton(unittest.TestCase):
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 
 	
+class TestAutomatonSearch(TestAutomatonBase):
+
 	def test_search_all1(self):
 		"not action is performed until automaton is constructed"
 		A = self.A
@@ -213,14 +249,12 @@ class TestAutomaton(unittest.TestCase):
 
 	def test_search_all2(self):
 		A = self.A
-		for w in self.words:
-			A.add_word(w, w)
+		self.add_words_and_make_automaton()
 
 		L = []
 		def callback(index, word):
 			L.append((index, word))
 
-		A.make_automaton();
 		A.search_all(self.string, callback)
 
 		C = self.correct_positons
@@ -229,14 +263,12 @@ class TestAutomaton(unittest.TestCase):
 
 	def test_search_all3(self):
 		A = self.A
-		for w in self.words:
-			A.add_word(w, w)
+		self.add_words_and_make_automaton()
 
 		L = []
 		def callback(index, word):
 			L.append((index, word))
 
-		A.make_automaton();
 		start = 4
 		end = 9
 
@@ -249,6 +281,8 @@ class TestAutomaton(unittest.TestCase):
 
 		self.assertEqual(L, C)
 
+
+class TestAutomatonIterSearch(TestAutomatonBase):
 
 	def test_iter1(self):
 		A = self.A
@@ -264,10 +298,8 @@ class TestAutomaton(unittest.TestCase):
 
 	def test_iter2(self):
 		A = self.A
-		for w in self.words:
-			A.add_word(w, w)
-
-		A.make_automaton()
+		self.add_words_and_make_automaton()
+		
 		L = []
 		for index, word in A.iter(self.string):
 			L.append((index, word))
@@ -278,10 +310,7 @@ class TestAutomaton(unittest.TestCase):
 		
 	def test_iter3(self):
 		A = self.A
-		for w in self.words:
-			A.add_word(w, w)
-
-		A.make_automaton()
+		self.add_words_and_make_automaton()
 		
 		start = 4
 		end = 9
@@ -299,10 +328,7 @@ class TestAutomaton(unittest.TestCase):
 	
 	def test_iter_search_all(self):
 		A = self.A
-		for w in self.words:
-			A.add_word(w, w)
-
-		A.make_automaton()
+		self.add_words_and_make_automaton()
 		
 		# results from search_all
 		L = []
@@ -318,6 +344,30 @@ class TestAutomaton(unittest.TestCase):
 
 		self.assertEqual(L, C)
 
+
+class TestAutomatonIterInvalidate(TestAutomatonBase):
+	
+	def test_iter1(self):
+		A = self.A
+		self.add_words_and_make_automaton()
+
+		it = A.iter(self.string)
+		w  = next(it)
+		A.add_word("should fail", 1)
+		with self.assertRaises(ValueError):
+			w = next(it)
+
+
+	def test_iter2(self):
+		A = self.A
+		self.add_words_and_make_automaton()
+
+		it = A.iter(self.string)
+		w  = next(it)
+		A.clear()
+		with self.assertRaises(ValueError):
+			w = next(it)
+		
 
 if __name__ == '__main__':
 	unittest.main()

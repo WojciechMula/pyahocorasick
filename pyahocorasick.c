@@ -11,14 +11,16 @@
 #define memrealloc	PyMem_Realloc
 
 #ifdef __GCC__
-#	define	LIKELY(x)	x
-#	define	UNLIKELY(x)	x
+#	define	LIKELY(x)	__builtin_expect(x, 1)
+#	define	UNLIKELY(x)	__builtin_expect(x, 0)
+#	define	ALWAYS_INLINE	__attribute__((always_inline))
 #else
 #	define	LIKELY(x)	x
 #	define	UNLIKELY(x)	x
+#	define	ALWAYS_INLINE
 #endif
 
-#if 1
+#ifdef DEBUG
 #	include <assert.h>
 #	define	ASSERT(expr)	do {if (!(expr)) printf("%s:%d:%s failed!\n", __FUNCTION__, __LINE__, #expr); }while(0)
 #else
@@ -29,67 +31,20 @@ typedef char	bool;
 #define true 1
 #define false 0
 
-/*
-
-TRIE		= 0
-AHOCORASICK	= 1
-
-STORE_STRINGS	= 0
-STORE_INTS		= 1
-STORE_ANY		= 2
-
-class AutomatonException(Exception):
-	pass
-
-class Automaton:
-	def __init__(self, store)
-		"store in STORE_STRINGS, STORE_INTS, STORE_ANY"
-		pass
-
-	def add_word(self, word, value)
-		"adds new word to dictionary"
-		pass
-
-	def clear(self):
-		"removes all words"
-		pass
-	
-	def match(self, word):
-		"returns true if word is present in a dictionary"
-		pass
-
-	def match_prefix(self, word):
-		"""
-		Returns true if word is present in a dictionary,
-		even if word has no associacted value.
-		"""
-		pass
-
-	def get(self, word, def=None):
-		"Returns object associated with word."
-		pass
-
-	def make_automaton(self):
-		"Constuct Aho-Corsick automaton."
-		pass
-
-	def search_all(self, string, callback):
-		"""
-		Callback is called on every occurence of any word from dictionary
-		Callback must accept two arguments: position and a tuple
-		"""
-		pass
-
-*/
 
 #include "slist.c"
 
 /* Types */
 typedef struct TrieNode {
-	void*				output;	///< output function
+	union {
+		PyObject*	object;		///< valid when kind = STORE_ANY
+		int			integer;	///< valid when kind in [STORE_LENGTH, STORE_INTS]
+	} output; ///< output function
+
 	struct TrieNode*	fail;	///< fail node
 
-	uint16_t			n;		///< length of next
+	uint16_t			n:15;	///< length of next
+	uint16_t			hasoutput:1;
 	uint8_t				byte;	///< incoming edge label
 	uint8_t				eow;	///< end of word label
 	struct TrieNode**	next;	///< table of pointers
@@ -104,8 +59,8 @@ typedef enum {
 
 
 typedef enum {
-	STORE_STRINGS,
 	STORE_INTS,
+	STORE_LENGTH,
 	STORE_ANY
 } KeysStore;
 
@@ -117,6 +72,8 @@ typedef struct Automaton {
 	KeysStore		store;	///< type of values: copy of string, bare integer, python  object
 	int				count;	///< number of distinct words
 	TrieNode*		root;	///< root of a trie
+
+	int				version;	///< current version of automaton, incremented by add_word, clean and make_automaton; used to lazy invalidate iterators
 } Automaton;
 
 
@@ -127,6 +84,7 @@ typedef struct AutomatonSearchIter {
 	PyObject_HEAD
 
 	Automaton*	automaton;
+	int			version;	///< automaton version
 	PyObject*	object;		///< unicode or buffer
 	void*		data;		///< Py_UNICODE or char*
 	TrieNode*	state;		///< current state of automaton
@@ -152,6 +110,7 @@ typedef struct AutomatonItemsIter {
 	PyObject_HEAD
 
 	Automaton*	automaton;
+	int			version;
 	TrieNode* 	state;
 	List		stack;
 	ItemsType	type;
@@ -211,7 +170,7 @@ PyInit_ahocorasick(void) {
 	add_enum_const(AHOCORASICK);
 	add_enum_const(EMPTY);
 
-	add_enum_const(STORE_STRINGS);
+	add_enum_const(STORE_LENGTH);
 	add_enum_const(STORE_INTS);
 	add_enum_const(STORE_ANY);
 #undef add_enum_const

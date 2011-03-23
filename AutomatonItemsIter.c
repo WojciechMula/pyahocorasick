@@ -16,6 +16,7 @@ automaton_items_iter_new(Automaton* automaton) {
 		return NULL;
 
 	iter->automaton = automaton;
+	iter->version	= automaton->version;
 	iter->state	= NULL;
 	iter->type = ITER_KEYS;
 	list_init(&iter->stack);
@@ -65,9 +66,13 @@ automaton_items_iter_iter(PyObject* self) {
 }
 
 
-
 static PyObject*
 automaton_items_iter_next(PyObject* self) {
+	if (iter->version != iter->automaton->version) {
+		PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
+		return NULL;
+	}
+
 	while (true) {
 		StackItem* item = (StackItem*)list_pop_first(&iter->stack);
 		if (item == NULL or item->node == NULL)
@@ -110,27 +115,60 @@ automaton_items_iter_next(PyObject* self) {
 			PyObject* key;
 			PyObject* val;
 			PyObject* it;
+
 			switch (iter->type) {
 				case ITER_KEYS:
 					key = PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
 					return key;
 
 				case ITER_VALUES:
-					val = (PyObject*)iter->state->output;
-					Py_INCREF(val);
+					switch (iter->automaton->store) {
+						case STORE_ANY:
+							val = iter->state->output.object;
+							Py_INCREF(val);
+							break;
+
+						case STORE_LENGTH:
+						case STORE_INTS:
+							val = Py_BuildValue("i", iter->state->output.integer);
+							break;
+
+						default:
+							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");
+							return NULL;
+					}
+
 					return val;
 
 				case ITER_ITEMS:
 					it = PyTuple_New(2);
-					if (it) {
-						key = PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
-						if (key == NULL)
-							return NULL;
+					if (it == NULL) 
+						return NULL;
 
-						val = (PyObject*)iter->state->output;
-						PyTuple_SET_ITEM(it, 0, key);
-						PyTuple_SET_ITEM(it, 1, val);
-					}
+					key = PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
+					if (key == NULL)
+						return NULL;
+
+					switch (iter->automaton->store) {
+						case STORE_ANY:
+							val = iter->state->output.object;
+							Py_INCREF(val);
+							break;
+
+						case STORE_LENGTH:
+						case STORE_INTS:
+							val = Py_BuildValue("i", iter->state->output.integer);
+							break;
+						
+						default:
+							Py_DECREF(key);
+							Py_DECREF(it);
+							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");
+							return NULL;
+					} // switch
+
+					PyTuple_SET_ITEM(it, 0, key);
+					PyTuple_SET_ITEM(it, 1, val);
 
 					return it;
 			}

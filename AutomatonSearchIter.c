@@ -13,6 +13,7 @@ automaton_search_iter_new(
 		return NULL;
 
 	iter->automaton = automaton;
+	iter->version	= automaton->version;
 	iter->object	= object;
 	iter->is_unicode = is_unicode;
 	if (is_unicode)
@@ -21,6 +22,7 @@ automaton_search_iter_new(
 		iter->data = PyBytes_AS_STRING(object);
 
 	iter->state	= automaton->root;
+	iter->output= NULL;
 	iter->index	= start - 1;	// -1 because first instruction in next() increments index
 	iter->end	= end;
 
@@ -49,18 +51,23 @@ automaton_search_iter_iter(PyObject* self) {
 
 static PyObject*
 automaton_search_iter_next(PyObject* self) {
+	if (iter->version != iter->automaton->version) {
+		PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
+		return NULL;
+	}
+
 return_output:
-	if (iter->output and iter->output->output) {
+	if (iter->output and iter->output->hasoutput) {
+		TrieNode* node = iter->output;
 		PyObject* tuple;
 		switch (iter->automaton->kind) {
-			case STORE_STRINGS:
-				return NULL;	// XXX
-
+			case STORE_LENGTH:
 			case STORE_INTS:
-				return NULL;	// XXX
+				tuple = Py_BuildValue("ii", iter->index, node->output.integer);
+				break;
 
 			case STORE_ANY:
-				tuple = Py_BuildValue("iO", iter->index, iter->output->output);
+				tuple = Py_BuildValue("iO", iter->index, node->output.object);
 				break;
 
 			default:

@@ -5,7 +5,7 @@
 TRIE		= 0
 AHOCORASICK	= 1
 
-STORE_STRINGS	= 0
+STORE_LENGTH	= 0
 STORE_INTS		= 1
 STORE_ANY		= 2
 
@@ -14,7 +14,7 @@ class AutomatonException(Exception):
 
 class Automaton:
 	def __init__(self, store)
-		"store in STORE_STRINGS, STORE_INTS, STORE_ANY"
+		"store in STORE_LENGTH, STORE_INTS, STORE_ANY"
 		pass
 
 	def add_word(self, word, value)
@@ -60,7 +60,7 @@ automaton_new(PyObject* self, PyObject* args) {
 
 	if (PyArg_ParseTuple(args, "i", &store)) {
 		switch (store) {
-			case STORE_STRINGS:
+			case STORE_LENGTH:
 			case STORE_INTS:
 			case STORE_ANY:
 				// ok
@@ -69,7 +69,7 @@ automaton_new(PyObject* self, PyObject* args) {
 			default:
 				PyErr_SetString(
 					PyExc_ValueError,
-					"store must have value STORE_STRINGS, STORE_INTS or STORE_ANY"
+					"store must have value STORE_LENGTH, STORE_INTS or STORE_ANY"
 				);
 				return NULL;
 		} // switch
@@ -83,6 +83,7 @@ automaton_new(PyObject* self, PyObject* args) {
 	if (automaton == NULL)
 		return NULL;
 
+	automaton->version = 0;
 	automaton->count = 0;
 	automaton->kind  = EMPTY;
 	automaton->store = store;
@@ -121,20 +122,55 @@ static PyObject*
 automaton_add_word(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	// argument
-	PyObject* py_word;
-	PyObject* py_value;
+	PyObject* py_word = NULL;
+	PyObject* py_value = NULL;
 
-	ssize_t wordlen;
-	char* word;
-	bool unicode;
+	ssize_t wordlen = 0;
+	char* word = NULL;
+	bool unicode = 0;
+	int integer = 0;
 
 	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
 	if (not py_word)
 		return NULL;
 
-	py_value = PyTuple_GetItem(args, 1);
-	if (not py_value)
-		return NULL;
+	switch (automaton->store) {
+		case STORE_ANY:
+			py_value = PyTuple_GetItem(args, 1);
+			if (not py_value) {
+				PyErr_SetString(PyExc_ValueError, "second argument required");
+				return NULL;
+			}
+			break;
+
+		case STORE_INTS:
+			py_value = PyTuple_GetItem(args, 1);
+			if (py_value) {
+				if (PyNumber_Check(py_value)) {
+					integer = (int)PyNumber_AsSsize_t(py_value, PyExc_ValueError);
+					if (integer == -1 and PyErr_Occurred())
+						return NULL;
+				}
+				else {
+					PyErr_SetString(PyExc_TypeError, "numer required");
+					return NULL;
+				}
+			}
+			else {
+				// default
+				PyErr_Clear();
+				integer = automaton->count + 1;
+			}
+			break;
+
+		case STORE_LENGTH:
+			integer = wordlen;
+			break;
+
+		default:
+			PyErr_SetString(PyExc_SystemError, "invalid store value");
+			return NULL;
+	}
 
 	if (wordlen > 0) {
 		bool new_word = false;
@@ -150,17 +186,26 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 		Py_DECREF(py_word);
 		if (node) {
-			if (new_word) {
-				if (node->output)
-					Py_DECREF(node->output);
+			automaton->version += 1;
+			switch (automaton->store) {
+				case STORE_ANY:
+					if (new_word and node->hasoutput)
+						Py_DECREF(node->output.object);
+				
+					Py_INCREF(py_value);
+					node->output.object = py_value;
+					break;
 
-				Py_INCREF(py_value);
-				node->output = py_value;
+				default:
+					node->output.integer = integer;
+			} // switch
+
+			node->hasoutput = 1;
+
+			if (new_word) {
 				Py_RETURN_TRUE;
 			}
 			else {
-				Py_INCREF(py_value);
-				node->output = py_value;
 				Py_RETURN_FALSE;
 			}
 		}
@@ -178,16 +223,13 @@ clear_aux(TrieNode* node, KeysStore store) {
 	if (node) {
 		switch (store) {
 			case STORE_INTS:
+			case STORE_LENGTH:
 				// nop
 				break;
 
-			case STORE_STRINGS:
-				memfree(node->output);
-				break;
-
 			case STORE_ANY:
-				if (node->output)
-					Py_DECREF(node->output);
+				if (node->output.object)
+					Py_DECREF(node->output.object);
 				break;
 		}
 
@@ -195,7 +237,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 		int i;
 		for (i=0; i < n; i++) {
 			TrieNode* child = node->next[i];
-			if (child != node) // avoid loops!
+			if (child != node) // avoid self-loops!
 				clear_aux(child, store);
 		}
 
@@ -216,6 +258,7 @@ automaton_clear(PyObject* self, PyObject* args) {
 	automaton->count = 0;
 	automaton->kind = EMPTY;
 	automaton->root = NULL;
+	automaton->version += 1;
 
 	Py_RETURN_NONE;
 #undef automaton
@@ -337,15 +380,13 @@ automaton_get(PyObject* self, PyObject* args) {
 
 	if (node and node->eow) {
 		switch (automaton->store) {
-			case STORE_STRINGS:
-				return Py_BuildValue("s", node->output);
-
 			case STORE_INTS:
-				return Py_BuildValue("i", (int)(node->output));
+			case STORE_LENGTH:
+				return Py_BuildValue("i", node->output.integer);
 
 			case STORE_ANY:
-				Py_INCREF(node->output);
-				return node->output;
+				Py_INCREF(node->output.object);
+				return node->output.object;
 
 			default:
 				PyErr_SetNone(PyExc_ValueError);
@@ -451,6 +492,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 	}
 
 	automaton->kind = AHOCORASICK;
+	automaton->version += 1;
 	list_delete(&queue);
 	Py_RETURN_NONE;
 #undef automaton
@@ -532,8 +574,12 @@ automaton_search_all(PyObject* self, PyObject* args) {
 #undef NEXT
 
 		// return output
-		while (tmp and tmp->output) {
-			callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output);
+		while (tmp and tmp->hasoutput) {
+			if (automaton->store == STORE_ANY)
+				callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output.object);
+			else
+				callback_ret = PyObject_CallFunction(callback, "ii", i, tmp->output.integer);
+
 			if (callback_ret == NULL)
 				return NULL;
 			else
@@ -649,6 +695,7 @@ automaton_iter(PyObject* self, PyObject* args) {
 	);
 #undef automaton
 }
+
 
 
 #define method(name, kind) {#name, automaton_##name, kind, automaton_##name##_doc}

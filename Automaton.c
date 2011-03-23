@@ -84,6 +84,7 @@ automaton_new(PyObject* self, PyObject* args) {
 		return NULL;
 
 	automaton->version = 0;
+	automaton->stats.version = -1;
 	automaton->count = 0;
 	automaton->kind  = EMPTY;
 	automaton->store = store;
@@ -189,7 +190,8 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			automaton->version += 1;
 			switch (automaton->store) {
 				case STORE_ANY:
-					if (new_word and node->hasoutput)
+					if (not new_word and node->eow)
+						// replace
 						Py_DECREF(node->output.object);
 				
 					Py_INCREF(py_value);
@@ -200,7 +202,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 					node->output.integer = integer;
 			} // switch
 
-			node->hasoutput = 1;
+			node->eow = true;
 
 			if (new_word) {
 				Py_RETURN_TRUE;
@@ -574,7 +576,7 @@ automaton_search_all(PyObject* self, PyObject* args) {
 #undef NEXT
 
 		// return output
-		while (tmp and tmp->hasoutput) {
+		while (tmp and tmp->eow) {
 			if (automaton->store == STORE_ANY)
 				callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output.object);
 			else
@@ -698,27 +700,30 @@ automaton_iter(PyObject* self, PyObject* args) {
 
 
 static void
-get_stats_aux(TrieNode* node, AutomatonStatistics* stats) {
+get_stats_aux(TrieNode* node, AutomatonStatistics* stats, int depth) {
 	stats->nodes_count	+= 1;
 	stats->words_count	+= (int)(node->eow);
 	stats->links_count	+= node->n;
 	stats->total_size	+= trienode_get_size(node);
+	if (depth > stats->longest_word)
+		stats->longest_word = depth;
 
 	int i;
 	for (i=0; i < node->n; i++)
-		get_stats_aux(node->next[i], stats);
+		get_stats_aux(node->next[i], stats, depth + 1);
 }
 
 static void
 get_stats(Automaton* automaton) {
 	automaton->stats.nodes_count	= 0;
 	automaton->stats.words_count	= 0;
+	automaton->stats.longest_word	= 0;
 	automaton->stats.links_count	= 0;
 	automaton->stats.sizeof_node	= sizeof(TrieNode);
 	automaton->stats.total_size		= 0;
 
 	if (automaton->kind != EMPTY)
-		get_stats_aux(automaton->root, &automaton->stats);
+		get_stats_aux(automaton->root, &automaton->stats, 0);
 	
 	automaton->stats.version		= automaton->version;
 }
@@ -738,6 +743,7 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 #define emit(name) #name, automaton->stats.name
 		emit(nodes_count),
 		emit(words_count),
+		emit(longest_word),
 		emit(links_count),
 		emit(sizeof_node),
 		emit(total_size)

@@ -14,7 +14,6 @@ trienode_new(char byte, char eow) {
 		node->byte	= byte;
 		node->eow	= eow;
 		node->next	= NULL;
-		node->hasoutput = 0;
 	}
 
 	return node;

@@ -57,7 +57,7 @@ automaton_search_iter_next(PyObject* self) {
 	}
 
 return_output:
-	if (iter->output and iter->output->hasoutput) {
+	if (iter->output and iter->output->eow) {
 		TrieNode* node = iter->output;
 		PyObject* tuple;
 		switch (iter->automaton->kind) {

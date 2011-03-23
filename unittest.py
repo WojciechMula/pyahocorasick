@@ -113,12 +113,23 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 				A.get(w)
 
 
-	def test_stats(self):
+	def test_stats1(self):
 		A = self.A
 		for i, w in enumerate(self.words):
 			A.add_word(w, i+1)
 
-		print(A.get_stats())
+		s = A.get_stats()
+		print(s)
+		self.assertTrue(len(s) > 0)
+
+
+	def test_stats2(self):
+		s = self.A.get_stats()
+		print(s)
+		self.assertTrue(len(s) > 0)
+		for key in s:
+			if key != "sizeof_node":
+				self.assertEqual(s[key], 0)
 
 
 class TestTrieIterators(TestTrieStorePyObjectsBase):

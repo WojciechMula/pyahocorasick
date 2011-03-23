@@ -41,14 +41,13 @@ typedef struct TrieNode {
 	union {
 		PyObject*	object;		///< valid when kind = STORE_ANY
 		int			integer;	///< valid when kind in [STORE_LENGTH, STORE_INTS]
-	} output; ///< output function
+	} output; ///< output function, valid when eow is true
 
 	struct TrieNode*	fail;	///< fail node
 
-	uint16_t			n:15;	///< length of next
-	uint16_t			hasoutput:1;
+	uint16_t			n;		///< length of next
 	uint8_t				byte;	///< incoming edge label
-	uint8_t				eow;	///< end of word label
+	uint8_t				eow;	///< end of word marker
 	struct TrieNode**	next;	///< table of pointers
 } TrieNode;
 
@@ -72,6 +71,7 @@ typedef struct AutomatonStatistics {
 
 	int		nodes_count;		///< total number of nodes
 	int		words_count;		///< len(automaton)
+	int		longest_word;		///< longest word
 	int		links_count;		///< links count
 	int		sizeof_node;		///< size of single node (a C structure)
 	int		total_size;			///< total size in bytes

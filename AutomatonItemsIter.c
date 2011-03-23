@@ -68,7 +68,7 @@ automaton_items_iter_iter(PyObject* self) {
 
 static PyObject*
 automaton_items_iter_next(PyObject* self) {
-	if (iter->version != iter->automaton->version) {
+	if (UNLIKELY(iter->version != iter->automaton->version)) {
 		PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
 		return NULL;
 	}
@@ -112,14 +112,11 @@ automaton_items_iter_next(PyObject* self) {
 		} // if
 
 		if (iter->state->eow) {
-			PyObject* key;
 			PyObject* val;
-			PyObject* it;
 
 			switch (iter->type) {
 				case ITER_KEYS:
-					key = PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
-					return key;
+					return PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
 
 				case ITER_VALUES:
 					switch (iter->automaton->store) {
@@ -130,8 +127,7 @@ automaton_items_iter_next(PyObject* self) {
 
 						case STORE_LENGTH:
 						case STORE_INTS:
-							val = Py_BuildValue("i", iter->state->output.integer);
-							break;
+							return Py_BuildValue("i", iter->state->output.integer);
 
 						default:
 							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");
@@ -141,36 +137,21 @@ automaton_items_iter_next(PyObject* self) {
 					return val;
 
 				case ITER_ITEMS:
-					it = PyTuple_New(2);
-					if (it == NULL) 
-						return NULL;
-
-					key = PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
-					if (key == NULL)
-						return NULL;
-
 					switch (iter->automaton->store) {
 						case STORE_ANY:
-							val = iter->state->output.object;
-							Py_INCREF(val);
-							break;
+							return Py_BuildValue("(y#O)",
+								/*key*/ iter->buffer + 1, item->depth,
+								/*val*/ iter->state->output.object
+							);
 
 						case STORE_LENGTH:
 						case STORE_INTS:
-							val = Py_BuildValue("i", iter->state->output.integer);
-							break;
+							return Py_BuildValue("i", iter->state->output.integer);
 						
 						default:
-							Py_DECREF(key);
-							Py_DECREF(it);
 							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");
 							return NULL;
 					} // switch
-
-					PyTuple_SET_ITEM(it, 0, key);
-					PyTuple_SET_ITEM(it, 1, val);
-
-					return it;
 			}
 		}
 	}

@@ -1,11 +1,5 @@
 static PyObject*
-pymod_get_string(PyObject* args, int index, char** word, ssize_t* wordlen, bool* unicode) {
-	PyObject* obj;
-
-	obj = PyTuple_GetItem(args, index);
-	if (obj == NULL)
-		return NULL;
-
+pymod_get_string(PyObject* obj, char** word, ssize_t* wordlen, bool* unicode) {
 	if (PyBytes_Check(obj)) {
 		*word = (char*)PyBytes_AS_STRING(obj);
 		*wordlen = PyBytes_GET_SIZE(obj);
@@ -24,6 +18,18 @@ pymod_get_string(PyObject* args, int index, char** word, ssize_t* wordlen, bool*
 		PyErr_SetString(PyExc_ValueError, "string or bytes object expected");
 		return NULL;
 	}
+}
+
+
+static PyObject*
+pymod_get_string_from_tuple(PyObject* tuple, int index, char** word, ssize_t* wordlen, bool* unicode) {
+	PyObject* obj;
+
+	obj = PyTuple_GetItem(tuple, index);
+	if (obj)
+		return pymod_get_string(obj, word, wordlen, unicode);
+	else
+		return NULL;
 }
 
 /**

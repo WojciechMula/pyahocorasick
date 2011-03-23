@@ -72,7 +72,7 @@ list_push_front(List* list, ListItem* item) {
 	ASSERT(list);
 
 	if (list->head) {
-		item->__next = list->last;
+		item->__next = list->head;
 		list->head = item;
 	}
 	else

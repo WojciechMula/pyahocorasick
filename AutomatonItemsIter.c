@@ -79,7 +79,7 @@ automaton_items_iter_next(PyObject* self) {
 		for (i=0; i < n; i++) {
 			StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
 			if (not new_item) {
-				PyErr_SetNone(PyExc_MemoryError);
+				PyErr_NoMemory();
 				return NULL;
 			}
 
@@ -88,7 +88,24 @@ automaton_items_iter_next(PyObject* self) {
 			list_push_front(&iter->stack, (ListItem*)new_item);
 		}
 
-		iter->buffer[item->depth] = iter->state->byte;
+		if (iter->type != ITER_VALUES) {
+			// update keys when needed
+			if (UNLIKELY(iter->n < item->depth)) {
+				size_t new_size = 256*((item->depth + 255)/256);
+				char* new_buf = (char*)memrealloc(iter->buffer, new_size);
+				if (new_buf) {
+					iter->n = new_size;
+					iter->buffer = new_buf;
+				}
+				else {
+					PyErr_NoMemory();
+					return NULL;
+				}
+			}
+
+			iter->buffer[item->depth] = iter->state->byte;
+		} // if
+
 		if (iter->state->eow) {
 			PyObject* key;
 			PyObject* val;
@@ -107,6 +124,9 @@ automaton_items_iter_next(PyObject* self) {
 					it = PyTuple_New(2);
 					if (it) {
 						key = PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
+						if (key == NULL)
+							return NULL;
+
 						val = (PyObject*)iter->state->output;
 						PyTuple_SET_ITEM(it, 0, key);
 						PyTuple_SET_ITEM(it, 1, val);

@@ -10,6 +10,14 @@
 #define memfree		PyMem_Free
 #define memrealloc	PyMem_Realloc
 
+#ifdef __GCC__
+#	define	LIKELY(x)	x
+#	define	UNLIKELY(x)	x
+#else
+#	define	LIKELY(x)	x
+#	define	UNLIKELY(x)	x
+#endif
+
 #if 1
 #	include <assert.h>
 #	define	ASSERT(expr)	do {if (!(expr)) printf("%s:%d:%s failed!\n", __FUNCTION__, __LINE__, #expr); }while(0)

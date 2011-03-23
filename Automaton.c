@@ -128,7 +128,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	char* word;
 	bool unicode;
 
-	py_word = pymod_get_string(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
 	if (not py_word)
 		return NULL;
 
@@ -230,7 +230,7 @@ automaton_contains(PyObject* self, PyObject* args) {
 	bool unicode;
 	PyObject* py_word;
 
-	py_word = pymod_get_string(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string(args, &word, &wordlen, &unicode);
 	if (py_word == NULL)
 		return -1;
 
@@ -255,16 +255,22 @@ automaton_contains(PyObject* self, PyObject* args) {
 
 static PyObject*
 automaton_match(PyObject* self, PyObject* args) {
-	switch (automaton_contains(self, args)) {
-		case 1:
-			Py_RETURN_TRUE;
+	PyObject* word;
 
-		case 0:
-			Py_RETURN_FALSE;
+	word = PyTuple_GetItem(args, 0);
+	if (word)
+		switch (automaton_contains(self, word)) {
+			case 1:
+				Py_RETURN_TRUE;
 
-		default:
-			return NULL;
-	}
+			case 0:
+				Py_RETURN_FALSE;
+
+			default:
+				return NULL;
+		}
+	else
+		return NULL;
 }
 
 
@@ -279,7 +285,7 @@ automaton_match_prefix(PyObject* self, PyObject* args) {
 	bool unicode;
 	PyObject* py_word;
 
-	py_word = pymod_get_string(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
 	if (py_word == NULL)
 		return NULL;
 
@@ -315,7 +321,7 @@ automaton_get(PyObject* self, PyObject* args) {
 	PyObject* py_word;
 	PyObject* py_def;
 
-	py_word = pymod_get_string(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
 	if (py_word == NULL)
 		return NULL;
 
@@ -475,7 +481,7 @@ automaton_search_all(PyObject* self, PyObject* args) {
 	PyObject* callback_ret;
 
 	// arg 1
-	py_word = pymod_get_string(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
 	if (py_word == NULL)
 		return NULL;
 

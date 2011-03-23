@@ -10,14 +10,16 @@
 #define memfree		PyMem_Free
 #define memrealloc	PyMem_Realloc
 
-#ifdef __GCC__
+#ifdef __GNUC__
 #	define	LIKELY(x)	__builtin_expect(x, 1)
 #	define	UNLIKELY(x)	__builtin_expect(x, 0)
 #	define	ALWAYS_INLINE	__attribute__((always_inline))
+#	define	PURE			__attribute__((pure))
 #else
 #	define	LIKELY(x)	x
 #	define	UNLIKELY(x)	x
 #	define	ALWAYS_INLINE
+#	define	PURE
 #endif
 
 #ifdef DEBUG
@@ -65,6 +67,17 @@ typedef enum {
 } KeysStore;
 
 
+typedef struct AutomatonStatistics {
+	int		version;
+
+	int		nodes_count;		///< total number of nodes
+	int		words_count;		///< len(automaton)
+	int		links_count;		///< links count
+	int		sizeof_node;		///< size of single node (a C structure)
+	int		total_size;			///< total size in bytes
+} AutomatonStatistics;
+
+
 typedef struct Automaton {
 	PyObject_HEAD
 
@@ -74,6 +87,8 @@ typedef struct Automaton {
 	TrieNode*		root;	///< root of a trie
 
 	int				version;	///< current version of automaton, incremented by add_word, clean and make_automaton; used to lazy invalidate iterators
+
+	AutomatonStatistics	stats;	///< statistics
 } Automaton;
 
 
@@ -110,13 +125,13 @@ typedef struct AutomatonItemsIter {
 	PyObject_HEAD
 
 	Automaton*	automaton;
-	int			version;
-	TrieNode* 	state;
-	List		stack;
-	ItemsType	type;
+	int			version;		///< automaton version
+	TrieNode* 	state;			///< current automaton node
+	List		stack;			///< stack
+	ItemsType	type;			///< type of iterator (KEYS/VALUES/ITEMS)
 	
-	size_t		n;
-	char*		buffer;
+	size_t		n;				///< length of buffer
+	char*		buffer;			///< buffer to construct key representation
 } AutomatonItemsIter;
 
 

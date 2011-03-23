@@ -697,6 +697,56 @@ automaton_iter(PyObject* self, PyObject* args) {
 }
 
 
+static void
+get_stats_aux(TrieNode* node, AutomatonStatistics* stats) {
+	stats->nodes_count	+= 1;
+	stats->words_count	+= (int)(node->eow);
+	stats->links_count	+= node->n;
+	stats->total_size	+= trienode_get_size(node);
+
+	int i;
+	for (i=0; i < node->n; i++)
+		get_stats_aux(node->next[i], stats);
+}
+
+static void
+get_stats(Automaton* automaton) {
+	automaton->stats.nodes_count	= 0;
+	automaton->stats.words_count	= 0;
+	automaton->stats.links_count	= 0;
+	automaton->stats.sizeof_node	= sizeof(TrieNode);
+	automaton->stats.total_size		= 0;
+
+	if (automaton->kind != EMPTY)
+		get_stats_aux(automaton->root, &automaton->stats);
+	
+	automaton->stats.version		= automaton->version;
+}
+
+
+#define automaton_get_stats_doc \
+	"returns statistics about automaton"
+
+static PyObject*
+automaton_get_stats(PyObject* self, PyObject* args) {
+#define automaton ((Automaton*)self)
+	if (automaton->stats.version != automaton->version)
+		get_stats(automaton);
+	
+	PyObject* dict = Py_BuildValue(
+		"{s:i,s:i,s:i,s:i,s:i}",
+#define emit(name) #name, automaton->stats.name
+		emit(nodes_count),
+		emit(words_count),
+		emit(links_count),
+		emit(sizeof_node),
+		emit(total_size)
+#undef emit
+	);
+	return dict;
+#undef automaton
+}
+
 
 #define method(name, kind) {#name, automaton_##name, kind, automaton_##name##_doc}
 static
@@ -712,6 +762,7 @@ PyMethodDef automaton_methods[] = {
 	method(values,			METH_NOARGS),
 	method(items,			METH_NOARGS),
 	method(iter,			METH_VARARGS),
+	method(get_stats,		METH_NOARGS),
 
 	{NULL, NULL, 0, NULL}
 };

@@ -113,6 +113,14 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 				A.get(w)
 
 
+	def test_stats(self):
+		A = self.A
+		for i, w in enumerate(self.words):
+			A.add_word(w, i+1)
+
+		print(A.get_stats())
+
+
 class TestTrieIterators(TestTrieStorePyObjectsBase):
 	def test_keys(self):
 		A = self.A

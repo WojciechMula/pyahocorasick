@@ -21,7 +21,7 @@ trienode_new(char byte, char eow) {
 }
 
 
-static TrieNode* //ALWAYS_INLINE
+static TrieNode* PURE ALWAYS_INLINE
 trienode_get_next(TrieNode* node, const uint8_t byte) {
 	ASSERT(node);
 	if (node->n == 256)
@@ -212,7 +212,7 @@ trie_add_word_UCS4(Automaton* automaton, uint32_t* word, size_t wordlen, bool* n
 }
 
 
-static TrieNode*
+static TrieNode* PURE
 trie_find(TrieNode* root, const char* word, const size_t wordlen) {
 	TrieNode* node;
 
@@ -228,7 +228,7 @@ trie_find(TrieNode* root, const char* word, const size_t wordlen) {
 }
 
 
-static TrieNode*
+static TrieNode* PURE
 trie_find_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen) {
 	TrieNode* node;
 
@@ -251,7 +251,7 @@ trie_find_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen) {
 }
 
 
-static TrieNode*
+static TrieNode* PURE
 trie_find_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen) {
 	TrieNode* node;
 
@@ -284,7 +284,7 @@ trie_find_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen) {
 }
 
 
-static TrieNode*
+static TrieNode* PURE
 ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte) {
 	TrieNode* next = node;
 	TrieNode* tmp;
@@ -304,3 +304,7 @@ ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte) {
 }
 
 
+size_t PURE ALWAYS_INLINE
+trienode_get_size(const TrieNode* node) {
+	return sizeof(TrieNode) + node->n * sizeof(TrieNode*);
+}

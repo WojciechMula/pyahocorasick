@@ -53,45 +53,121 @@ class Automaton:
 
 */
 
+static bool
+automaton_unpickle(
+	Automaton* automaton,
+	const size_t count,
+	void* data,
+	const ssize_t size,
+	PyObject* values
+);
+
+
+static bool ALWAYS_INLINE
+check_store(const int store) {
+	switch (store) {
+		case STORE_LENGTH:
+		case STORE_INTS:
+		case STORE_ANY:
+			return true;
+
+		default:
+			PyErr_SetString(
+				PyExc_ValueError,
+				"store must have value STORE_LENGTH, STORE_INTS or STORE_ANY"
+			);
+			return false;
+	} // switch
+}
+
+
+static bool ALWAYS_INLINE
+check_kind(const int kind) {
+	switch (kind) {
+		case EMPTY:
+		case TRIE:
+		case AHOCORASICK:
+			return true;
+
+		default:
+			PyErr_SetString(
+				PyExc_ValueError,
+				"store must have value EMPTY, TRIE or AHOCORASICK"
+			);
+			return false;
+	}
+}
+
+
 static PyObject*
-automaton_new(PyObject* self, PyObject* args) {
-	Automaton* automaton;
+automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
+	Automaton* automaton = NULL;
 	int store;
 
-	if (PyArg_ParseTuple(args, "i", &store)) {
-		switch (store) {
-			case STORE_LENGTH:
-			case STORE_INTS:
-			case STORE_ANY:
-				// ok
-				break;
-
-			default:
-				PyErr_SetString(
-					PyExc_ValueError,
-					"store must have value STORE_LENGTH, STORE_INTS or STORE_ANY"
-				);
-				return NULL;
-		} // switch
-	}
-	else {
-		PyErr_Clear();
-		store = STORE_ANY;
-	}
-	
 	automaton = (Automaton*)PyObject_New(Automaton, &automaton_type);
-	if (automaton == NULL)
+	if (UNLIKELY(automaton == NULL))
 		return NULL;
 
+	// commons settings
 	automaton->version = 0;
 	automaton->stats.version = -1;
 	automaton->count = 0;
 	automaton->kind  = EMPTY;
-	automaton->store = store;
 	automaton->root  = NULL;
 
+	if (UNLIKELY(PyTuple_Size(args) == 6)) {
+		
+		// unpickle: count, data, kind, store, version, values
+		size_t			count;
+		void*			data;
+		size_t			size;
+		int				version;
+		AutomatonKind	kind;
+		KeysStore		store;
+		PyObject*		values = NULL;
+
+		if (not PyArg_ParseTuple(args, "iy#iiiO", &count, &data, &size, &kind, &store, &version, &values)) {
+			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
+			goto error;
+		}
+
+		if (not check_store(store) or not check_kind(kind))
+			goto error;
+
+		if (kind != EMPTY) {
+			if (automaton_unpickle(automaton, count, data, size, values)) {
+				automaton->kind		= kind;
+				automaton->store	= store;
+				automaton->version	= version;
+			}
+			else
+				goto error;
+		}
+
+		Py_DECREF(values);
+	}
+	else {
+		// construct new object
+		if (PyArg_ParseTuple(args, "i", &store)) {
+			if (not check_store(store))
+				goto error;
+		}
+		else {
+			PyErr_Clear();
+			store = STORE_ANY;
+		}
+
+		automaton->store = store;
+	}
+
+//ok:
 	return (PyObject*)automaton;
+
+error:
+	Py_XDECREF(automaton);
+	return NULL;
 }
+
 
 static PyObject*
 automaton_clear(PyObject* self, PyObject* args);
@@ -739,7 +815,7 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 		get_stats(automaton);
 	
 	PyObject* dict = Py_BuildValue(
-		"{s:i,s:i,s:i,s:i,s:i}",
+		"{s:i,s:i,s:i,s:i,s:i,s:i}",
 #define emit(name) #name, automaton->stats.name
 		emit(nodes_count),
 		emit(words_count),
@@ -752,6 +828,8 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 	return dict;
 #undef automaton
 }
+
+#include "Automaton_pickle.c"
 
 
 #define method(name, kind) {#name, automaton_##name, kind, automaton_##name##_doc}
@@ -769,6 +847,7 @@ PyMethodDef automaton_methods[] = {
 	method(items,			METH_NOARGS),
 	method(iter,			METH_VARARGS),
 	method(get_stats,		METH_NOARGS),
+	method(__reduce__,		METH_VARARGS),
 
 	{NULL, NULL, 0, NULL}
 };
@@ -794,7 +873,7 @@ PyMemberDef automaton_members[] = {
 
 static PyTypeObject automaton_type = {
 	PyVarObject_HEAD_INIT(&PyType_Type, 0)
-	"Automaton",								/* tp_name */
+	"ahocorasick.Automaton",					/* tp_name */
 	sizeof(Automaton),							/* tp_size */
 	0,											/* tp_itemsize? */
 	(destructor)automaton_del,          	  	/* tp_dealloc */
@@ -828,8 +907,8 @@ static PyTypeObject automaton_type = {
 	0,                                          /* tp_descr_get */
 	0,                                          /* tp_descr_set */
 	0,                                          /* tp_dictoffset */
-	0,                                          /* tp_init */
+	0,											/* tp_init */
 	0,                                          /* tp_alloc */
-	0,                                          /* tp_new */
+	automaton_new,								/* tp_new */
 };
 

@@ -149,13 +149,6 @@ static PyTypeObject automaton_items_iter_type;
 static
 PyMethodDef
 ahocorasick_module_methods[] = {
-	{
-		"Automaton",
-		automaton_new,
-		METH_VARARGS,
-		"Create new Automaton object"
-	},
-
 	{NULL, NULL, 0, NULL}
 };
 
@@ -178,8 +171,17 @@ PyInit_ahocorasick(void) {
 
 	automaton_type.tp_as_sequence = &automaton_as_sequence;
 	
-
 	module = PyModule_Create(&ahocorasick_module);
+	if (module == NULL)
+		return NULL;
+
+	if (PyType_Ready(&automaton_type) < 0) {
+		Py_DECREF(module);
+		return NULL;
+	}
+	else
+		PyModule_AddObject(module, "Automaton", (PyObject*)&automaton_type);
+
 #define add_enum_const(name) PyModule_AddIntConstant(module, #name, name)
 	add_enum_const(TRIE);
 	add_enum_const(AHOCORASICK);

@@ -216,6 +216,7 @@ class TestAutomatonBase(unittest.TestCase):
 	def add_words_and_make_automaton(self):
 		self.add_words()
 		self.A.make_automaton()
+		return self.A
 
 
 class TestAutomatonConstruction(TestAutomatonBase):
@@ -267,8 +268,7 @@ class TestAutomatonSearch(TestAutomatonBase):
 
 
 	def test_search_all2(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 
 		L = []
 		def callback(index, word):
@@ -281,8 +281,7 @@ class TestAutomatonSearch(TestAutomatonBase):
 
 
 	def test_search_all3(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 
 		L = []
 		def callback(index, word):
@@ -316,8 +315,7 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 
 
 	def test_iter2(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 		
 		L = []
 		for index, word in A.iter(self.string):
@@ -328,8 +326,7 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 		
 		
 	def test_iter3(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 		
 		start = 4
 		end = 9
@@ -346,8 +343,7 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 
 	
 	def test_iter_search_all(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 		
 		# results from search_all
 		L = []
@@ -367,8 +363,7 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 class TestAutomatonIterInvalidate(TestAutomatonBase):
 	
 	def test_iter1(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 
 		it = A.iter(self.string)
 		w  = next(it)
@@ -378,14 +373,32 @@ class TestAutomatonIterInvalidate(TestAutomatonBase):
 
 
 	def test_iter2(self):
-		A = self.A
-		self.add_words_and_make_automaton()
+		A = self.add_words_and_make_automaton()
 
 		it = A.iter(self.string)
 		w  = next(it)
 		A.clear()
 		with self.assertRaises(ValueError):
 			w = next(it)
+
+	
+class TestPickle(TestAutomatonBase):
+
+	def test_pickle(self):
+		import pickle
+
+		A = self.add_words_and_make_automaton();
+		print(pickle.dumps(A))
+
+
+	def test_unpickle(self):
+		import pickle
+		A = self.add_words_and_make_automaton();
+		dump = pickle.dumps(A)
+		B = pickle.loads(dump)
+		print([x for x in B.items()])
+		print([x for x in B.iter(self.string)])
+		#print(B)
 		
 
 if __name__ == '__main__':

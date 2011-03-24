@@ -302,8 +302,40 @@ ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte) {
 	return root;
 }
 
+typedef int (*trie_traverse_callback)(TrieNode* node, const int depth, void* extra);
 
-size_t PURE ALWAYS_INLINE
+static void
+trie_traverse_aux(
+	TrieNode* node,
+	const int depth,
+	trie_traverse_callback callback,
+	void *extra
+) {
+	if (not callback(node, depth, extra))
+		return;
+
+	int i;
+	for (i=0; i < node->n; i++) {
+		TrieNode* child = node->next[i];
+		ASSERT(child);
+		trie_traverse_aux(child, depth + 1, callback, extra);
+	}
+}
+
+
+static void
+trie_traverse(
+	TrieNode* root,
+	trie_traverse_callback callback,
+	void *extra
+) {
+	ASSERT(root);
+	ASSERT(callback);
+	trie_traverse_aux(root, 0, callback, extra);
+}
+
+
+size_t PURE
 trienode_get_size(const TrieNode* node) {
 	return sizeof(TrieNode) + node->n * sizeof(TrieNode*);
 }

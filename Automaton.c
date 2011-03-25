@@ -1,57 +1,3 @@
-/*
-	Implementation Automaton class methods
-	and other class related stuff.
-
-TRIE		= 0
-AHOCORASICK	= 1
-
-STORE_LENGTH	= 0
-STORE_INTS		= 1
-STORE_ANY		= 2
-
-class AutomatonException(Exception):
-	pass
-
-class Automaton:
-	def __init__(self, store)
-		"store in STORE_LENGTH, STORE_INTS, STORE_ANY"
-		pass
-
-	def add_word(self, word, value)
-		"adds new word to dictionary"
-		pass
-
-	def clear(self):
-		"removes all words"
-		pass
-	
-	def match(self, word):
-		"returns true if word is present in a dictionary"
-		pass
-
-	def match_prefix(self, word):
-		"""
-		Returns true if word is present in a dictionary,
-		even if word has no associacted value.
-		"""
-		pass
-
-	def get(self, word, def):
-		"Returns object associated with word."
-		pass
-
-	def make_automaton(self):
-		"Constuct Aho-Corsick automaton."
-		pass
-
-	def search_all(self, string, callback):
-		"""
-		Callback is called on every occurence of any word from dictionary
-		Callback must accept two arguments: position and a tuple
-		"""
-		pass
-
-*/
 
 static PyTypeObject automaton_type;
 
@@ -373,11 +319,11 @@ automaton_contains(PyObject* self, PyObject* args) {
 }
 
 
-#define automaton_match_doc \
-	"match(word) => bool - returns if word is in dictionary"
+#define automaton_exists_doc \
+	"exists(word) => bool - returns if word is in dictionary"
 
 static PyObject*
-automaton_match(PyObject* self, PyObject* args) {
+automaton_exists(PyObject* self, PyObject* args) {
 	PyObject* word;
 
 	word = PyTuple_GetItem(args, 0);
@@ -397,11 +343,11 @@ automaton_match(PyObject* self, PyObject* args) {
 }
 
 
-#define automaton_match_prefix_doc \
-	"match_prefix(word) => bool - returns if there is a prefix equal to word"
+#define automaton_match_doc \
+	"match(word) => bool - returns if there is a prefix equal to word"
 
 static PyObject*
-automaton_match_prefix(PyObject* self, PyObject* args) {
+automaton_match(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	ssize_t wordlen;
 	char* word;
@@ -591,11 +537,11 @@ no_mem:
 }
 
 
-#define automaton_search_all_doc \
-	"search_all(string, callback, [start, [end]])"
+#define automaton_find_all_doc \
+	"find_all(string, callback, [start, [end]])"
 
 static PyObject*
-automaton_search_all(PyObject* self, PyObject* args) {
+automaton_find_all(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	if (automaton->kind != AHOCORASICK)
 		Py_RETURN_NONE;
@@ -846,15 +792,15 @@ static
 PyMethodDef automaton_methods[] = {
 	method(add_word,		METH_VARARGS),
 	method(clear,			METH_NOARGS),
+	method(exists,			METH_VARARGS),
 	method(match,			METH_VARARGS),
-	method(match_prefix,	METH_VARARGS),
 	method(get,				METH_VARARGS),
 	method(make_automaton,	METH_NOARGS),
-	method(search_all,		METH_VARARGS),
+	method(find_all,		METH_VARARGS),
+	method(iter,			METH_VARARGS),
 	method(keys,			METH_NOARGS),
 	method(values,			METH_NOARGS),
 	method(items,			METH_NOARGS),
-	method(iter,			METH_VARARGS),
 	method(get_stats,		METH_NOARGS),
 	method(__reduce__,		METH_VARARGS),
 

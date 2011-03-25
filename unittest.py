@@ -32,6 +32,12 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		self.assertTrue(len(A) == n)
 
 
+	def test_add_empty_word(self):
+		self.assertFalse(self.A.add_word(b"", None))
+		self.assertEqual(len(self.A), 0)
+		self.assertEqual(self.A.kind, ahocorasick.EMPTY)
+
+
 	def test_clear(self):
 		A = self.A
 		self.assertTrue(A.kind == ahocorasick.EMPTY)
@@ -46,17 +52,17 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		self.assertEqual(len(A), 0)
 
 
-	def test_match(self):
+	def test_exists(self):
 		A = self.A
 		words = b"word python aho corasick \x00\x00\x00".split()
 		for w in self.words:
 			A.add_word(w, w)
 
 		for w in self.words:
-			self.assertTrue(A.match(w))
+			self.assertTrue(A.exists(w))
 
 		for w in self.inexisting:
-			self.assertFalse(A.match(w))
+			self.assertFalse(A.exists(w))
 
 
 	def test_contains(self):
@@ -71,18 +77,18 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 			self.assertTrue(w not in A)
 
 
-	def test_match_prefix(self):
+	def test_match(self):
 		A = self.A
 		for w in self.words:
 			A.add_word(w, w)
 
 		prefixes = b"w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
 		for w in prefixes:
-			self.assertTrue(A.match_prefix(w))
+			self.assertTrue(A.match(w))
 		
 		inexisting = b"wa apple pyTon \x00\x00\x00\x00".split()
 		for w in inexisting:
-			self.assertFalse(A.match_prefix(w))
+			self.assertFalse(A.match(w))
 
 
 	def test_get1(self):
@@ -256,31 +262,31 @@ class TestAutomatonConstruction(TestAutomatonBase):
 	
 class TestAutomatonSearch(TestAutomatonBase):
 
-	def test_search_all1(self):
+	def test_find_all1(self):
 		"not action is performed until automaton is constructed"
 		A = self.A
 		self.assertEqual(A.kind, ahocorasick.EMPTY)
-		self.assertEqual(A.search_all(self.string, 'any arg'), None)
+		self.assertEqual(A.find_all(self.string, 'any arg'), None)
 		
 		A.add_word(b"word", None)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
-		self.assertEqual(A.search_all(self.string, 'any arg'), None)
+		self.assertEqual(A.find_all(self.string, 'any arg'), None)
 
 
-	def test_search_all2(self):
+	def test_find_all2(self):
 		A = self.add_words_and_make_automaton()
 
 		L = []
 		def callback(index, word):
 			L.append((index, word))
 
-		A.search_all(self.string, callback)
+		A.find_all(self.string, callback)
 
 		C = self.correct_positons
 		self.assertEqual(L, C)
 
 
-	def test_search_all3(self):
+	def test_find_all3(self):
 		A = self.add_words_and_make_automaton()
 
 		L = []
@@ -291,11 +297,11 @@ class TestAutomatonSearch(TestAutomatonBase):
 		end = 9
 
 		L = []
-		A.search_all(self.string[start:end], callback)
+		A.find_all(self.string[start:end], callback)
 		C = [(pos+start, word) for pos, word in L]
 
 		L = []
-		A.search_all(self.string, callback, start, end)
+		A.find_all(self.string, callback, start, end)
 
 		self.assertEqual(L, C)
 
@@ -342,15 +348,15 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 		self.assertEqual(L, C)
 
 	
-	def test_iter_search_all(self):
+	def test_iter_find_all(self):
 		A = self.add_words_and_make_automaton()
 		
-		# results from search_all
+		# results from find_all
 		L = []
 		def callback(index, word):
 			L.append((index, word))
 
-		A.search_all(self.string, callback)
+		A.find_all(self.string, callback)
 
 		# results from iterator
 		C = []

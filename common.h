@@ -3,7 +3,6 @@
 
 #include <Python.h>
 #include <structmember.h>	// PyMemberDef
-#include <pyerrors.h>	// PyErr_Occured
 
 #include <iso646.h>
 

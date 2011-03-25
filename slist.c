@@ -1,15 +1,4 @@
-#define LISTITEM_data struct ListItem* __next;
-
-typedef struct ListItem {
-	LISTITEM_data;
-} ListItem;
-
-
-typedef struct {
-	ListItem*	head;
-	ListItem*	last;
-} List;
-
+#include "slist.h"
 
 ListItem*
 list_item_new(const size_t size) {

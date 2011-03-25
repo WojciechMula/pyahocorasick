@@ -1,3 +1,6 @@
+static PyTypeObject automaton_items_iter_type;
+
+
 typedef struct AutomatonItemsStackItem {
 	LISTITEM_data
 

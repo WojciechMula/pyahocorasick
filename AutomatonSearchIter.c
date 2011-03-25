@@ -1,3 +1,7 @@
+#include "AutomatonSearchIter.h"
+
+static PyTypeObject automaton_search_iter_type;
+
 static PyObject*
 automaton_search_iter_new(
 	Automaton* automaton,

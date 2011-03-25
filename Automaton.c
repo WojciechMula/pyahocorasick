@@ -53,6 +53,8 @@ class Automaton:
 
 */
 
+static PyTypeObject automaton_type;
+
 static bool
 automaton_unpickle(
 	Automaton* automaton,
@@ -494,11 +496,15 @@ typedef struct AutomatonQueueItem {
 #define automaton_make_automaton_doc \
 	"convert trie to Aho-Corasick automaton"
 
+#include <malloc.h>
+
 static PyObject*
 automaton_make_automaton(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	if (automaton->kind != TRIE)
 		Py_RETURN_FALSE;
+
+	malloc_stats();
 	
 	AutomatonQueueItem* item;
 	List queue;
@@ -536,8 +542,10 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 		AutomatonQueueItem* item = (AutomatonQueueItem*)list_pop_first(&queue);
 		if (item == NULL)
 			break;
-		else
+		else {
 			node = item->node;
+			memfree(item);
+		}
 
 		const size_t n = node->n;
 		for (i=0; i < n; i++) {
@@ -572,6 +580,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 	automaton->kind = AHOCORASICK;
 	automaton->version += 1;
 	list_delete(&queue);
+	malloc_stats();
 	Py_RETURN_NONE;
 #undef automaton
 

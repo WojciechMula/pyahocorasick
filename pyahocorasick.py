@@ -1,118 +1,172 @@
+nil = object()	# used to distinguish from None
+
 class TrieNode(object):
-	__slots__ = ['c', 'output', 'fail', 'child']
-	def __init__(self, c):
-		self.c = c
-		self.output = set()
-		self.fail = None
-		self.child = {}
+	__slots__ = ['char', 'output', 'fail', 'children']
+	def __init__(self, char):
+		self.char = char
+		self.output = nil
+		self.fail = nil
+		self.children = {}
 
 	def __repr__(self):
-		return "<TrieNode '%s' '%s'>" % (self.c, self.output)
+		if self.output is not nil:
+			return "<TrieNode '%s' '%s'>" % (self.char, self.output)
+		else:
+			return "<TrieNode '%s'>" % self.char
 
 
 class Trie(object):
 	def __init__(self):
 		self.root = TrieNode('')
 
-	def add(self, s):
-		if not s:
+
+	def __get_node(self, word):
+		node = self.root
+		for c in word:
+			try:
+				node = node.children[c]
+			except KeyError:
+				return None
+
+		return node
+
+
+	def get(self, word, default=nil):
+		node = self.__get_node(word)
+		output = nil
+		if node:
+			output = node.output
+
+		if output is nil:
+			if default is nil:
+				raise KeyError("no key '%s'" % word)
+			else:
+				return default
+		else:
+			return output
+
+
+	def keys(self):
+		for key, _ in self.items():
+			yield key
+
+
+	def values(self):
+		for _, value in self.items():
+			yield value
+
+	
+	def items(self):
+		L = []
+		def aux(node, s):
+			s = s + node.char
+			if node.output is not nil:
+				L.append((s, node.output))
+
+			for child in node.children.values():
+				if child is not node:
+					aux(child, s)
+
+		aux(self.root, '')
+		return iter(L)
+
+	
+	def __len__(self):
+		stack = [self.root]
+		n = 0
+		while stack:
+			n += 1
+			node = stack.pop()
+			for child in node.children.values():
+				stack.append(child)
+
+		return n
+
+
+	def add_word(self, word, value):
+		if not word:
 			return
 
 		node = self.root
-		for i, c in enumerate(s):
+		for i, c in enumerate(word):
 			try:
-				node = node.child[c]
+				node = node.children[c]
 			except KeyError:
 				n = TrieNode(c)
-				node.child[c] = n
+				node.children[c] = n
 				node = n
 
-		node.output.add(s)
+		node.output = value
 
-	def make_fail(self):
+
+	def clear(self):
+		self.root = TrieNode('')
+
+
+	def exists(self, word):
+		node = self.__get_node(word)
+		if node:
+			return bool(node.output != nil)
+		else:
+			return False
+
+
+	def match(self, word):
+		return (self.__get_node(word) is not None)
+		
+
+	def make_automaton(self):
 		queue = []
 
 		# 1.
 		for i in range(256):
 			c = chr(i)
-			if c in self.root.child:
-				node = self.root.child[c]
+			if c in self.root.children:
+				node = self.root.children[c]
 				node.fail = self.root	# f(s) = 0
 				queue.append(node)
 			else:
-				self.root.child[c] = self.root
+				self.root.children[c] = self.root
 
 		# 2.
 		while queue:
 			r = queue.pop(0);
-			for node in r.child.values():
+			for node in r.children.values():
 				queue.append(node)
 				state = r.fail
-				c = node.c
-				while c not in state.child:
+				while node.char not in state.children:
 						state = state.fail
 
-				node.fail = state.child.get(c, self.root)
-				node.output.update(node.fail.output)
+				node.fail = state.children.get(node.char, self.root)
 
 
-
-	def determinize(self):
-		queue = []
-
-		# 1.
-		for node in self.root.child.values():
-			if node != self.root:
-				queue.append(node)
-
-		# 2.
-		while queue:
-			r = queue.pop(0)
-			for i in range(256):
-				c = chr(i)
-				if c not in r.child:
-					state = r.fail
-					while c not in state.child:
-							state = state.fail
-
-					r.child[c] = state.child[c]
-				else:
-					queue.append(r.child[c])
+	def find_all(self, string, callback, start=None, end=None):
+		for index, output in self.iter():
+			callback(index, output)
 
 
-	def match(self, s):
-		print(s)
+	def iter(self, string, start=None, end=None):
+		start = start if start is not None else 0
+		end = end if end is not None else len(string)
+
 		state = self.root
-		for index, c in enumerate(s):
-			while c not in state.child:
+		for index, c in enumerate(string[start:end]):
+			while c not in state.children:
 				state = state.fail
 
-			state = state.child.get(c, self.root)
+			state = state.children.get(c, self.root)
 
-			if state.output:
-				print(index, ", ".join(state.output))
+			tmp = state
+			output = []
+			while tmp is not nil and tmp.output is not nil:
+				output.append(tmp.output)
+				tmp = tmp.fail
 
-
-	def match_determinized(self, s):
-		state = self.root
-		for index, c in enumerate(s):
-			state = state.child[c]
-
-			if state.output:
-				print(index, ", ".join(state.output))
+			if output:
+				yield (index + start, output)
 
 
-	def print(self):
-		def aux(node, s):
-			if node.output:
-				print(s + node.c, node.output)
-			
-			for n in node.child.values():
-				aux(n, s + node.c)
 
-		for node in self.root.child.values():
-			if node != self.root:
-				aux(node, '')
 
 
 if __name__ == '__main__':
@@ -120,22 +174,19 @@ if __name__ == '__main__':
 	words = "he hers his she hi him man".split()
 
 	t = Trie();
-	#for w in words:
-	#	t.add(w)
-	for w in open('xxx/test1.txt'):
-		t.add(w.rstrip())
+	for w in words:
+		t.add_word(w, w)
 
 	s = "he rshershidamanza "
 
-	t.make_fail()
+	t.make_automaton()
 	#t.print()
 	print("="*10)
-	t.match(s)
+	for res in t.items():
+		print(res)
 
-	print("="*10)
-	t.determinize()
-	t.match_determinized(s)
-
+	for res in t.iter(s):
+		print(res)
 
 	#input()
 

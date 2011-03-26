@@ -21,7 +21,7 @@
 
 /** list item node */
 typedef struct ListItem {
-	LISTITEM_data;
+	LISTITEM_data
 } ListItem;
 
 /** Create new item */
@@ -34,7 +34,7 @@ void list_item_delete(ListItem* item);
 #define list_item_next(item) (((ListItem*)(item))->__next)
 
 /** Set new pointer to next item */
-#define list_item_setnext(item, next) list_item_next(item) = (ListItem*)node
+#define list_item_setnext(item, next) list_item_next(item) = (ListItem*)(next)
 
 
 /** List.
@@ -66,6 +66,7 @@ ListItem* list_push_front(List* list, ListItem* item);
 /** Unlink first item from list. */
 ListItem* list_pop_first(List* list);
 
+/** Test if list is empty. */
 #define list_empty(list) ((list)->head == NULL)
 
 

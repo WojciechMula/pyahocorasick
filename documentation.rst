@@ -150,12 +150,6 @@ Trie
 
 	This method invalidates all iterators.
 
-..
-	[TODO] ``del_word(word)``
-		Removes word from dictionary.
-		
-		This method invalidates all iterators.
-
 ``clear() => None``
 	Removes all words from dictionary.
 	

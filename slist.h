@@ -1,11 +1,17 @@
 /*
 	This is part of pyahocorasick Python module.
 	
-	<short info>
+	Linked list declarations.
+
+	Const time of:
+	* append
+	* prepend
+	* pop first
+	* get first/last
 
 	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
 	WWW       : http://0x80.pl/proj/pyahocorasick/
-	License   : 3-clauses BSD (see LICENSE)
+	License   : public domain
 	Date      : $Date$
 
 	$Id$
@@ -39,11 +45,6 @@ void list_item_delete(ListItem* item);
 
 /** List.
 
-	const time of:
-	* append
-	* prepend
-	* pop first
-	* get first/last
 */
 typedef struct {
 	ListItem*	head;	///< first node

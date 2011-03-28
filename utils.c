@@ -1,3 +1,19 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	Helpers functions.
+	This file is included directly.
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : public domain
+	Date      : $Date$
+
+	$Id$
+*/
+
+
+/* returns bytes or unicode internal buffer */
 static PyObject*
 pymod_get_string(PyObject* obj, char** word, ssize_t* wordlen, bool* unicode) {
 	if (PyBytes_Check(obj)) {
@@ -32,9 +48,7 @@ pymod_get_string_from_tuple(PyObject* tuple, int index, char** word, ssize_t* wo
 		return NULL;
 }
 
-/**
-	[start, [end]]
-*/
+/* parse optional indexes used in few functions [start, [end]] */
 static int
 pymod_parse_start_end(
 	PyObject* args,

@@ -1,12 +1,29 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	Python module.
+
+	This file include all code from *.c files.
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : 3-clauses BSD (see LICENSE)
+	Date      : $Date$
+
+	$Id$
+*/
+
 #include "common.h"
 #include "slist.h"
+#include "trienode.h"
 #include "trie.h"
 #include "Automaton.h"
 #include "AutomatonSearchIter.h"
 #include "AutomatonItemsIter.h"
 
-/* inline code! */
+/* code */
 #include "utils.c"
+#include "trienode.c"
 #include "trie.c"
 #include "slist.c"
 #include "Automaton.c"

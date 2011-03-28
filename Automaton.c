@@ -1,14 +1,20 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	Automaton class implementation.
+	(this file includes Automaton_pickle.c)
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : 3-clauses BSD (see LICENSE)
+	Date      : $Date$
+
+	$Id$
+*/
+
+#include "Automaton.h"
 
 static PyTypeObject automaton_type;
-
-static bool
-automaton_unpickle(
-	Automaton* automaton,
-	const size_t count,
-	void* data,
-	const ssize_t size,
-	PyObject* values
-);
 
 
 static bool ALWAYS_INLINE
@@ -117,9 +123,6 @@ error:
 }
 
 
-static PyObject*
-automaton_clear(PyObject* self, PyObject* args);
-
 static void
 automaton_del(PyObject* self) {
 #define automaton ((Automaton*)self)
@@ -132,7 +135,7 @@ automaton_del(PyObject* self) {
 #define automaton_len_doc \
 	"returns count of words"
 
-ssize_t
+static ssize_t
 automaton_len(PyObject* self) {
 #define automaton ((Automaton*)self)
 	return automaton->count;
@@ -442,16 +445,12 @@ typedef struct AutomatonQueueItem {
 #define automaton_make_automaton_doc \
 	"convert trie to Aho-Corasick automaton"
 
-#include <malloc.h>
-
 static PyObject*
 automaton_make_automaton(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	if (automaton->kind != TRIE)
 		Py_RETURN_FALSE;
 
-	malloc_stats();
-	
 	AutomatonQueueItem* item;
 	List queue;
 	int i;
@@ -526,7 +525,6 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 	automaton->kind = AHOCORASICK;
 	automaton->version += 1;
 	list_delete(&queue);
-	malloc_stats();
 	Py_RETURN_NONE;
 #undef automaton
 

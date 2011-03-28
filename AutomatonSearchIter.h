@@ -1,3 +1,19 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	AutomatonSearchIter const, struct & methods declarations.
+	This class implements iterator walk over Aho-Corasick
+	automaton. Object of this class is returnd by 'iter' method
+	of Automaton class.
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : 3-clauses BSD (see LICENSE)
+	Date      : $Date$
+
+	$Id$
+
+*/
 #ifndef ahocorasick_AutomatonSearchIter_h_included
 #define ahocorasick_AutomatonSearchIter_h_included
 

@@ -1,3 +1,16 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	AutomatonSearchIter implementation
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : 3-clauses BSD (see LICENSE)
+	Date      : $Date$
+
+	$Id$
+*/
+
 #include "AutomatonSearchIter.h"
 
 static PyTypeObject automaton_search_iter_type;

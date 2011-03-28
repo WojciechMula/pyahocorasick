@@ -4,8 +4,8 @@ import ahocorasick
 class TestTrieStorePyObjectsBase(unittest.TestCase):
 	def setUp(self):
 		self.A = ahocorasick.Automaton();
-		self.words = b"word python aho corasick \x00\x00\x00".split()
-		self.inexisting = b"test foo bar dword".split()
+		self.words = "word python aho corasick \x00\x00\x00".split()
+		self.inexisting = "test foo bar dword".split()
 
 
 class TestTrieMethods(TestTrieStorePyObjectsBase):
@@ -33,7 +33,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
 
 	def test_add_empty_word(self):
-		self.assertFalse(self.A.add_word(b"", None))
+		self.assertFalse(self.A.add_word("", None))
 		self.assertEqual(len(self.A), 0)
 		self.assertEqual(self.A.kind, ahocorasick.EMPTY)
 
@@ -54,7 +54,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
 	def test_exists(self):
 		A = self.A
-		words = b"word python aho corasick \x00\x00\x00".split()
+		words = "word python aho corasick \x00\x00\x00".split()
 		for w in self.words:
 			A.add_word(w, w)
 
@@ -82,11 +82,11 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		for w in self.words:
 			A.add_word(w, w)
 
-		prefixes = b"w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
+		prefixes = "w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
 		for w in prefixes:
 			self.assertTrue(A.match(w))
 		
-		inexisting = b"wa apple pyTon \x00\x00\x00\x00".split()
+		inexisting = "wa apple pyTon \x00\x00\x00\x00".split()
 		for w in inexisting:
 			self.assertFalse(A.match(w))
 
@@ -201,17 +201,17 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
 class TestAutomatonBase(unittest.TestCase):
 	def setUp(self):
 		self.A = ahocorasick.Automaton();
-		self.words  = b"he her hers she".split()
-		self.string = b"_sherhershe_"
+		self.words  = "he her hers she".split()
+		self.string = "_sherhershe_"
 		self.correct_positons = [
-			(3, b'she'),
-			(3, b'he'),
-			(4, b'her'),
-			(6, b'he'),
-			(7, b'her'),
-			(8, b'hers'),
-			(10, b'she'),
-			(10, b'he')
+			(3, "she"),
+			(3, "he"),
+			(4, "her"),
+			(6, "he"),
+			(7, "her"),
+			(8, "hers"),
+			(10, "she"),
+			(10, "he")
 		]
 
 	def add_words(self):
@@ -256,7 +256,7 @@ class TestAutomatonConstruction(TestAutomatonBase):
 		A.make_automaton()
 		self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
 
-		A.add_word(b"rollback?", True)
+		A.add_word("rollback?", True)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 
 	
@@ -268,7 +268,7 @@ class TestAutomatonSearch(TestAutomatonBase):
 		self.assertEqual(A.kind, ahocorasick.EMPTY)
 		self.assertEqual(A.find_all(self.string, 'any arg'), None)
 		
-		A.add_word(b"word", None)
+		A.add_word("word", None)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 		self.assertEqual(A.find_all(self.string, 'any arg'), None)
 
@@ -314,7 +314,7 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 		with self.assertRaises(AttributeError):
 			A.iter(self.string)
 		
-		A.add_word(b"word", None)
+		A.add_word("word", None)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 		with self.assertRaises(AttributeError):
 			A.iter(self.string)

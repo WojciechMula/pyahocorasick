@@ -102,14 +102,18 @@ Members
 	property could be better (faster, more elegant.)
 
 ``store`` [readonly]
-	Type of values stored in trie (default ``STORE_ANY``).
+	Type of values stored in trie. By default ``STORE_ANY``
+	is used, thus any python object could be used. When ``STORE_INT``
+	or ``STORE_LEN`` is used then values are 32-bit integers
+	and do not occupy additional memory. See ``add_word`` description
+	to find details.
 
 
 Constructor
 ###########
 
 Constructor accepts just one argument: type of values, one of
-constants ``STORE_XXX``.
+constants ``STORE_ANY``, ``STORE_INT``, ``STORE_LEN``.
 
 
 Dictionary methods
@@ -148,21 +152,22 @@ Trie
 	If ``store == STORE_ANY`` then ``value`` is required and could
 	be any object.
 
-	This method invalidates all iterators.
+	**This method invalidates all iterators.**
 
 ``clear() => None``
 	Removes all words from dictionary.
 	
-	This method invalidates all iterators.
+	**This method invalidates all iterators.**
 
 ``exists(word) => bool`` or ``word in ...``
-	Returns if word is present in dictionary. See also (
+	Returns if word is present in dictionary.
 
 ``match(word) => bool``
 	Returns if there is a prefix (or word) equal to ``word``.
 	For example if word "example" is present in dictionary, then
-	all ``match("e")``, ``match("ex")``, ..., ``match("exampl")``
-	are True.
+	all ``match("e")``, ``match("ex")``, ..., ``match("exampl")``,
+	``match("example")`` are True. But ``exists()`` is True just
+	for the last word.
 
 
 Aho-Corasick
@@ -170,10 +175,10 @@ Aho-Corasick
 
 ``make_automaton()``
 	Creates Aho-Corasick automaton based on trie. This doesn't require
-	additional memory. After successful creation ``kind`` became
+	additional memory. After successful creation ``kind`` become
 	``AHOCORASICK``.
 
-	This method invalidates all iterators.
+	**This method invalidates all iterators.**
 
 ``find_all(string, callback, [start, [end]])``
 	Perform Aho-Corsick on string; ``start``/``end`` can be used to
@@ -182,7 +187,7 @@ Aho-Corasick
 	* index of end of matched string
 	* value associated with string
 
-	Method called with ``start``/``end`` does the same things
+	Method called with ``start``/``end`` does similar job
 	as ``find_all(string[start:end], callback)``.
 
 ``iter(string, [start, [end]])``
@@ -199,18 +204,20 @@ Other
 
 	* ``nodes_count``	--- total number of nodes
 	* ``words_count``	--- same as ``len(automaton)``
-	* ``longest_word``	--- lenth of the longest word
+	* ``longest_word``	--- length of the longest word
 	* ``links_count``	--- number of edges
 	* ``sizeof_node``	--- size of single node in bytes
 	* ``total_size``	--- total size of trie in bytes (about
 	  ``nodes_count * size_of node + links_count * size of pointer``).
 	  The real size occupied by structure could be larger, because
 	  of :enwiki:`Memory fragmentation|internal memory fragmentation`
-	  happened in underlaying memory manager.
+	  happened in memory manager.
 
 
 Examples
 ~~~~~~~~
+
+*TODO*
 
 
 Unicode and bytes

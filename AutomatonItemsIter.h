@@ -1,3 +1,18 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	AutomatonItemsIter const, struct & methods declarations.
+	This class implements iterator walk over trie, that returns
+	words and associated values. Object of this class is
+	returned by 'keys'/'values'/'items' methods of Automaton class.
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : 3-clauses BSD (see LICENSE)
+	Date      : $Date$
+
+	$Id$
+*/
 #ifndef ahocorasick_AutomatonItemsIter_h_included
 #define ahocorasick_AutomatonItemsIter_h_included
 
@@ -25,6 +40,7 @@ typedef struct AutomatonItemsIter {
 } AutomatonItemsIter;
 
 
+/* __init__() */
 static PyObject*
 automaton_items_iter_new(Automaton* automaton);
 

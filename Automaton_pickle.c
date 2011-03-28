@@ -1,6 +1,36 @@
 /*
-	Routines to pickle/unpickle Automaton class.
+	This is part of pyahocorasick Python module.
+	
+	Implementation of pickling/unpickling routines for Automaton class
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : 3-clauses BSD (see LICENSE)
+	Date      : $Date$
+
+	$Id$
 */
+
+/*
+Pickling (automaton___reduce__):
+
+1. assign sequential numbers to nodes in order to replace
+   address with these numbers
+   (pickle_dump_replace_fail_with_id)
+2. save in array all nodes data in the same order as numbers,
+   also replace fail and next links with numbers; collect on
+   a list all values (python objects) stored in trie
+   (pickle_dump_save)
+3. clean up
+   (pickle_dump_undo_replace or pickle_dump_revert_replace)
+
+Unpickling (automaton_unpickle, called in Automaton constructor)
+1. load all nodes from array
+2. make number->node lookup table
+3. replace numbers stored in fail and next pointers with
+   real pointers, reassign python objects as values
+*/
+
 
 #include <string.h>
 
@@ -10,12 +40,14 @@ typedef struct NodeID {
 } NodeID;
 
 typedef struct DumpState {
-	int id;
-	size_t total_size;
-	TrieNode* failed_on;
+	int id;					///< next id
+	size_t total_size;		///< number of nodes
+	TrieNode* failed_on;	///< if fail while numerating, save node in order
+							///  to revert changes made in trie
 } DumpState;
 
 
+// replace fail with pairs (fail, id)
 static int
 pickle_dump_replace_fail_with_id(TrieNode* node, const int depth, void* extra) {
 #define state ((DumpState*)extra)
@@ -38,7 +70,8 @@ pickle_dump_replace_fail_with_id(TrieNode* node, const int depth, void* extra) {
 #undef state
 }
 
-// revert in case of error
+
+// revert changes in trie (in case of error)
 static int
 pickle_dump_revert_replace(TrieNode* node, const int depth, void* extra) {
 #define state ((DumpState*)extra)
@@ -55,7 +88,7 @@ pickle_dump_revert_replace(TrieNode* node, const int depth, void* extra) {
 }
 
 
-// revert in case of error
+// revert changes in trie
 static int
 pickle_dump_undo_replace(TrieNode* node, const int depth, void* extra) {
 #define state ((DumpState*)extra)
@@ -69,12 +102,12 @@ pickle_dump_undo_replace(TrieNode* node, const int depth, void* extra) {
 
 
 typedef struct PickleData {
-	size_t	size;
-	size_t	top;
-	void*	data;
+	size_t	size;		///< size of array
+	size_t	top;		///< first free address
+	void*	data;		///< array
 
 	PyObject* values;	///< a list (if store == STORE_ANY)
-	bool	error;
+	bool	error;		///< error occured during pickling
 } PickleData;
 
 
@@ -86,7 +119,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	TrieNode* dump = (TrieNode*)(self->data + self->top);
 	TrieNode* tmp;
 
-	// we do not save last pointer to array
+	// we do not save last pointer in array
 	TrieNode** arr = (TrieNode**)(self->data + self->top + sizeof(TrieNode) - sizeof(TrieNode*));
 
 	// append python object to the list
@@ -220,6 +253,7 @@ exception:
 	return NULL;
 #undef automaton
 }
+
 
 static bool
 automaton_unpickle(

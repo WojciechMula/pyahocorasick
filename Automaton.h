@@ -1,7 +1,7 @@
 /*
 	This is part of pyahocorasick Python module.
 	
-	Header for of automaton methods:
+	Automaton class methods
 
 	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
 	WWW       : http://0x80.pl/proj/pyahocorasick/
@@ -55,5 +55,80 @@ typedef struct Automaton {
 
 	AutomatonStatistics	stats;	///< statistics
 } Automaton;
+
+/*------------------------------------------------------------------------*/
+
+static bool
+automaton_unpickle(
+	Automaton* automaton,
+	const size_t count,
+	void* data,
+	const ssize_t size,
+	PyObject* values
+);
+
+/* __init__ */
+static PyObject*
+automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs);
+
+/* clear() */
+static PyObject*
+automaton_clear(PyObject* self, PyObject* args);
+
+/* len() */
+static ssize_t
+automaton_len(PyObject* self);
+
+/* add_word */
+static PyObject*
+automaton_add_word(PyObject* self, PyObject* args);
+
+/* clear() */
+static PyObject*
+automaton_clear(PyObject* self, PyObject* args);
+
+/* __contains__ */
+static int
+automaton_contains(PyObject* self, PyObject* args);
+
+/* exists() */
+static PyObject*
+automaton_exists(PyObject* self, PyObject* args);
+
+/* match() */
+static PyObject*
+automaton_match(PyObject* self, PyObject* args);
+
+/* get() */
+static PyObject*
+automaton_get(PyObject* self, PyObject* args);
+
+/* make_automaton() */
+static PyObject*
+automaton_make_automaton(PyObject* self, PyObject* args);
+
+/* find_all() */
+static PyObject*
+automaton_find_all(PyObject* self, PyObject* args);
+
+/* keys() */
+static PyObject*
+automaton_keys(PyObject* self, PyObject* args);
+
+/* values() */
+static PyObject*
+automaton_values(PyObject* self, PyObject* args);
+
+/* items() */
+static PyObject*
+automaton_items(PyObject* self, PyObject* args);
+
+/* iter() */
+static PyObject*
+automaton_iter(PyObject* self, PyObject* args);
+
+/* get_stats() */
+static PyObject*
+automaton_get_stats(PyObject* self, PyObject* args);
 
 #endif

@@ -1,3 +1,16 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	common definitions and includes
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : public domain
+	Date      : $Date$
+
+	$Id$
+*/
+
 #ifndef ahocorasick_common_h_included__
 #define ahocorasick_common_h_included__
 

@@ -1,3 +1,22 @@
+/*
+	This is part of pyahocorasick Python module.
+	
+	Linked list implementation.
+
+	Const time of:
+	* append
+	* prepend
+	* pop first
+	* get first/last
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : public domain
+	Date      : $Date$
+
+	$Id$
+
+*/
 #include "slist.h"
 
 ListItem*

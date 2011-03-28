@@ -4,8 +4,8 @@ import ahocorasick
 class TestTrieStorePyObjectsBase(unittest.TestCase):
 	def setUp(self):
 		self.A = ahocorasick.Automaton();
-		self.words = "word python aho corasick \x00\x00\x00".split()
-		self.inexisting = "test foo bar dword".split()
+		self.words = b"word python aho corasick \x00\x00\x00".split()
+		self.inexisting = b"test foo bar dword".split()
 
 
 class TestTrieMethods(TestTrieStorePyObjectsBase):
@@ -54,7 +54,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
 	def test_exists(self):
 		A = self.A
-		words = "word python aho corasick \x00\x00\x00".split()
+		words = b"word python aho corasick \x00\x00\x00".split()
 		for w in self.words:
 			A.add_word(w, w)
 
@@ -82,11 +82,11 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		for w in self.words:
 			A.add_word(w, w)
 
-		prefixes = "w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
+		prefixes = b"w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
 		for w in prefixes:
 			self.assertTrue(A.match(w))
 		
-		inexisting = "wa apple pyTon \x00\x00\x00\x00".split()
+		inexisting = b"wa apple pyTon \x00\x00\x00\x00".split()
 		for w in inexisting:
 			self.assertFalse(A.match(w))
 
@@ -173,6 +173,30 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 		self.assertEqual(set(L), set(I))
 
 
+	def test_items_with_prefix_valid(self):
+		A = self.A
+		words = b"he she her hers star ham".split()
+		for word in words:
+			A.add_word(word, word)
+
+		I = b"he her hers".split()
+		L = [x for x in A.keys(b"he")]
+		self.assertEqual(len(L), len(I))
+		self.assertEqual(set(L), set(I))
+
+
+	def test_items_with_prefix_invalid(self):
+		A = self.A
+		words = b"he she her hers star ham".split()
+		for word in words:
+			A.add_word(word, word)
+
+		I = []
+		L = [x for x in A.keys(b"cat")]
+		self.assertEqual(len(L), len(I))
+		self.assertEqual(set(L), set(I))
+
+
 class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
 	def helper(self, method):
 		A = self.A
@@ -201,17 +225,17 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
 class TestAutomatonBase(unittest.TestCase):
 	def setUp(self):
 		self.A = ahocorasick.Automaton();
-		self.words  = "he her hers she".split()
-		self.string = "_sherhershe_"
+		self.words  = b"he her hers she".split()
+		self.string = b"_sherhershe_"
 		self.correct_positons = [
-			(3, "she"),
-			(3, "he"),
-			(4, "her"),
-			(6, "he"),
-			(7, "her"),
-			(8, "hers"),
-			(10, "she"),
-			(10, "he")
+			(3, b"she"),
+			(3, b"he"),
+			(4, b"her"),
+			(6, b"he"),
+			(7, b"her"),
+			(8, b"hers"),
+			(10, b"she"),
+			(10, b"he")
 		]
 
 	def add_words(self):

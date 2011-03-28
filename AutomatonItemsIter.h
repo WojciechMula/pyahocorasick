@@ -40,8 +40,13 @@ typedef struct AutomatonItemsIter {
 } AutomatonItemsIter;
 
 
-/* __init__() */
+/* new() */
 static PyObject*
-automaton_items_iter_new(Automaton* automaton);
+automaton_items_iter_new(
+	Automaton* automaton,
+	uint8_t* word,
+	const ssize_t wordlen,
+	const bool unicode
+);
 
 #endif

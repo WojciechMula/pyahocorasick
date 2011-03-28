@@ -123,13 +123,15 @@ Dictionary methods
 	Returns value associated with ``word``. Raises ``KeyError`` or
 	returns ``default`` value if ``word`` isn't present in dictionary.
 
-``keys() => yield bytes object``
+``keys([prefix]) => yield bytes object``
 	Returns iterator that iterate through words.
+	If prefix (a string) is given, then only words sharing this
+	prefix are yielded.
 
-``values() => yield object``
+``values([prefix]) => yield object``
 	Return iterator that iterate through values associated with words.
 
-``items() => yield tuple (bytes object, object)``
+``items([prefix]) => yield tuple (bytes object, object)``
 	Return iterator that iterate through words and associated values.
 
 ``len()`` protocol
@@ -187,12 +189,19 @@ Aho-Corasick
 	* index of end of matched string
 	* value associated with string
 
-	Method called with ``start``/``end`` does similar job
-	as ``find_all(string[start:end], callback)``.
+	(Method called with ``start``/``end`` does similar job
+	as ``find_all(string[start:end], callback)``, except index
+	values).
 
 ``iter(string, [start, [end]])``
 	Returns iterator that does the same thing as ``find_all``,
 	yielding tuples instead of calling a user function.
+
+	``find_all`` method could be expressed as::
+
+		def find_all(self, string, callback):
+			for index, value in self.iter(string):
+				callback(index, value)
 
 
 Other

@@ -625,20 +625,50 @@ automaton_find_all(PyObject* self, PyObject* args) {
 }
 
 
-#define automaton_keys_doc \
-	"iterator for keys"
-
 static PyObject*
-automaton_keys(PyObject* self, PyObject* args) {
+automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 #define automaton ((Automaton*)self)
-	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(automaton);
+	PyObject* object;
+	char* word;
+	ssize_t wordlen;
+	bool unicode;
+
+	object = PyTuple_GetItem(args, 0);
+	if (object) {
+		object = pymod_get_string(object, &word, &wordlen, &unicode);
+		if (object == NULL) {
+			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
+			return NULL;
+		}
+	}
+	else {
+		PyErr_Clear();
+		word = NULL;
+		wordlen = 0;
+		unicode = false;
+	}
+
+	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(
+									automaton, (uint8_t*)word, wordlen, unicode
+								);
+	Py_XDECREF(object);
+
 	if (iter) {
-		iter->type = ITER_KEYS;
+		iter->type = type;
 		return (PyObject*)iter;
 	}
 	else
 		return NULL;
 #undef automaton
+}
+
+
+#define automaton_keys_doc \
+	"iterator for keys"
+
+static PyObject*
+automaton_keys(PyObject* self, PyObject* args) {
+	return automaton_items_create(self, args, ITER_KEYS);
 }
 
 
@@ -647,15 +677,7 @@ automaton_keys(PyObject* self, PyObject* args) {
 
 static PyObject*
 automaton_values(PyObject* self, PyObject* args) {
-#define automaton ((Automaton*)self)
-	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(automaton);
-	if (iter) {
-		iter->type = ITER_VALUES;
-		return (PyObject*)iter;
-	}
-	else
-		return NULL;
-#undef automaton
+	return automaton_items_create(self, args, ITER_VALUES);
 }
 
 
@@ -664,15 +686,7 @@ automaton_values(PyObject* self, PyObject* args) {
 
 static PyObject*
 automaton_items(PyObject* self, PyObject* args) {
-#define automaton ((Automaton*)self)
-	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(automaton);
-	if (iter) {
-		iter->type = ITER_ITEMS;
-		return (PyObject*)iter;
-	}
-	else
-		return NULL;
-#undef automaton
+	return automaton_items_create(self, args, ITER_ITEMS);
 }
 
 
@@ -796,9 +810,9 @@ PyMethodDef automaton_methods[] = {
 	method(make_automaton,	METH_NOARGS),
 	method(find_all,		METH_VARARGS),
 	method(iter,			METH_VARARGS),
-	method(keys,			METH_NOARGS),
-	method(values,			METH_NOARGS),
-	method(items,			METH_NOARGS),
+	method(keys,			METH_VARARGS),
+	method(values,			METH_VARARGS),
+	method(items,			METH_VARARGS),
 	method(get_stats,		METH_NOARGS),
 	method(__reduce__,		METH_VARARGS),
 

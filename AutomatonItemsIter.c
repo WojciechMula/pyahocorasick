@@ -25,8 +25,103 @@ typedef struct AutomatonItemsStackItem {
 
 #define StackItem AutomatonItemsStackItem
 
+static TrieNode*
+trie_find_and_store_path(TrieNode* root, uint8_t* word, const ssize_t wordlen, char* buffer, size_t* n) {
+	TrieNode* node = root;
+	ssize_t i;
+	for (i=0; i < wordlen; i++) {
+		node = trienode_get_next(node, word[i]);
+		if (node)
+			buffer[i] = word[i];
+		else
+			return NULL;
+	}
+
+	*n = wordlen;
+	return node;
+}
+
+
+static TrieNode*
+trie_find_and_store_path_UCS2(TrieNode* root, uint16_t* word, const ssize_t wordlen, char* buffer, size_t* n) {
+	TrieNode* node = root;
+	ssize_t i, j;
+	for (i=0, j=0; i < wordlen; i++) {
+		uint8_t b;
+		const uint16_t w = word[i];
+
+		b = w & 0xff;
+		node = trienode_get_next(node, b);
+		if (node)
+			buffer[j++] = b;
+		else
+			return NULL;
+
+		if (w > 0x00ff) {
+			b = (w >> 8) & 0xff;
+			node = trienode_get_next(node, b);
+			if (node)
+				buffer[j++] = b;
+			else
+				return NULL;
+		}
+	}
+
+	*n = j;
+	return node;
+}
+
+
+static TrieNode*
+trie_find_and_store_path_UCS4(TrieNode* root, uint32_t* word, const ssize_t wordlen, char* buffer, size_t* n) {
+	TrieNode* node = root;
+	ssize_t i, j;
+	for (i=0, j=0; i < wordlen; i++) {
+		uint8_t b;
+		const uint32_t w = word[i];
+
+		b = w & 0xff;
+		node = trienode_get_next(node, b);
+		if (node)
+			buffer[j++] = b;
+		else
+			return NULL;
+
+		if (w > 0x000000ff) {
+			b = (w >> 8) & 0xff;
+			node = trienode_get_next(node, b);
+			if (node)
+				buffer[j++] = b;
+			else
+				return NULL;
+
+			if (w > 0x0000ffff) {
+				b = (w >> 16) & 0xff;
+				node = trienode_get_next(node, b);
+				if (node)
+					buffer[j++] = b;
+				else
+					return NULL;
+
+				if (w > 0x00ffffff) {
+					b = (w >> 24) & 0xff;
+					node = trienode_get_next(node, b);
+					if (node)
+						buffer[j++] = b;
+					else
+						return NULL;
+				}
+			}
+		}
+	}
+
+	*n = j;
+	return node;
+}
+
+
 static PyObject*
-automaton_items_iter_new(Automaton* automaton) {
+automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t wordlen, const bool unicode) {
 	AutomatonItemsIter* iter;
 
 	iter = (AutomatonItemsIter*)PyObject_New(AutomatonItemsIter, &automaton_items_iter_type);
@@ -44,20 +139,60 @@ automaton_items_iter_new(Automaton* automaton) {
 		PyErr_SetNone(PyExc_MemoryError);
 		return NULL;
 	}
-	else {
-		new_item->node = automaton->root;
-		new_item->depth = 0;
-		list_push_front(&iter->stack, (ListItem*)new_item);
+
+	size_t n_bytes;
+	if (word) {
+		if (unicode)
+#ifdef Py_UNICODE_WIDE
+			n_bytes = 4*wordlen;
+#else
+			n_bytes = 2*wordlen;
+#endif
+		else
+			n_bytes = wordlen;
 	}
 
 
-	iter->n = 256;
+	iter->n = (wordlen > 256) ? wordlen : 256;
 	iter->buffer = memalloc(iter->n);
 	if (iter->buffer == NULL) {
 		PyObject_Del((PyObject*)iter);
 		return NULL;
 	}
-	
+
+	TrieNode* node = automaton->root;
+	if (word != NULL) {
+		if (unicode)
+#ifdef Py_UNICODE_WIDE
+			node = trie_find_and_store_path_UCS4(
+					node,
+					(uint32_t*)word,
+					wordlen,
+					iter->buffer + 1,
+					&n_bytes);
+#else
+			node = trie_find_and_store_path_UCS2(
+					node,
+					(uint16_t*)word,
+					wordlen,
+					iter->buffer + 1,
+					&n_bytes);
+#endif
+		else
+			node = trie_find_and_store_path(
+					node,
+					word,
+					wordlen,
+					iter->buffer + 1,
+					&n_bytes);
+	}
+	else
+		n_bytes = 0;
+
+	new_item->node = node;
+	new_item->depth = n_bytes;
+	list_push_front(&iter->stack, (ListItem*)new_item);
+
 	Py_INCREF((PyObject*)iter->automaton);
 	return (PyObject*)iter;
 }

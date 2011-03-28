@@ -30,7 +30,8 @@ typedef struct AutomatonSearchIter {
 	TrieNode*	state;		///< current state of automaton
 	TrieNode*	output;		///< current node, i.e. yielded value
 	
-	int			index;		///< current index
+	int			index;		///< current index in data
+	int			shift;		///< shift + index => output index
 	int			end;		///< end index
 	bool		is_unicode;	///< is data unicode or bytes
 } AutomatonSearchIter;

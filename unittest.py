@@ -371,8 +371,21 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 
 		self.assertEqual(L, C)
 
+
+	def test_iter_set(self):
+		A = self.add_words_and_make_automaton()
+		parts = b"_sh erhe rshe _".split()
+
+		it = A.iter(b"")
+		print()
+		for part in parts:
+			it.set(part)
+			print(part, ":")
+			for item in it:
+				print(item)
+
 	
-	def test_iter_find_all(self):
+	def test_iter_compare_with_find_all(self):
 		A = self.add_words_and_make_automaton()
 		
 		# results from find_all

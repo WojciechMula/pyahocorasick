@@ -40,6 +40,7 @@ automaton_search_iter_new(
 
 	iter->state	= automaton->root;
 	iter->output= NULL;
+	iter->shift	= 0;
 	iter->index	= start - 1;	// -1 because first instruction in next() increments index
 	iter->end	= end;
 
@@ -80,11 +81,15 @@ return_output:
 		switch (iter->automaton->kind) {
 			case STORE_LENGTH:
 			case STORE_INTS:
-				tuple = Py_BuildValue("ii", iter->index, node->output.integer);
+				tuple = Py_BuildValue("ii",
+							iter->index + iter->shift,
+							node->output.integer);
 				break;
 
 			case STORE_ANY:
-				tuple = Py_BuildValue("iO", iter->index, node->output.object);
+				tuple = Py_BuildValue("iO",
+							iter->index + iter->shift,
+							node->output.object);
 				break;
 
 			default:
@@ -143,11 +148,96 @@ return_output:
 	return NULL;	// StopIteration
 }
 
+
+static PyObject*
+automaton_search_iter_set(PyObject* self, PyObject* args) {
+	PyObject* object;
+	PyObject* flag;
+	ssize_t len;
+	bool is_unicode;
+	bool reset;
+
+	// first argument - required string or buffer
+	object = PyTuple_GetItem(args, 0);
+	if (object) {
+		if (PyUnicode_Check(object)) {
+			is_unicode = true;
+			len		= PyUnicode_GET_SIZE(object);
+		}
+		else
+		if (PyBytes_Check(object)) {
+			is_unicode = false;
+			len		= PyBytes_GET_SIZE(object);
+		}
+		else {
+			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
+			return NULL;
+		}
+	}
+	else
+		return NULL;
+
+	// second argument - optional bool
+	flag = PyTuple_GetItem(args, 1);
+	if (flag) {
+		switch (PyObject_IsTrue(flag)) {
+			case 0:
+				reset = false;
+				break;
+			case 1:
+				reset = true;
+				break;
+			default:
+				return NULL;
+		}
+	}
+	else {
+		PyErr_Clear();
+		reset = false;
+	}
+
+	// update internal state
+	Py_XDECREF(iter->object);
+	iter->is_unicode = is_unicode;
+	Py_INCREF(object);
+	iter->object	= object;
+	if (is_unicode)
+		iter->data = PyUnicode_AS_UNICODE(object);
+	else
+		iter->data = PyBytes_AS_STRING(object);
+
+	if (!reset)
+		iter->shift += (iter->index >= 0) ? iter->index : 0;
+
+	iter->index		= -1;
+	iter->end		= len;
+
+	if (reset) {
+		iter->state  = iter->automaton->root;
+		iter->shift  = 0;
+		iter->output = NULL;
+	}
+
+	Py_RETURN_NONE;
+}
+
+
 #undef iter
+
+#define method(name, kind) {#name, automaton_search_iter_##name, kind, ""}
+
+static
+PyMethodDef automaton_search_iter_methods[] = {
+	method(set, METH_VARARGS),
+
+	{NULL, NULL, 0, NULL}
+};
+#undef method
+
 
 static PyTypeObject automaton_search_iter_type = {
 	PyVarObject_HEAD_INIT(&PyType_Type, 0)
-	"AutomatonSearchIter",						/* tp_name */
+	"ahocorasick.AutomatonSearchIter",			/* tp_name */
 	sizeof(AutomatonSearchIter),				/* tp_size */
 	0,											/* tp_itemsize? */
 	(destructor)automaton_search_iter_del,		/* tp_dealloc */
@@ -173,7 +263,7 @@ static PyTypeObject automaton_search_iter_type = {
 	0,                                          /* tp_weaklistoffset */
 	automaton_search_iter_iter,					/* tp_iter */
 	automaton_search_iter_next,					/* tp_iternext */
-	0,											/* tp_methods */
+	automaton_search_iter_methods,				/* tp_methods */
 	0,						                	/* tp_members */
 	0,                                          /* tp_getset */
 	0,                                          /* tp_base */

@@ -194,8 +194,9 @@ Aho-Corasick
 	values).
 
 ``iter(string, [start, [end]])``
-	Returns iterator that does the same thing as ``find_all``,
-	yielding tuples instead of calling a user function.
+	Returns iterator (object of class AutomatonSearchIter) that
+	does the same thing as ``find_all``, yielding tuples instead
+	of calling a user function.
 
 	``find_all`` method could be expressed as::
 
@@ -221,6 +222,44 @@ Other
 	  The real size occupied by structure could be larger, because
 	  of :enwiki:`Memory fragmentation|internal memory fragmentation`
 	  happened in memory manager.
+
+
+AutomatonSearchIter
+~~~~~~~~~~~~~~~~~~~
+
+Iterator has following methods.
+
+
+``set(string, [reset]) => None``
+	Sets new string to process. When ``reset`` is ``False`` (default),
+	then processing is continued, i.e internal state of automaton and
+	index aren't touched. This allow to process larger strings in chunks,
+	for example::
+
+		it = automaton.iter(b"")
+		while True:
+			buffer = receive(server_address)
+			if not buffer:
+				break
+
+			it.set(buffer)
+			for index, value in it:
+				print(index, '=>', value)
+
+	When ``reset`` is ``True`` then processing is restarted.
+	For example this code::
+
+		for string in set:
+			for index, value in automaton.iter(string)
+				print(index, '=>', value)
+
+	Does the same job as::
+
+		it = automaton.iter(b"")
+		for string in set:
+			it.set(it, True)
+			for index, value in it:
+				print(index, '=>', value)
 
 
 Examples

@@ -3,40 +3,16 @@
 ========================================================================
 
 :Author:		Wojciech Mu³a, wojciech_mula@poczta.onet.pl
-:Last update:	2011-03-2x
+:Last update:	$Date$
 
-.. contents::
-
-Introduction
-------------
-
-**pyahocorasick** is a Python module implements two kinds of data
-structures: :enwiki:`trie` and :enwiki:`Aho-Corasick algorithm`.
-Extension is compatible only with Python3.
-
-**Trie** is a dictionary indexed by strings, which allow to retrieve
-associated items in a time proportional to string length. **Aho-Corasick
-string matching automaton** allows to find all occurrences of strings
-from given set in a single run over string.
-
-(BTW in order to use Aho-Corasick automaton, a trie have to be created;
-this is the reason why these two distinct entities exist in a single
-module.)
+.. contents:: Contents
 
 
-Last changes
-------------
+Module
+------
 
-*none*
-
-
-Documentation
--------------
-
-Module ``pyahocorasick`` contains some constants and
-following classes:
-
-* ``Automaton`` --- the most flexible structure
+Module ``ahocorasick`` contains several constants and
+class ``Automaton``.
 
 ..
 	* [TODO] ``FrozenAutomaton`` --- read-only structure trie or Aho-Corasick
@@ -45,25 +21,24 @@ following classes:
 	  automaton, occupying **much more** memory then ``Automaton``, but
 	  is the fastest. Suitable for small string sets and large amount
 	  of data.
- 
 
 
-Module constants
-~~~~~~~~~~~~~~~~
+Constants
+~~~~~~~~~
 
 There are two groups of constants.
 
 1. Type of values associated with strings in ``Automaton``.
 See Constructor section for details.
 
+``STORE_ANY``
+	Any Python object (default).
+
 ``STORE_LEN``
-	Length of string (implicit).
+	Length of string.
 
 ``STORE_INT``
 	32-bit integers.
-
-``STORE_ANY``
-	Any Python object.
 
 
 2. Kind of ``Automaton`` object:
@@ -95,18 +70,17 @@ Members
 	One of ``EMPTY``, ``TRIE``, ``AHOCORASICK``.
 
 	Kind is maintained internally by ``Automaton`` object.
-	Some methods are not available when automaton is ``EMPTY``
-	or isn't an ``AHOCORASICK``.
-
-	Class raises proper exceptions, however testing this
-	property could be better (faster, more elegant.)
+	Some methods are not available when automaton kind is
+	``EMPTY`` or isn't an ``AHOCORASICK``. When called then
+	exception is raised, however testing this property could
+	be better (say faster, more elegant).
 
 ``store`` [readonly]
 	Type of values stored in trie. By default ``STORE_ANY``
 	is used, thus any python object could be used. When ``STORE_INT``
 	or ``STORE_LEN`` is used then values are 32-bit integers
 	and do not occupy additional memory. See ``add_word`` description
-	to find details.
+	for details.
 
 
 Constructor
@@ -148,8 +122,8 @@ Trie
 	If ``store == STORE_LEN`` then ``value`` is not allowed ---
 	``len(word)`` is saved.
 
-	If ``store == STORE_INT`` then ``value`` is optional. If given
-	have to be integer, otherwise defaults to ``len(automaton)``.
+	If ``store == STORE_INT`` then ``value`` is optional. If present,
+	then have to be an integer, otherwise defaults to ``len(automaton)``.
 
 	If ``store == STORE_ANY`` then ``value`` is required and could
 	be any object.
@@ -187,7 +161,7 @@ Aho-Corasick
 	reduce string range. Callback is called with two arguments:
 
 	* index of end of matched string
-	* value associated with string
+	* value associated with that string
 
 	(Method called with ``start``/``end`` does similar job
 	as ``find_all(string[start:end], callback)``, except index
@@ -221,14 +195,14 @@ Other
 	  ``nodes_count * size_of node + links_count * size of pointer``).
 	  The real size occupied by structure could be larger, because
 	  of :enwiki:`Memory fragmentation|internal memory fragmentation`
-	  happened in memory manager.
+	  occurred in memory manager.
 
 
-AutomatonSearchIter
-~~~~~~~~~~~~~~~~~~~
+AutomatonSearchIter class
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Iterator has following methods.
-
+Class isn't available directly, object of this class is returned
+by ``iter`` method of ``Automaton``. Iterator has additional method.
 
 ``set(string, [reset]) => None``
 	Sets new string to process. When ``reset`` is ``False`` (default),
@@ -238,7 +212,7 @@ Iterator has following methods.
 
 		it = automaton.iter(b"")
 		while True:
-			buffer = receive(server_address)
+			buffer = receive(server_address, 4096)
 			if not buffer:
 				break
 
@@ -262,46 +236,68 @@ Iterator has following methods.
 				print(index, '=>', value)
 
 
-Examples
-~~~~~~~~
+Example
+~~~~~~~
 
-*TODO*
+::
+
+	>>> import ahocorasick
+	>>> A = ahocorasick.Automaton() 
+		
+	# add some words to trie
+	>>> for index, word in enumerate("he her hers she".split()):
+	...   A.add_word(word, (index, word))
+
+	# test is word exists in set
+	>>> "he" in A
+	True
+	>>> "HER" in A
+	False
+	>>> A.get("he")
+	(0, 'he')
+	>>> A.get("she")
+	(3, 'she')
+	>>> A.get("cat", "<not exists>")
+	'<not exists>'
+	>>> A.get("dog")
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in <module>
+	KeyError
+	>>> 
+
+	# convert trie to Aho-Corasick automaton
+	A.make_automaton()
+
+	# then find all occurrences in string
+	for item in A.iter(b"_hershe_"):
+	...  print(item)
+	... 
+	(2, (0, 'he'))
+	(3, (1, 'her'))
+	(4, (2, 'hers'))
+	(6, (3, 'she'))
+	(6, (0, 'he'))
 
 
 Unicode and bytes
 -----------------
 
-Trie internally operates on bytes, and because of that there following
-caveats. Unicode objects are read directly --- Python saves all strings
-in :enwiki:`UCS-2` (2 bytes per char) or :enwiki:`UCS-4` (4 bytes per
-char). To conserve memory ``pyahocorasick`` saves just leading non-zero
-bytes, thus keys returned by ``keys``/``items`` are incompleted ``UCS-x``
-byte strings.
+Trie internally operates on bytes, and this is the reason of following
+problem. Unicode objects are read directly --- current version of Python
+saves all strings in :enwiki:`UCS-2` (2 bytes per char) or :enwiki:`UCS-4`
+(4 bytes per char). To conserve memory ``pyahocorasick`` saves just leading
+non-zero bytes, thus keys returned by ``keys``/``items`` are incomplete
+``UCS-x`` byte strings.
 
-**This will be redesigned!**
+**Probably this will be redesigned to work with UTF-8.**
 
 
-Download
---------
+License
+-------
 
 Library is licensed under very liberal two-clauses BSD license.
+Some portions has been realased into public domain.
 
-Single archive is available:
+Full text of license is available in LICENSE file.
 
-* `pyahocorasick.tgz`__ [size: ?, md5sum: ?]
-
-__ pyahocorasick.tgz
-
-File list:
-
-* ``LICENSE``
-* ``README``
-* ``pyahocorasick.c``
-* ``setup.py``
-* ``unittests.py``
-* ``trie.h``, ``trie.c``
-* ``slist.h``, ``slist.c``
-* ``Automaton.h``, ``Automaton.c``, ``Automaton_pickle.c``,
-* ``AutomatonItemsIter.h``, ``AutomatonItemsIter.c``
-* ``AutomatonSearchIter.h``, ``AutomatonSearchIter.c``
 

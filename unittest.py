@@ -1,3 +1,17 @@
+# -*- coding: iso-8859-2 -*-
+"""
+	This is part of pyahocorasick Python module.
+	
+	Unit tests
+
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : public domain
+	Date      : $Date$
+
+	$Id$
+"""
+
 import unittest
 import ahocorasick
 
@@ -9,11 +23,13 @@ class TestTrieStorePyObjectsBase(unittest.TestCase):
 
 
 class TestTrieMethods(TestTrieStorePyObjectsBase):
+	"Test basic methods related to trie structure"
+
 	def test_empty(self):
 		A = self.A
 		self.assertTrue(A.kind == ahocorasick.EMPTY)
 		self.assertTrue(len(A) == 0)
-	
+
 
 	def test_add_word(self):
 		A = self.A
@@ -25,7 +41,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 			A.add_word(word, None)
 			self.assertEqual(A.kind, ahocorasick.TRIE)
 			self.assertEqual(len(A), n)
-		
+
 		# dupliacted entry
 		A.add_word(self.words[0], None)
 		self.assertTrue(A.kind == ahocorasick.TRIE)
@@ -41,7 +57,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 	def test_clear(self):
 		A = self.A
 		self.assertTrue(A.kind == ahocorasick.EMPTY)
-		
+
 		for w in self.words:
 			A.add_word(w, w)
 
@@ -72,7 +88,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
 		for w in self.words:
 			self.assertTrue(w in A)
-		
+
 		for w in self.inexisting:
 			self.assertTrue(w not in A)
 
@@ -85,7 +101,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		prefixes = b"w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
 		for w in prefixes:
 			self.assertTrue(A.match(w))
-		
+
 		inexisting = b"wa apple pyTon \x00\x00\x00\x00".split()
 		for w in inexisting:
 			self.assertFalse(A.match(w))
@@ -139,6 +155,8 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
 
 class TestTrieIterators(TestTrieStorePyObjectsBase):
+	"Test iterators walking over trie"
+
 	def test_keys(self):
 		A = self.A
 		for i, w in enumerate(self.words):
@@ -198,6 +216,8 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 
 
 class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
+	"Test invalidating iterator when trie is changed"
+
 	def helper(self, method):
 		A = self.A
 		for i, w in enumerate(self.words):
@@ -208,7 +228,7 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
 		A.add_word("should fail", 1)
 		with self.assertRaises(ValueError):
 			w = next(it)
-			
+
 
 	def test_keys(self):
 		self.helper(self.A.keys)
@@ -238,6 +258,7 @@ class TestAutomatonBase(unittest.TestCase):
 			(10, b"he")
 		]
 
+
 	def add_words(self):
 		for word in self.words:
 			self.A.add_word(word, word)
@@ -250,6 +271,7 @@ class TestAutomatonBase(unittest.TestCase):
 
 
 class TestAutomatonConstruction(TestAutomatonBase):
+	"Test converting trie to Aho-Corasick automaton"
 
 	def test_make_automaton1(self):
 		A = self.A
@@ -283,15 +305,16 @@ class TestAutomatonConstruction(TestAutomatonBase):
 		A.add_word("rollback?", True)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 
-	
+
 class TestAutomatonSearch(TestAutomatonBase):
+	"Test searching using constructed automaton (method find_all)"
 
 	def test_find_all1(self):
-		"not action is performed until automaton is constructed"
+		"no action is performed until automaton is constructed"
 		A = self.A
 		self.assertEqual(A.kind, ahocorasick.EMPTY)
 		self.assertEqual(A.find_all(self.string, 'any arg'), None)
-		
+
 		A.add_word("word", None)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 		self.assertEqual(A.find_all(self.string, 'any arg'), None)
@@ -331,13 +354,14 @@ class TestAutomatonSearch(TestAutomatonBase):
 
 
 class TestAutomatonIterSearch(TestAutomatonBase):
+	"Test searching using constructed automaton (iterator)"
 
 	def test_iter1(self):
 		A = self.A
 		self.assertEqual(A.kind, ahocorasick.EMPTY)
 		with self.assertRaises(AttributeError):
 			A.iter(self.string)
-		
+
 		A.add_word("word", None)
 		self.assertEqual(A.kind, ahocorasick.TRIE)
 		with self.assertRaises(AttributeError):
@@ -346,18 +370,18 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 
 	def test_iter2(self):
 		A = self.add_words_and_make_automaton()
-		
+
 		L = []
 		for index, word in A.iter(self.string):
 			L.append((index, word))
 
 		C = self.correct_positons
 		self.assertEqual(L, C)
-		
-		
+
+
 	def test_iter3(self):
 		A = self.add_words_and_make_automaton()
-		
+
 		start = 4
 		end = 9
 
@@ -384,10 +408,10 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 			for item in it:
 				print(item)
 
-	
+
 	def test_iter_compare_with_find_all(self):
 		A = self.add_words_and_make_automaton()
-		
+
 		# results from find_all
 		L = []
 		def callback(index, word):
@@ -404,7 +428,8 @@ class TestAutomatonIterSearch(TestAutomatonBase):
 
 
 class TestAutomatonIterInvalidate(TestAutomatonBase):
-	
+	"Test if searching iterator is invalidated when trie/automaton change"
+
 	def test_iter1(self):
 		A = self.add_words_and_make_automaton()
 
@@ -424,14 +449,18 @@ class TestAutomatonIterInvalidate(TestAutomatonBase):
 		with self.assertRaises(ValueError):
 			w = next(it)
 
-	
+
+print_dumps = False
+
 class TestPickle(TestAutomatonBase):
+	"Test pickling/unpickling"
 
 	def test_pickle(self):
 		import pickle
 
 		A = self.add_words_and_make_automaton();
-		print(pickle.dumps(A))
+		if print_dumps:
+			print(pickle.dumps(A))
 
 
 	def test_unpickle(self):
@@ -439,10 +468,112 @@ class TestPickle(TestAutomatonBase):
 		A = self.add_words_and_make_automaton();
 		dump = pickle.dumps(A)
 		B = pickle.loads(dump)
-		print([x for x in B.items()])
-		print([x for x in B.iter(self.string)])
-		#print(B)
+
+		if print_dumps:
+			print([x for x in B.items()])
+			print([x for x in B.iter(self.string)])
+
+		self.assertEqual(len(A), len(B))
+
+		AL = set(key for key in A.keys())
+		BL = set(key for key in B.keys())
+		self.assertEqual(AL, BL)
+
+
+class TestTrieStoreInts(unittest.TestCase):
+	"Test storing plain ints as values (instead of python objects)"
+
+	def setUp(self):
+		self.A = ahocorasick.Automaton(ahocorasick.STORE_INTS);
+		self.words = b"word python aho corasick \x00\x00\x00".split()
+
+
+	def test_add_word1(self):
+		A = self.A
+
+		# by default next values are stored
+		for word in self.words:
+			A.add_word(word)
+
+		I = list(range(1, len(self.words) + 1))
+		L = [A.get(word) for word in self.words]
+		self.assertEqual(I, L)
+
+
+	def test_add_word2(self):
+		A = self.A
+
+		# store arbitrary ints
+		for i, word in enumerate(self.words):
+			A.add_word(word, i + 123)
+
+		I = list(range(123, 123 + len(self.words)))
+		L = [A.get(word) for word in self.words]
+		self.assertEqual(I, L)
+
+
+	def test_add_word3(self):
+		# not a number
+		with self.assertRaises(TypeError):
+			self.A.add_word(b"xyz", None)
+
+	
+	def test_iter(self):
+		A = self.A
+		for word in self.words:
+			A.add_word(word);
+
+		I = set(range(1, len(A) + 1))
+		L1 = [val for val in A.values()]
+		L2 = [val for key, val in A.items()]
+
+		self.assertEqual(L1, L2)
+		self.assertEqual(set(L1), I)
+
+
+	def test_find_all_and_iter(self):
+		words  = b"he her hers she".split()
+		string = b"_sherhershe_"
+
+		A = self.A
+		for word in words:
+			A.add_word(word)
+
+		A.make_automaton()
+
+		# find_all()
+		C = []
+		def callback(index, value):
+			C.append((index, value))
 		
+		A.find_all(string, callback);
+
+		# iter()
+		L = [(index, value) for index, value in A.iter(string)]
+
+		#
+		self.assertEqual(C, L)
+
+
+class TestTrieStoreLengths(unittest.TestCase):
+	"""Test storing plain ints -- length of words --- as values
+	(instead of python objects)"""
+
+	def setUp(self):
+		self.A = ahocorasick.Automaton(ahocorasick.STORE_LENGTH);
+		self.words = b"word python aho corasick \x00\x00\x00".split()
+
+
+	def test_add_word1(self):
+		A = self.A
+
+		# by default next values are stored
+		for word in self.words:
+			A.add_word(word)
+
+		for key, value in A.items():
+			self.assertEqual(len(key), value)
+
 
 if __name__ == '__main__':
 	unittest.main()

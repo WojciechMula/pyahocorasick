@@ -299,7 +299,10 @@ automaton_items_iter_next(PyObject* self) {
 
 						case STORE_LENGTH:
 						case STORE_INTS:
-							return Py_BuildValue("i", iter->state->output.integer);
+							return Py_BuildValue("(y#i)",
+								/*key*/ iter->buffer + 1, item->depth,
+								/*val*/ iter->state->output.integer
+							);
 						
 						default:
 							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");

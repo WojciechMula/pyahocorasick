@@ -78,7 +78,7 @@ return_output:
 	if (iter->output and iter->output->eow) {
 		TrieNode* node = iter->output;
 		PyObject* tuple;
-		switch (iter->automaton->kind) {
+		switch (iter->automaton->store) {
 			case STORE_LENGTH:
 			case STORE_INTS:
 				tuple = Py_BuildValue("ii",

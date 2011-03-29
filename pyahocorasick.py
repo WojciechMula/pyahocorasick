@@ -1,3 +1,15 @@
+# -*- coding: iso-8859-2 -*-
+"""
+	Aho-Corasick string search algorithm.
+	
+	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl/proj/pyahocorasick/
+	License   : public domain
+	Date      : $Date$
+
+	$Id$
+"""
+
 nil = object()	# used to distinguish from None
 
 class TrieNode(object):

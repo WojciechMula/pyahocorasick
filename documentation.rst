@@ -145,6 +145,10 @@ Trie
 	``match("example")`` are True. But ``exists()`` is True just
 	for the last word.
 
+``longest_prefix(word) => integer``
+	Returns length of the longest prefix of word that exists in
+	dictionary.
+
 
 Aho-Corasick
 ############

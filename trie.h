@@ -45,7 +45,8 @@ ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte);
 
 typedef int (*trie_traverse_callback)(TrieNode* node, const int depth, void* extra);
 
-/* traverse trie in DFS order, for each node callback is called */
+/* traverse trie in DFS order, for each node callback is called
+   if callback returns false, then traversing stop */
 static void
 trie_traverse(
 	TrieNode* root,

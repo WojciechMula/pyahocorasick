@@ -828,6 +828,94 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 #undef automaton
 }
 
+
+typedef struct DumpAux {
+	PyObject*	nodes;
+	PyObject*	edges;
+	PyObject*	fail;
+	char		error;
+} DumpAux;
+
+static int
+dump_aux(TrieNode* node, const int depth, void* extra) {
+#define Dump ((DumpAux*)extra)
+	PyObject* tuple;
+	TrieNode* child;
+	int i;
+
+#define append_tuple(list) \
+	if (tuple == NULL) { \
+		Dump->error = 1; \
+		return 0; \
+	} \
+	else if (PyList_Append(list, tuple) < 0) { \
+		Dump->error = 1; \
+		return 0; \
+	}
+		
+	
+	// 1.
+	tuple = Py_BuildValue("ii", node, (int)(node->eow));
+	append_tuple(Dump->nodes)
+
+	// 2.
+	for (i=0; i < node->n; i++) {
+		child = node->next[i];
+		tuple = Py_BuildValue("ici", node, child->byte, child);
+		append_tuple(Dump->edges)
+	}
+
+	// 3.
+	if (node->fail) {
+		tuple = Py_BuildValue("ii", node, node->fail);
+		append_tuple(Dump->fail);
+	}
+
+	return 1;
+#undef append_tuple
+#undef Dump
+}
+
+
+#define automaton_dump_doc \
+	"dump information about links and fail links"
+
+
+static PyObject*
+automaton_dump(PyObject* self, PyObject* args) {
+#define automaton ((Automaton*)self)
+	if (automaton->kind == EMPTY)
+		Py_RETURN_NONE;
+	
+	DumpAux dump;
+	dump.nodes = 0;
+	dump.edges = 0;
+	dump.fail  = 0;
+	dump.error = 0;
+
+	dump.nodes = PyList_New(0);
+	dump.edges = PyList_New(0);
+	dump.fail  = PyList_New(0);
+	if (dump.edges == NULL or dump.fail == NULL or dump.nodes == NULL)
+		goto error;
+
+	trie_traverse(automaton->root, dump_aux, &dump);
+	if (dump.error)
+		goto error;
+	else
+		return Py_BuildValue("OOO", dump.nodes, dump.edges, dump.fail);
+
+error:
+	Py_XDECREF(dump.nodes);
+	Py_XDECREF(dump.edges);
+	Py_XDECREF(dump.fail);
+	return NULL;
+
+#undef automaton
+}
+
+
+
 #include "Automaton_pickle.c"
 
 
@@ -847,6 +935,7 @@ PyMethodDef automaton_methods[] = {
 	method(values,			METH_VARARGS),
 	method(items,			METH_VARARGS),
 	method(get_stats,		METH_NOARGS),
+	method(dump,			METH_NOARGS),
 	method(__reduce__,		METH_VARARGS),
 
 	{NULL, NULL, 0, NULL}

@@ -34,10 +34,10 @@ See Constructor section for details.
 ``STORE_ANY``
 	Any Python object (default).
 
-``STORE_LEN``
+``STORE_LENGTH``
 	Length of string.
 
-``STORE_INT``
+``STORE_INTS``
 	32-bit integers.
 
 
@@ -77,8 +77,8 @@ Members
 
 ``store`` [readonly]
 	Type of values stored in trie. By default ``STORE_ANY``
-	is used, thus any python object could be used. When ``STORE_INT``
-	or ``STORE_LEN`` is used then values are 32-bit integers
+	is used, thus any python object could be used. When ``STORE_INTS``
+	or ``STORE_LENGTH`` is used then values are 32-bit integers
 	and do not occupy additional memory. See ``add_word`` description
 	for details.
 
@@ -87,7 +87,7 @@ Constructor
 ###########
 
 Constructor accepts just one argument: type of values, one of
-constants ``STORE_ANY``, ``STORE_INT``, ``STORE_LEN``.
+constants ``STORE_ANY``, ``STORE_INTS``, ``STORE_LENGTH``.
 
 
 Dictionary methods
@@ -119,10 +119,10 @@ Trie
 	Add new ``word``, a key, to dictionary and associate with ``value``.
 	Returns True if ``word`` didn't exists earlier in dictionary.
 
-	If ``store == STORE_LEN`` then ``value`` is not allowed ---
+	If ``store == STORE_LENGTH`` then ``value`` is not allowed ---
 	``len(word)`` is saved.
 
-	If ``store == STORE_INT`` then ``value`` is optional. If present,
+	If ``store == STORE_INTS`` then ``value`` is optional. If present,
 	then have to be an integer, otherwise defaults to ``len(automaton)``.
 
 	If ``store == STORE_ANY`` then ``value`` is required and could
@@ -147,7 +147,7 @@ Trie
 
 ``longest_prefix(word) => integer``
 	Returns length of the longest prefix of word that exists in
-	dictionary.
+	a dictionary.
 
 
 Aho-Corasick
@@ -185,6 +185,20 @@ Aho-Corasick
 
 Other
 #####
+
+``dump() => (list of nodes, list of edges, list of fail links)``
+	Returns 3 lists describing a graph:
+
+	* nodes: each item is a pair (node id, end of word marker)
+	* edges: each item is a triple (node id, label char, child node id)
+	* fail: each item is a pair (source node id, node if connected by fail node)
+
+	ID is a unique number and a label is a single byte.
+
+	Module package contains also program ``dump2dot.py`` that shows
+	how to convert ``dump`` results to input file for graphviz__ tools.
+
+	__ http://graphviz.org
 
 ``get_stats() => dict``
 	Returns dictionary containing some statistics about underlaying

@@ -22,9 +22,21 @@
 static TrieNode*
 trie_add_word(Automaton* automaton, char* word, size_t wordlen, bool* new_word);
 
+static TrieNode*
+trie_add_word_UCS2(Automaton* automaton, uint16_t* word, size_t wordlen, bool* new_word);
+
+static TrieNode*
+trie_add_word_UCS4(Automaton* automaton, uint32_t* word, size_t wordlen, bool* new_word);
+
 /* returns last node on a path for given word */
 static TrieNode* PURE
 trie_find(TrieNode* root, const char* word, const size_t wordlen);
+
+static TrieNode* PURE
+trie_find_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen);
+
+static TrieNode* PURE
+trie_find_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen);
 
 /* returns node linked by edge labeled with byte including paths going
    through fail links */

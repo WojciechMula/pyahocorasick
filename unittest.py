@@ -134,6 +134,20 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 			with self.assertRaises(KeyError):
 				A.get(w)
 
+	
+	def test_longest_prefix(self):
+		A = self.A
+		for i, w in enumerate(self.words):
+			A.add_word(w, i+1)
+
+		# there is "word"
+		self.assertEqual(A.longest_prefix(b"wo"), 2)
+		self.assertEqual(A.longest_prefix(b"working"), 3)
+		self.assertEqual(A.longest_prefix(b"word"), 4)
+		self.assertEqual(A.longest_prefix(b"wordbook"), 4)
+		self.assertEqual(A.longest_prefix(b"void"), 0)
+		self.assertEqual(A.longest_prefix(b""), 0)
+
 
 	def test_stats1(self):
 		A = self.A

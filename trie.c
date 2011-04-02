@@ -179,16 +179,9 @@ trie_find_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen) {
 	node = root;
 	ssize_t i;
 	for (i=0; i < wordlen; i++) {
-		const uint16_t w = word[i];
-		node = trienode_get_next(node, w & 0xff);
+		node = trienode_get_next_UCS2(node, word[i]);
 		if (node == NULL)
 			return NULL;
-
-		if (w < 0x0100) {
-			node = trienode_get_next(node, (w >> 8) & 0xff);
-			if (node == NULL)
-				return NULL;
-		}
 	}
 		
 	return node;
@@ -202,29 +195,69 @@ trie_find_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen) {
 	node = root;
 	ssize_t i;
 	for (i=0; i < wordlen; i++) {
-#define NEXT(byte) \
-		node = trienode_get_next(node, (byte)); \
-		if (node == NULL) \
+		node = trienode_get_next_UCS4(node, word[i]);
+		if (node == NULL)
 			return NULL;
-
-		uint32_t w = word[i];
-
-		NEXT(w & 0xff);
-		if (w > 0x000000ff) {
-			NEXT((w >> 8) & 0xff);
-
-			if (w < 0x0000ffff) {
-				NEXT((w >> 16) & 0xff);
-
-				if (w > 0x00ffffff) {
-					NEXT((w >> 24) & 0xff);
-				}
-			}
-		}
-#undef NEXT
-	} // for
+	}
 		
 	return node;
+}
+
+
+static int PURE
+trie_longest(TrieNode* root, const char* word, const size_t wordlen) {
+	TrieNode* node;
+	int len = 0;
+
+	node = root;
+	ssize_t i;
+	for (i=0; i < wordlen; i++) {
+		node = trienode_get_next(node, word[i]);
+		if (node == NULL)
+			break;
+		else
+			len += 1;
+	}
+
+	return len;
+}
+
+
+static int PURE
+trie_longest_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen) {
+	TrieNode* node;
+	int len = 0;
+
+	node = root;
+	ssize_t i;
+	for (i=0; i < wordlen; i++) {
+		node = trienode_get_next_UCS2(node, word[i]);
+		if (node == NULL)
+			break;
+		else
+			len += 1;
+	}
+
+	return len;
+}
+
+
+static int PURE
+trie_longest_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen) {
+	TrieNode* node;
+	int len = 0;
+
+	node = root;
+	ssize_t i;
+	for (i=0; i < wordlen; i++) {
+		node = trienode_get_next_UCS4(node, word[i]);
+		if (node == NULL)
+			break;
+		else
+			len += 1;
+	}
+
+	return len;
 }
 
 

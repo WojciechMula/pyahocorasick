@@ -41,6 +41,12 @@ trienode_new(char byte, char eow);
 static TrieNode* PURE ALWAYS_INLINE
 trienode_get_next(TrieNode* node, const uint8_t byte);
 
+static TrieNode* PURE ALWAYS_INLINE
+trienode_get_next_UCS2(TrieNode* node, const uint16_t byte);
+
+static TrieNode* PURE ALWAYS_INLINE
+trienode_get_next_UCS4(TrieNode* node, const uint32_t byte);
+
 /* link with child node by edge labeled with byte */
 static TrieNode*
 trienode_set_next(TrieNode* node, const uint8_t byte, TrieNode* child);

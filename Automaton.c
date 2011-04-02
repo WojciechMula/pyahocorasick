@@ -371,10 +371,42 @@ automaton_match(PyObject* self, PyObject* args) {
 	else
 		node = trie_find(automaton->root, word, wordlen);
 	
+	Py_DECREF(py_word);
 	if (node)
 		Py_RETURN_TRUE;
 	else
 		Py_RETURN_FALSE;
+#undef automaton
+}
+
+
+#define automaton_longest_prefix_doc \
+	"longest_prefix(word) => integer - length of longest prefix"
+
+static PyObject*
+automaton_longest_prefix(PyObject* self, PyObject* args) {
+#define automaton ((Automaton*)self)
+	ssize_t wordlen;
+	char* word;
+	bool unicode;
+	PyObject* py_word;
+
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
+	if (py_word == NULL)
+		return NULL;
+
+	int len;
+	if (unicode)
+#ifndef Py_UNICODE_WIDE
+		len = trie_longest_UCS2(automaton->root, (uint16_t*)word, wordlen);
+#else
+		len = trie_longest_UCS4(automaton->root, (uint32_t*)word, wordlen);
+#endif
+	else
+		len = trie_longest(automaton->root, word, wordlen);
+	
+	Py_DECREF(py_word);
+	return Py_BuildValue("i", len);
 #undef automaton
 }
 
@@ -806,6 +838,7 @@ PyMethodDef automaton_methods[] = {
 	method(clear,			METH_NOARGS),
 	method(exists,			METH_VARARGS),
 	method(match,			METH_VARARGS),
+	method(longest_prefix,	METH_VARARGS),
 	method(get,				METH_VARARGS),
 	method(make_automaton,	METH_NOARGS),
 	method(find_all,		METH_VARARGS),
@@ -833,6 +866,14 @@ PyMemberDef automaton_members[] = {
 		offsetof(Automaton, kind),
 		READONLY,
 		"current kind of automaton"
+	},
+
+	{
+		"store",
+		T_INT,
+		offsetof(Automaton, store),
+		READONLY,
+		"type of values (ahocorasick.STORE_ANY/STORE_INTS/STORE_LEN)"
 	},
 
 	{NULL}

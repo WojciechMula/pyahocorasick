@@ -45,6 +45,58 @@ trienode_get_next(TrieNode* node, const uint8_t byte) {
 	}
 }
 
+
+static TrieNode* PURE
+trienode_get_next_UCS2(TrieNode* node, const uint16_t word) {
+	TrieNode* tmp = node;
+	uint8_t byte = word & 0xff;
+	tmp = trienode_get_next(node, byte);
+	if (tmp == NULL)
+		return NULL;
+
+	if (word > 0xff) {
+		byte = (word >> 8) & 0xff;
+		return trienode_get_next(tmp, byte);
+	}
+	else
+		return NULL;
+}
+
+
+static TrieNode* PURE
+trienode_get_next_UCS4(TrieNode* node, const uint32_t dword) {
+	TrieNode* tmp = node;
+	uint8_t byte = dword & 0xff;
+	tmp = trienode_get_next(node, byte);
+	if (tmp == NULL)
+		return NULL;
+
+	if (dword > 0xff) {
+		byte = (dword >> 8) & 0xff;
+		tmp = trienode_get_next(tmp, byte);
+		if (tmp == NULL)
+			return NULL;
+
+		if (dword > 0xffff) {
+			byte = (dword >> 16) & 0xff;
+			tmp = trienode_get_next(tmp, byte);
+			if (tmp == NULL)
+				return NULL;
+
+			if (dword > 0xffffff) {
+				byte = (dword >> 24) & 0xff;
+				tmp = trienode_get_next(tmp, byte);
+				if (tmp == NULL)
+					return NULL;
+			}
+		}
+	}
+
+	return tmp;
+}
+
+
+
 int
 trienode_sort_cmp(const void* a, const void* b) {
 #define A ((TrieNode*)a)

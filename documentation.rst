@@ -14,14 +14,6 @@ Module
 Module ``ahocorasick`` contains several constants and
 class ``Automaton``.
 
-..
-	* [TODO] ``FrozenAutomaton`` --- read-only structure trie or Aho-Corasick
-	  automaton, occupying less memory then ``Automaton``
-	* [TODO] ``DeterminizedAutomaton`` --- read-only determinized Aho-Corasick
-	  automaton, occupying **much more** memory then ``Automaton``, but
-	  is the fastest. Suitable for small string sets and large amount
-	  of data.
-
 
 Constants
 ~~~~~~~~~
@@ -97,7 +89,7 @@ Dictionary methods
 	Returns value associated with ``word``. Raises ``KeyError`` or
 	returns ``default`` value if ``word`` isn't present in dictionary.
 
-``keys([prefix]) => yield bytes object``
+``keys([prefix]) => yield bytes object`` or ``iter()`` protocol
 	Returns iterator that iterate through words.
 	If prefix (a string) is given, then only words sharing this
 	prefix are yielded.
@@ -128,7 +120,8 @@ Trie
 	If ``store == STORE_ANY`` then ``value`` is required and could
 	be any object.
 
-	**This method invalidates all iterators.**
+	**This method invalidates all iterators only if new word was
+	added (i.e. method returned True).**
 
 ``clear() => None``
 	Removes all words from dictionary.
@@ -317,5 +310,4 @@ Library is licensed under very liberal two-clauses BSD license.
 Some portions has been realased into public domain.
 
 Full text of license is available in LICENSE file.
-
 

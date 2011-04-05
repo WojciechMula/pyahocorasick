@@ -214,7 +214,6 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 		Py_DECREF(py_word);
 		if (node) {
-			automaton->version += 1;
 			switch (automaton->store) {
 				case STORE_ANY:
 					if (not new_word and node->eow)
@@ -229,9 +228,8 @@ automaton_add_word(PyObject* self, PyObject* args) {
 					node->output.integer = integer;
 			} // switch
 
-			node->eow = true;
-
 			if (new_word) {
+				automaton->version += 1; // change version only when new word appeared
 				Py_RETURN_TRUE;
 			}
 			else {
@@ -665,7 +663,11 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	ssize_t wordlen;
 	bool unicode;
 
-	object = PyTuple_GetItem(args, 0);
+	if (args) 
+		object = PyTuple_GetItem(args, 0);
+	else
+		object = NULL;
+	
 	if (object) {
 		object = pymod_get_string(object, &word, &wordlen, &unicode);
 		if (object == NULL) {
@@ -701,6 +703,12 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 static PyObject*
 automaton_keys(PyObject* self, PyObject* args) {
 	return automaton_items_create(self, args, ITER_KEYS);
+}
+
+
+static PyObject*
+automaton_iterate(PyObject* self) {
+	return automaton_items_create(self, NULL, ITER_KEYS);
 }
 
 
@@ -994,7 +1002,7 @@ static PyTypeObject automaton_type = {
 	0,                                          /* tp_clear */
 	0,                                          /* tp_richcompare */
 	0,                                          /* tp_weaklistoffset */
-	0,                                          /* tp_iter */
+	automaton_iterate,							/* tp_iter */
 	0,                                          /* tp_iternext */
 	automaton_methods,							/* tp_methods */
 	automaton_members,			                /* tp_members */

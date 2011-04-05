@@ -282,22 +282,25 @@ ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte) {
 
 typedef int (*trie_traverse_callback)(TrieNode* node, const int depth, void* extra);
 
-static void
+static int
 trie_traverse_aux(
 	TrieNode* node,
 	const int depth,
 	trie_traverse_callback callback,
 	void *extra
 ) {
-	if (not callback(node, depth, extra))
-		return;
+	if (callback(node, depth, extra) == 0)
+		return 0;
 
 	int i;
 	for (i=0; i < node->n; i++) {
 		TrieNode* child = node->next[i];
 		ASSERT(child);
-		trie_traverse_aux(child, depth + 1, callback, extra);
+		if (trie_traverse_aux(child, depth + 1, callback, extra) == 0)
+			return 0;
 	}
+
+	return 1;
 }
 
 

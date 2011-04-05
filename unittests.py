@@ -171,6 +171,17 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 class TestTrieIterators(TestTrieStorePyObjectsBase):
 	"Test iterators walking over trie"
 
+	def test_iter(self):
+		A = self.A
+		for i, w in enumerate(self.words):
+			A.add_word(w, i+1)
+
+		L = [word for word in A]
+		K = self.words
+		self.assertEqual(len(L), len(K))
+		self.assertEqual(set(L), set(K))
+
+
 	def test_keys(self):
 		A = self.A
 		for i, w in enumerate(self.words):
@@ -239,6 +250,12 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
 
 		it = method()
 		w  = next(it)
+		# word already exists, just change associated value
+		# iterator is still valid
+		A.add_word(self.words[0], 2)
+		w  = next(it)
+
+		# new word, iterator is invalidated
 		A.add_word("should fail", 1)
 		with self.assertRaises(ValueError):
 			w = next(it)

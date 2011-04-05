@@ -123,6 +123,7 @@ trie_find_and_store_path_UCS4(TrieNode* root, uint32_t* word, const ssize_t word
 static PyObject*
 automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t wordlen, const bool unicode) {
 	AutomatonItemsIter* iter;
+	size_t prefix_depth = 0;
 
 	iter = (AutomatonItemsIter*)PyObject_New(AutomatonItemsIter, &automaton_items_iter_type);
 	if (iter == NULL)
@@ -140,23 +141,11 @@ automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t word
 		return NULL;
 	}
 
-	size_t n_bytes;
-	if (word) {
-		if (unicode)
-#ifdef Py_UNICODE_WIDE
-			n_bytes = 4*wordlen;
-#else
-			n_bytes = 2*wordlen;
-#endif
-		else
-			n_bytes = wordlen;
-	}
 
-
-	iter->n = (wordlen > 256) ? wordlen : 256;
-	iter->buffer = memalloc(iter->n);
+	iter->buffer = memalloc(automaton->longest_word + 2);
 	if (iter->buffer == NULL) {
 		PyObject_Del((PyObject*)iter);
+		PyErr_NoMemory();
 		return NULL;
 	}
 
@@ -169,14 +158,14 @@ automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t word
 					(uint32_t*)word,
 					wordlen,
 					iter->buffer + 1,
-					&n_bytes);
+					&prefix_depth);
 #else
 			node = trie_find_and_store_path_UCS2(
 					node,
 					(uint16_t*)word,
 					wordlen,
 					iter->buffer + 1,
-					&n_bytes);
+					&prefix_depth);
 #endif
 		else
 			node = trie_find_and_store_path(
@@ -184,13 +173,13 @@ automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t word
 					word,
 					wordlen,
 					iter->buffer + 1,
-					&n_bytes);
+					&prefix_depth);
 	}
 	else
-		n_bytes = 0;
+		prefix_depth = 0;
 
 	new_item->node = node;
-	new_item->depth = n_bytes;
+	new_item->depth = prefix_depth;
 	list_push_front(&iter->stack, (ListItem*)new_item);
 
 	Py_INCREF((PyObject*)iter->automaton);
@@ -246,23 +235,9 @@ automaton_items_iter_next(PyObject* self) {
 			list_push_front(&iter->stack, (ListItem*)new_item);
 		}
 
-		if (iter->type != ITER_VALUES) {
+		if (iter->type != ITER_VALUES)
 			// update keys when needed
-			if (UNLIKELY(iter->n < item->depth)) {
-				size_t new_size = 256*((item->depth + 255)/256);
-				char* new_buf = (char*)memrealloc(iter->buffer, new_size);
-				if (new_buf) {
-					iter->n = new_size;
-					iter->buffer = new_buf;
-				}
-				else {
-					PyErr_NoMemory();
-					return NULL;
-				}
-			}
-
 			iter->buffer[item->depth] = iter->state->byte;
-		} // if
 
 		if (iter->state->eow) {
 			PyObject* val;

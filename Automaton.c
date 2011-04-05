@@ -66,6 +66,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->version = 0;
 	automaton->stats.version = -1;
 	automaton->count = 0;
+	automaton->longest_word = 0;
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
@@ -230,6 +231,19 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 			if (new_word) {
 				automaton->version += 1; // change version only when new word appeared
+				size_t n;
+				if (unicode)
+#ifndef Py_UNICODE_WIDE
+					n = wordlen * 2;
+#else
+					n = wordlen * 4;
+#endif
+				else
+					n = wordlen;
+
+				if (n > automaton->longest_word)
+					automaton->longest_word = n;
+					
 				Py_RETURN_TRUE;
 			}
 			else {
@@ -283,6 +297,7 @@ automaton_clear(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	clear_aux(automaton->root, automaton->store);
 	automaton->count = 0;
+	automaton->longest_word = 0;
 	automaton->kind = EMPTY;
 	automaton->root = NULL;
 	automaton->version += 1;

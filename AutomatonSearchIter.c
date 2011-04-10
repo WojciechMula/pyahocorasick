@@ -20,8 +20,7 @@ automaton_search_iter_new(
 	Automaton* automaton,
 	PyObject* object,
 	int start,
-	int end,
-	bool is_unicode
+	int end
 ) {
 	AutomatonSearchIter* iter;
 
@@ -32,11 +31,11 @@ automaton_search_iter_new(
 	iter->automaton = automaton;
 	iter->version	= automaton->version;
 	iter->object	= object;
-	iter->is_unicode = is_unicode;
-	if (is_unicode)
-		iter->data = PyUnicode_AS_UNICODE(object);
-	else
-		iter->data = PyBytes_AS_STRING(object);
+#ifdef AHOCORASICK_UNICODE
+	iter->data		= PyUnicode_AS_UNICODE(object);
+#else
+	iter->data		= (uint8_t*)PyBytes_AS_STRING(object);
+#endif
 
 	iter->state	= automaton->root;
 	iter->output= NULL;
@@ -108,32 +107,13 @@ return_output:
 
 	while (iter->index < iter->end) {
 #define NEXT(byte) ahocorasick_next(iter->state, iter->automaton->root, (byte))
-		if (iter->is_unicode) {
-#ifndef Py_UNICODE_WIDE
-			// UCS-2 - process 1 or 2 bytes
-			const uint16_t w = ((uint16_t*)iter->data)[iter->index];
-			iter->state = NEXT(w & 0xff);
-			if (w > 0x00ff)
-				iter->state = NEXT((w >> 8) & 0xff);
-#else
-			// UCS-4 - process 1, 2, 3 or 4 bytes
-			const uint32_t w = ((uint32_t*)iter->data)[iter->index];
-			iter->state = NEXT(w & 0xff);
-			if (w < 0x00010000)
-				iter->state = NEXT((w >> 8) & 0xff);
-			if (w < 0x01000000)
-				iter->state = NEXT((w >> 16) & 0xff);
-			if (w > 0x00ffffff)
-				iter->state = NEXT((w >> 24) & 0xff);
-#endif
-		}
-		else {
-			// process single char
-			const uint8_t w = ((uint8_t*)(iter->data))[iter->index];
-			iter->state = NEXT(w);
-		}
-#undef NEXT
-
+		// process single char
+		iter->state = ahocorasick_next(
+						iter->state,
+						iter->automaton->root,
+						iter->data[iter->index]
+						);
+		
 		ASSERT(iter->state);
 
 		if (iter->state->eow) {
@@ -154,25 +134,26 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 	PyObject* object;
 	PyObject* flag;
 	ssize_t len;
-	bool is_unicode;
 	bool reset;
 
 	// first argument - required string or buffer
 	object = PyTuple_GetItem(args, 0);
 	if (object) {
-		if (PyUnicode_Check(object)) {
-			is_unicode = true;
-			len		= PyUnicode_GET_SIZE(object);
+#ifdef AHOCORASICK_UNICODE
+		if (PyUnicode_Check(object))
+			len = PyUnicode_GET_SIZE(object);
+		else {
+			PyErr_SetString(PyExc_TypeError, "string required");
+			return NULL;
 		}
-		else
-		if (PyBytes_Check(object)) {
-			is_unicode = false;
-			len		= PyBytes_GET_SIZE(object);
-		}
+#else
+		if (PyBytes_Check(object))
+			len = PyBytes_GET_SIZE(object);
 		else {
 			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
 			return NULL;
 		}
+#endif
 	}
 	else
 		return NULL;
@@ -198,13 +179,13 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 
 	// update internal state
 	Py_XDECREF(iter->object);
-	iter->is_unicode = is_unicode;
 	Py_INCREF(object);
 	iter->object	= object;
-	if (is_unicode)
-		iter->data = PyUnicode_AS_UNICODE(object);
-	else
-		iter->data = PyBytes_AS_STRING(object);
+#ifdef AHOCORASICK_UNICODE
+	iter->data = PyUnicode_AS_UNICODE(object);
+#else
+	iter->data = (uint8_t*)PyBytes_AS_STRING(object);
+#endif
 
 	if (!reset)
 		iter->shift += (iter->index >= 0) ? iter->index : 0;

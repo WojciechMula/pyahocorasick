@@ -280,7 +280,7 @@ Example
 	A.make_automaton()
 
 	# then find all occurrences in string
-	for item in A.iter(b"_hershe_"):
+	for item in A.iter("_hershe_"):
 	...  print(item)
 	... 
 	(2, (0, 'he'))
@@ -290,17 +290,18 @@ Example
 	(6, (0, 'he'))
 
 
-Unicode and bytes
------------------
+Unicode and bytes %%%UPDATED%%%
+-------------------------------
 
-Trie internally operates on bytes, and this is the reason of following
-problem. Unicode objects are read directly --- current version of Python
-saves all strings in :enwiki:`UCS-2` (2 bytes per char) or :enwiki:`UCS-4`
-(4 bytes per char). To conserve memory ``pyahocorasick`` saves just leading
-non-zero bytes, thus keys returned by ``keys``/``items`` are incomplete
-``UCS-x`` byte strings.
+Type of strings accepted and returned by ``Automaton`` methods
+can be either **unicode** or **bytes**, depending on compile time
+settings (preprocessor definition ``AHOCORASICK_UNICODE``). Value
+of module member ``unicode`` informs about chosen type.
 
-**Probably this will be redesigned to work with UTF-8.**
+.. warning::
+	If unicode is selected, then trie stores 2 or 4 bytes
+	per letter, depending on Python settings. This make trie
+	bigger then bytes are used.
 
 
 License

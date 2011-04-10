@@ -15,35 +15,40 @@
 
 /* returns bytes or unicode internal buffer */
 static PyObject*
-pymod_get_string(PyObject* obj, char** word, ssize_t* wordlen, bool* unicode) {
-	if (PyBytes_Check(obj)) {
-		*word = (char*)PyBytes_AS_STRING(obj);
-		*wordlen = PyBytes_GET_SIZE(obj);
-		Py_INCREF(obj);
-		*unicode = false;
-		return obj;
-	}
-	else if (PyUnicode_Check(obj)) {
-		*word = (char*)PyUnicode_AS_UNICODE(obj);
+pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+#ifdef AHOCORASICK_UNICODE
+	if (PyUnicode_Check(obj)) {
+		*word = PyUnicode_AS_UNICODE(obj);
 		*wordlen = PyUnicode_GET_SIZE(obj);
 		Py_INCREF(obj);
-		*unicode = true;
 		return obj;
 	}
 	else {
-		PyErr_SetString(PyExc_ValueError, "string or bytes object expected");
+		PyErr_SetString(PyExc_TypeError, "string expected");
 		return NULL;
 	}
+#else
+	if (PyBytes_Check(obj)) {
+		*word = (TRIE_LETTER_TYPE*)PyBytes_AS_STRING(obj);
+		*wordlen = PyBytes_GET_SIZE(obj);
+		Py_INCREF(obj);
+		return obj;
+	}
+	else {
+		PyErr_SetString(PyExc_TypeError, "bytes expected");
+		return NULL;
+	}
+#endif
 }
 
 
 static PyObject*
-pymod_get_string_from_tuple(PyObject* tuple, int index, char** word, ssize_t* wordlen, bool* unicode) {
+pymod_get_string_from_tuple(PyObject* tuple, int index, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 	PyObject* obj;
 
 	obj = PyTuple_GetItem(tuple, index);
 	if (obj)
-		return pymod_get_string(obj, word, wordlen, unicode);
+		return pymod_get_string(obj, word, wordlen);
 	else
 		return NULL;
 }

@@ -26,14 +26,13 @@ typedef struct AutomatonSearchIter {
 	Automaton*	automaton;
 	int			version;	///< automaton version
 	PyObject*	object;		///< unicode or buffer
-	void*		data;		///< Py_UNICODE or char*
+	TRIE_LETTER_TYPE* data;	///< Py_UNICODE or char*
 	TrieNode*	state;		///< current state of automaton
 	TrieNode*	output;		///< current node, i.e. yielded value
 	
 	int			index;		///< current index in data
 	int			shift;		///< shift + index => output index
 	int			end;		///< end index
-	bool		is_unicode;	///< is data unicode or bytes
 } AutomatonSearchIter;
 
 
@@ -42,8 +41,7 @@ automaton_search_iter_new(
 	Automaton* automaton,
 	PyObject* object,
 	int start,
-	int end,
-	bool is_unicode
+	int end
 );
 
 #endif

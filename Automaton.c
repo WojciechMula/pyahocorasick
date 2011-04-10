@@ -70,18 +70,19 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 6)) {
+	if (UNLIKELY(PyTuple_Size(args) == 7)) {
 		
 		// unpickle: count, data, kind, store, version, values
 		size_t			count;
 		void*			data;
 		size_t			size;
 		int				version;
+		int				longest_word;
 		AutomatonKind	kind;
 		KeysStore		store;
 		PyObject*		values = NULL;
 
-		if (not PyArg_ParseTuple(args, "iy#iiiO", &count, &data, &size, &kind, &store, &version, &values)) {
+		if (not PyArg_ParseTuple(args, "iy#iiiiO", &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
 			goto error;
 		}
@@ -94,6 +95,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 				automaton->kind		= kind;
 				automaton->store	= store;
 				automaton->version	= version;
+				automaton->longest_word	= longest_word;
 			}
 			else
 				goto error;
@@ -154,12 +156,11 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	PyObject* py_word = NULL;
 	PyObject* py_value = NULL;
 
+	TRIE_LETTER_TYPE* word = NULL;
 	ssize_t wordlen = 0;
-	char* word = NULL;
-	bool unicode = 0;
 	int integer = 0;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (not py_word)
 		return NULL;
 
@@ -181,7 +182,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 						return NULL;
 				}
 				else {
-					PyErr_SetString(PyExc_TypeError, "numer required");
+					PyErr_SetString(PyExc_TypeError, "number required");
 					return NULL;
 				}
 			}
@@ -204,14 +205,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	if (wordlen > 0) {
 		bool new_word = false;
 		TrieNode* node;
-		if (unicode)
-#ifndef Py_UNICODE_WIDE
-			node = trie_add_word_UCS2(automaton, (uint16_t*)word, wordlen, &new_word);
-#else
-			node = trie_add_word_UCS4(automaton, (uint32_t*)word, wordlen, &new_word);
-#endif
-		else
-			node = trie_add_word(automaton, word, wordlen, &new_word);
+		node = trie_add_word(automaton, word, wordlen, &new_word);
 
 		Py_DECREF(py_word);
 		if (node) {
@@ -231,18 +225,8 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 			if (new_word) {
 				automaton->version += 1; // change version only when new word appeared
-				size_t n;
-				if (unicode)
-#ifndef Py_UNICODE_WIDE
-					n = wordlen * 2;
-#else
-					n = wordlen * 4;
-#endif
-				else
-					n = wordlen;
-
-				if (n > automaton->longest_word)
-					automaton->longest_word = n;
+				if (wordlen > automaton->longest_word)
+					automaton->longest_word = wordlen;
 					
 				Py_RETURN_TRUE;
 			}
@@ -311,25 +295,16 @@ static int
 automaton_contains(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	ssize_t wordlen;
-	char* word;
-	bool unicode;
+	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
 
-	py_word = pymod_get_string(args, &word, &wordlen, &unicode);
+	py_word = pymod_get_string(args, &word, &wordlen);
 	if (py_word == NULL)
 		return -1;
 
-	TrieNode* node;
-	if (unicode)
-#ifndef Py_UNICODE_WIDE
-		node = trie_find_UCS2(automaton->root, (uint16_t*)word, wordlen);
-#else
-		node = trie_find_UCS4(automaton->root, (uint32_t*)word, wordlen);
-#endif
-	else
-		node = trie_find(automaton->root, word, wordlen);
-
+	TrieNode* node = trie_find(automaton->root, word, wordlen);
 	Py_DECREF(py_word);
+
 	return (node and node->eow);
 #undef automaton
 }
@@ -366,24 +341,15 @@ static PyObject*
 automaton_match(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	ssize_t wordlen;
-	char* word;
-	bool unicode;
+	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
-	TrieNode* node;
-	if (unicode)
-#ifndef Py_UNICODE_WIDE
-		node = trie_find_UCS2(automaton->root, (uint16_t*)word, wordlen);
-#else
-		node = trie_find_UCS4(automaton->root, (uint32_t*)word, wordlen);
-#endif
-	else
-		node = trie_find(automaton->root, word, wordlen);
-	
+	TrieNode* node = trie_find(automaton->root, word, wordlen);;
+
 	Py_DECREF(py_word);
 	if (node)
 		Py_RETURN_TRUE;
@@ -400,25 +366,16 @@ static PyObject*
 automaton_longest_prefix(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	ssize_t wordlen;
-	char* word;
-	bool unicode;
+	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
-	int len;
-	if (unicode)
-#ifndef Py_UNICODE_WIDE
-		len = trie_longest_UCS2(automaton->root, (uint16_t*)word, wordlen);
-#else
-		len = trie_longest_UCS4(automaton->root, (uint32_t*)word, wordlen);
-#endif
-	else
-		len = trie_longest(automaton->root, word, wordlen);
-	
+	const int len = trie_longest(automaton->root, word, wordlen);
 	Py_DECREF(py_word);
+
 	return Py_BuildValue("i", len);
 #undef automaton
 }
@@ -433,24 +390,15 @@ static PyObject*
 automaton_get(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	ssize_t wordlen;
-	char* word;
-	bool unicode;
+	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
 	PyObject* py_def;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
-	TrieNode* node;
-	if (unicode)
-#ifndef Py_UNICODE_WIDE
-		node = trie_find_UCS2(automaton->root, (uint16_t*)word, wordlen);
-#else
-		node = trie_find_UCS4(automaton->root, (uint32_t*)word, wordlen);
-#endif
-	else
-		node = trie_find(automaton->root, word, wordlen);
+	TrieNode* node = trie_find(automaton->root, word, wordlen);
 
 	if (node and node->eow) {
 		switch (automaton->store) {
@@ -553,13 +501,13 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 			ASSERT(state);
 			ASSERT(child);
 			while (state != automaton->root and\
-				   not trienode_get_next(state, child->byte)) {
+				   not trienode_get_next(state, child->letter)) {
 
 				state = state->fail;
 				ASSERT(state);
 			}
 
-			child->fail = trienode_get_next(state, child->byte);
+			child->fail = trienode_get_next(state, child->letter);
 			if (child->fail == NULL)
 				child->fail = automaton->root;
 			
@@ -592,14 +540,13 @@ automaton_find_all(PyObject* self, PyObject* args) {
 	ssize_t wordlen;
 	ssize_t start;
 	ssize_t end;
-	char* word;
-	bool unicode;
+	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
 	PyObject* callback;
 	PyObject* callback_ret;
 
 	// arg 1
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen, &unicode);
+	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
@@ -623,31 +570,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 
 	state = automaton->root;
 	for (i=start; i < end; i++) {
-#define NEXT(byte) ahocorasick_next(state, automaton->root, byte)
-		if (unicode) {
-#ifndef Py_UNICODE_WIDE
-			const uint16_t w = ((uint16_t*)word)[i];
-			state = NEXT(w & 0xff);
-			if (w > 0x00ff)
-				state = NEXT((w >> 8) & 0xff);
-#else
-			const uint32_t w = ((uint32_t*)word)[i];
-			state = NEXT(w & 0xff);
-			if (w > 0x000000ff) {
-				state = NEXT((w >> 8) & 0xff);
-				if (w > 0x0000ffff) {
-					state = NEXT((w >> 16) & 0xff);
-					if (w > 0x00ffffff) {
-						state = NEXT((w >> 24) & 0xff);
-					}
-				}
-			}
-#endif
-			tmp = state;
-		}
-		else
-			state = tmp = ahocorasick_next(state, automaton->root, word[i]);
-#undef NEXT
+		state = tmp = ahocorasick_next(state, automaton->root, word[i]);
 
 		// return output
 		while (tmp and tmp->eow) {
@@ -674,9 +597,8 @@ static PyObject*
 automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 #define automaton ((Automaton*)self)
 	PyObject* object;
-	char* word;
+	TRIE_LETTER_TYPE* word;
 	ssize_t wordlen;
-	bool unicode;
 
 	if (args) 
 		object = PyTuple_GetItem(args, 0);
@@ -684,7 +606,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 		object = NULL;
 	
 	if (object) {
-		object = pymod_get_string(object, &word, &wordlen, &unicode);
+		object = pymod_get_string(object, &word, &wordlen);
 		if (object == NULL) {
 			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
 			return NULL;
@@ -694,11 +616,10 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 		PyErr_Clear();
 		word = NULL;
 		wordlen = 0;
-		unicode = false;
 	}
 
 	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(
-									automaton, (uint8_t*)word, wordlen, unicode
+									automaton, word, wordlen 
 								);
 	Py_XDECREF(object);
 
@@ -758,27 +679,30 @@ automaton_iter(PyObject* self, PyObject* args) {
 	}
 
 	PyObject* object;
-	bool is_unicode;
 	ssize_t start;
 	ssize_t end;
 
 	object = PyTuple_GetItem(args, 0);
 	if (object) {
+#ifdef AHOCORASICK_UNICODE
 		if (PyUnicode_Check(object)) {
-			is_unicode = true;
 			start	= 0;
 			end		= PyUnicode_GET_SIZE(object);
 		}
-		else
+		else {
+			PyErr_SetString(PyExc_TypeError, "string required");
+			return NULL;
+		}
+#else
 		if (PyBytes_Check(object)) {
-			is_unicode = false;
 			start 	= 0;
 			end		= PyBytes_GET_SIZE(object);
 		}
 		else {
-			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
+			PyErr_SetString(PyExc_TypeError, "bytes required");
 			return NULL;
 		}
+#endif
 	}
 	else
 		return NULL;
@@ -790,8 +714,7 @@ automaton_iter(PyObject* self, PyObject* args) {
 		automaton,
 		object,
 		start,
-		end,
-		is_unicode
+		end
 	);
 #undef automaton
 }
@@ -884,7 +807,7 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 	// 2.
 	for (i=0; i < node->n; i++) {
 		child = node->next[i];
-		tuple = Py_BuildValue("ici", node, child->byte, child);
+		tuple = Py_BuildValue("ici", node, child->letter, child);
 		append_tuple(Dump->edges)
 	}
 

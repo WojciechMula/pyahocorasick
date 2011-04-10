@@ -77,5 +77,11 @@ PyInit_ahocorasick(void) {
 	add_enum_const(STORE_ANY);
 #undef add_enum_const
 
+#ifdef AHOCORASICK_UNICODE
+	PyModule_AddIntConstant(module, "unicode", 1);
+#else
+	PyModule_AddIntConstant(module, "unicode", 0);
+#endif
+
 	return module;
 }

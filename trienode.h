@@ -11,11 +11,10 @@
 	$Id$
 */
 
-#ifndef ahocorasick_trie_h_included
-#define ahocorasick_trie_h_included
+#ifndef ahocorasick_trienode_h_included
+#define ahocorasick_trienode_h_included
 
 #include "common.h"
-#include "trienode.h"
 
 /* links to children nodes are stored in dynamic table */
 typedef struct TrieNode {
@@ -23,32 +22,30 @@ typedef struct TrieNode {
 		PyObject*	object;		///< valid when kind = STORE_ANY
 		int			integer;	///< valid when kind in [STORE_LENGTH, STORE_INTS]
 	} output; ///< output function, valid when eow is true
-
 	struct TrieNode*	fail;	///< fail node
 
+#if TRIE_LETTER_SIZE == 1
 	uint16_t			n;		///< length of next
-	uint8_t				byte;	///< incoming edge label
+#else
+	uint32_t			n;		///< length of next
+#endif
 	uint8_t				eow;	///< end of word marker
+	TRIE_LETTER_TYPE	letter;	///< incoming edge label
+
 	struct TrieNode**	next;	///< table of pointers
 } TrieNode;
 
 
 /* allocate new node */
 static TrieNode*
-trienode_new(char byte, char eow);
+trienode_new(const TRIE_LETTER_TYPE letter, const char eow);
 
-/* returns child node linked by edge labeled with byte */
+/* returns child node linked by edge labeled with letter */
 static TrieNode* PURE ALWAYS_INLINE
-trienode_get_next(TrieNode* node, const uint8_t byte);
+trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter);
 
-static TrieNode* PURE ALWAYS_INLINE
-trienode_get_next_UCS2(TrieNode* node, const uint16_t byte);
-
-static TrieNode* PURE ALWAYS_INLINE
-trienode_get_next_UCS4(TrieNode* node, const uint32_t byte);
-
-/* link with child node by edge labeled with byte */
+/* link with child node by edge labeled with letter */
 static TrieNode*
-trienode_set_next(TrieNode* node, const uint8_t byte, TrieNode* child);
+trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child);
 
 #endif

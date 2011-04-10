@@ -3,6 +3,9 @@ from distutils.core import setup, Extension
 module1 = Extension(
 	'ahocorasick',
 	sources = ['pyahocorasick.c'],
+	define_macros = [
+		('AHOCORASICK_UNICODE', ''),	# when defined unicode strings are supported
+	],
 	depends = [
 		'Automaton.c',
 		'AutomatonKeysIter.c',

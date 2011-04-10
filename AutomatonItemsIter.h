@@ -34,7 +34,7 @@ typedef struct AutomatonItemsIter {
 	TrieNode* 	state;			///< current automaton node
 	List		stack;			///< stack
 	ItemsType	type;			///< type of iterator (KEYS/VALUES/ITEMS)
-	char*		buffer;			///< buffer to construct key representation
+	TRIE_LETTER_TYPE* buffer;	///< buffer to construct key representation
 } AutomatonItemsIter;
 
 
@@ -42,9 +42,8 @@ typedef struct AutomatonItemsIter {
 static PyObject*
 automaton_items_iter_new(
 	Automaton* automaton,
-	uint8_t* word,
-	const ssize_t wordlen,
-	const bool unicode
+	const TRIE_LETTER_TYPE* word,
+	const ssize_t wordlen
 );
 
 #endif

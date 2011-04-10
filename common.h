@@ -21,6 +21,24 @@
 
 #define DEBUG
 
+// setup supported character set
+#ifdef AHOCORASICK_UNICODE
+#	ifdef Py_UNICODE_WIDE
+		// Python use UCS-4
+#		define TRIE_LETTER_TYPE	Py_UNICODE
+#		define TRIE_LETTER_SIZE 4
+#	else
+		// Python use UCS-2
+#		define TRIE_LETTER_TYPE	Py_UNICODE
+#		define TRIE_LETTER_SIZE 2
+#	endif
+#else
+	// only bytes are supported
+#	define TRIE_LETTER_TYPE	uint8_t
+#	define TRIE_LETTER_SIZE 1
+#endif
+
+
 #define memalloc	PyMem_Malloc
 #define memfree		PyMem_Free
 #define memrealloc	PyMem_Realloc
@@ -39,7 +57,7 @@
 
 #ifdef DEBUG
 #	include <assert.h>
-#	define	ASSERT(expr)	do {if (!(expr)) printf("%s:%d:%s failed!\n", __FUNCTION__, __LINE__, #expr); }while(0)
+#	define	ASSERT(expr)	do {if (!(expr)) {fprintf(stderr, "%s:%s:%d - %s failed!\n", __FILE__, __FUNCTION__, __LINE__, #expr); fflush(stderr); exit(1);} }while(0)
 #else
 #	define	ASSERT(expr)
 #endif

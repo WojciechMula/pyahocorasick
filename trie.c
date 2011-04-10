@@ -15,26 +15,12 @@
 
 
 static TrieNode*
-trie_add_byte(TrieNode* node, const uint8_t byte) {
-	TrieNode* child;
-	child = trienode_get_next(node, byte);
-	if (child == NULL) {
-		child = trienode_new(byte, false);
-		if (child)
-			trienode_set_next(node, byte, child);
-		else
-			return NULL;
-	}
-
-	return child;
-}
-
-
-static TrieNode*
-trie_add_word(Automaton* automaton, char* word, size_t wordlen, bool* new_word) {
+trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen, bool* new_word) {
 	if (automaton->kind == EMPTY) {
 		ASSERT(automaton->root == NULL);
 		automaton->root = trienode_new('\0', false);
+		if (automaton->root == NULL)
+			return NULL;
 	}
 
 	TrieNode* node = automaton->root;
@@ -42,54 +28,18 @@ trie_add_word(Automaton* automaton, char* word, size_t wordlen, bool* new_word) 
 
 	int i;
 	for (i=0; i < wordlen; i++) {
-		child = trie_add_byte(node, word[i]);
-		if (child)
-			node = child;
-		else
-			return NULL;
-	}
+		const TRIE_LETTER_TYPE letter = word[i];
 
-	if (node->eow == false) {
-		node->eow = true;
-		*new_word = true;
-		automaton->count += 1;
-	}
-	else
-		*new_word = false;
-	
-	automaton->kind = TRIE;
-
-	return node;
-}
-
-
-static TrieNode*
-trie_add_word_UCS2(Automaton* automaton, uint16_t* word, size_t wordlen, bool* new_word) {
-	if (automaton->kind == EMPTY) {
-		ASSERT(automaton->root == NULL);
-		automaton->root = trienode_new('\0', false);
-	}
-
-	TrieNode* node = automaton->root;
-	TrieNode* child;
-
-	int i;
-	for (i=0; i < wordlen; i++) {
-		const uint16_t w = word[i];
-
-		child = trie_add_byte(node, w & 0xff);
-		if (child)
-			node = child;
-		else
-			return NULL;
-
-		if (w < 0x0100) {
-			child = trie_add_byte(node, (w >> 8) & 0xff);
+		child = trienode_get_next(node, letter);
+		if (child == NULL) {
+			child = trienode_new(letter, false);
 			if (child)
-				node = child;
+				trienode_set_next(node, letter, child);
 			else
 				return NULL;
 		}
+
+		node = child;
 	}
 
 	if (node->eow == false) {
@@ -99,57 +49,7 @@ trie_add_word_UCS2(Automaton* automaton, uint16_t* word, size_t wordlen, bool* n
 	}
 	else
 		*new_word = false;
-	
-	automaton->kind = TRIE;
 
-	return node;
-}
-
-
-static TrieNode*
-trie_add_word_UCS4(Automaton* automaton, uint32_t* word, size_t wordlen, bool* new_word) {
-	if (automaton->kind == EMPTY) {
-		ASSERT(automaton->root == NULL);
-		automaton->root = trienode_new('\0', false);
-	}
-
-	TrieNode* node = automaton->root;
-	TrieNode* child;
-
-	int i;
-	for (i=0; i < wordlen; i++) {
-#define ADD_BYTE(byte) \
-		child = trie_add_byte(node, (byte)); \
-		if (child) \
-			node = child; \
-		else \
-			return NULL;
-
-		const uint32_t w = word[i];
-
-		ADD_BYTE(w & 0xff);
-		if (w > 0x000000ff) {
-			ADD_BYTE((w >> 8) & 0xff);
-
-			if (w > 0x0000ffff) {
-				ADD_BYTE((w >> 16) & 0xff);
-
-				if (w > 0x00ffffff) {
-					ADD_BYTE((w >> 24) & 0xff);
-				}
-			}
-		}
-#undef ADD_BYTE
-	}
-
-	if (node->eow == false) {
-		node->eow = true;
-		*new_word = true;
-		automaton->count += 1;
-	}
-	else
-		*new_word = false;
-	
 	automaton->kind = TRIE;
 
 	return node;
@@ -157,7 +57,7 @@ trie_add_word_UCS4(Automaton* automaton, uint32_t* word, size_t wordlen, bool* n
 
 
 static TrieNode* PURE
-trie_find(TrieNode* root, const char* word, const size_t wordlen) {
+trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 	TrieNode* node;
 
 	node = root;
@@ -172,40 +72,8 @@ trie_find(TrieNode* root, const char* word, const size_t wordlen) {
 }
 
 
-static TrieNode* PURE
-trie_find_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen) {
-	TrieNode* node;
-
-	node = root;
-	ssize_t i;
-	for (i=0; i < wordlen; i++) {
-		node = trienode_get_next_UCS2(node, word[i]);
-		if (node == NULL)
-			return NULL;
-	}
-		
-	return node;
-}
-
-
-static TrieNode* PURE
-trie_find_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen) {
-	TrieNode* node;
-
-	node = root;
-	ssize_t i;
-	for (i=0; i < wordlen; i++) {
-		node = trienode_get_next_UCS4(node, word[i]);
-		if (node == NULL)
-			return NULL;
-	}
-		
-	return node;
-}
-
-
 static int PURE
-trie_longest(TrieNode* root, const char* word, const size_t wordlen) {
+trie_longest(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 	TrieNode* node;
 	int len = 0;
 
@@ -223,51 +91,13 @@ trie_longest(TrieNode* root, const char* word, const size_t wordlen) {
 }
 
 
-static int PURE
-trie_longest_UCS2(TrieNode* root, const uint16_t* word, const size_t wordlen) {
-	TrieNode* node;
-	int len = 0;
-
-	node = root;
-	ssize_t i;
-	for (i=0; i < wordlen; i++) {
-		node = trienode_get_next_UCS2(node, word[i]);
-		if (node == NULL)
-			break;
-		else
-			len += 1;
-	}
-
-	return len;
-}
-
-
-static int PURE
-trie_longest_UCS4(TrieNode* root, const uint32_t* word, const size_t wordlen) {
-	TrieNode* node;
-	int len = 0;
-
-	node = root;
-	ssize_t i;
-	for (i=0; i < wordlen; i++) {
-		node = trienode_get_next_UCS4(node, word[i]);
-		if (node == NULL)
-			break;
-		else
-			len += 1;
-	}
-
-	return len;
-}
-
-
 static TrieNode* PURE
-ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte) {
+ahocorasick_next(TrieNode* node, TrieNode* root, const TRIE_LETTER_TYPE letter) {
 	TrieNode* next = node;
 	TrieNode* tmp;
 
 	while (next) {
-		tmp = trienode_get_next(next, byte);
+		tmp = trienode_get_next(next, letter);
 		if (tmp)
 			// found link
 			return tmp;
@@ -279,8 +109,6 @@ ahocorasick_next(TrieNode* node, TrieNode* root, const uint8_t byte) {
 	// or return root node
 	return root;
 }
-
-typedef int (*trie_traverse_callback)(TrieNode* node, const int depth, void* extra);
 
 static int
 trie_traverse_aux(

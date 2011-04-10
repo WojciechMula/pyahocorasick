@@ -26,7 +26,7 @@ typedef struct AutomatonItemsStackItem {
 #define StackItem AutomatonItemsStackItem
 
 static TrieNode*
-trie_find_and_store_path(TrieNode* root, uint8_t* word, const ssize_t wordlen, char* buffer, size_t* n) {
+trie_find_and_store_path(TrieNode* root, const TRIE_LETTER_TYPE* word, const ssize_t wordlen, TRIE_LETTER_TYPE* buffer, size_t* n) {
 	TrieNode* node = root;
 	ssize_t i;
 	for (i=0; i < wordlen; i++) {
@@ -42,86 +42,8 @@ trie_find_and_store_path(TrieNode* root, uint8_t* word, const ssize_t wordlen, c
 }
 
 
-static TrieNode*
-trie_find_and_store_path_UCS2(TrieNode* root, uint16_t* word, const ssize_t wordlen, char* buffer, size_t* n) {
-	TrieNode* node = root;
-	ssize_t i, j;
-	for (i=0, j=0; i < wordlen; i++) {
-		uint8_t b;
-		const uint16_t w = word[i];
-
-		b = w & 0xff;
-		node = trienode_get_next(node, b);
-		if (node)
-			buffer[j++] = b;
-		else
-			return NULL;
-
-		if (w > 0x00ff) {
-			b = (w >> 8) & 0xff;
-			node = trienode_get_next(node, b);
-			if (node)
-				buffer[j++] = b;
-			else
-				return NULL;
-		}
-	}
-
-	*n = j;
-	return node;
-}
-
-
-static TrieNode*
-trie_find_and_store_path_UCS4(TrieNode* root, uint32_t* word, const ssize_t wordlen, char* buffer, size_t* n) {
-	TrieNode* node = root;
-	ssize_t i, j;
-	for (i=0, j=0; i < wordlen; i++) {
-		uint8_t b;
-		const uint32_t w = word[i];
-
-		b = w & 0xff;
-		node = trienode_get_next(node, b);
-		if (node)
-			buffer[j++] = b;
-		else
-			return NULL;
-
-		if (w > 0x000000ff) {
-			b = (w >> 8) & 0xff;
-			node = trienode_get_next(node, b);
-			if (node)
-				buffer[j++] = b;
-			else
-				return NULL;
-
-			if (w > 0x0000ffff) {
-				b = (w >> 16) & 0xff;
-				node = trienode_get_next(node, b);
-				if (node)
-					buffer[j++] = b;
-				else
-					return NULL;
-
-				if (w > 0x00ffffff) {
-					b = (w >> 24) & 0xff;
-					node = trienode_get_next(node, b);
-					if (node)
-						buffer[j++] = b;
-					else
-						return NULL;
-				}
-			}
-		}
-	}
-
-	*n = j;
-	return node;
-}
-
-
 static PyObject*
-automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t wordlen, const bool unicode) {
+automaton_items_iter_new(Automaton* automaton, const TRIE_LETTER_TYPE* word, const ssize_t wordlen) {
 	AutomatonItemsIter* iter;
 	size_t prefix_depth = 0;
 
@@ -141,8 +63,7 @@ automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t word
 		return NULL;
 	}
 
-
-	iter->buffer = memalloc(automaton->longest_word + 2);
+	iter->buffer = memalloc((automaton->longest_word + 1) * TRIE_LETTER_SIZE);
 	if (iter->buffer == NULL) {
 		PyObject_Del((PyObject*)iter);
 		PyErr_NoMemory();
@@ -150,31 +71,13 @@ automaton_items_iter_new(Automaton* automaton, uint8_t* word, const ssize_t word
 	}
 
 	TrieNode* node = automaton->root;
-	if (word != NULL) {
-		if (unicode)
-#ifdef Py_UNICODE_WIDE
-			node = trie_find_and_store_path_UCS4(
-					node,
-					(uint32_t*)word,
-					wordlen,
-					iter->buffer + 1,
-					&prefix_depth);
-#else
-			node = trie_find_and_store_path_UCS2(
-					node,
-					(uint16_t*)word,
-					wordlen,
-					iter->buffer + 1,
-					&prefix_depth);
-#endif
-		else
-			node = trie_find_and_store_path(
-					node,
-					word,
-					wordlen,
-					iter->buffer + 1,
-					&prefix_depth);
-	}
+	if (word != NULL)
+		node = trie_find_and_store_path(
+				node,
+				word,
+				wordlen,
+				iter->buffer + 1,
+				&prefix_depth);
 	else
 		prefix_depth = 0;
 
@@ -237,14 +140,18 @@ automaton_items_iter_next(PyObject* self) {
 
 		if (iter->type != ITER_VALUES)
 			// update keys when needed
-			iter->buffer[item->depth] = iter->state->byte;
+			iter->buffer[item->depth] = iter->state->letter;
 
 		if (iter->state->eow) {
 			PyObject* val;
 
 			switch (iter->type) {
 				case ITER_KEYS:
-					return PyBytes_FromStringAndSize(iter->buffer + 1, item->depth);
+#ifdef AHOCORASICK_UNICODE
+					return PyUnicode_FromUnicode(iter->buffer + 1, item->depth);
+#else
+					return PyBytes_FromStringAndSize((char*)(iter->buffer + 1), item->depth);
+#endif
 
 				case ITER_VALUES:
 					switch (iter->automaton->store) {
@@ -267,14 +174,24 @@ automaton_items_iter_next(PyObject* self) {
 				case ITER_ITEMS:
 					switch (iter->automaton->store) {
 						case STORE_ANY:
-							return Py_BuildValue("(y#O)",
+							return Py_BuildValue(
+#ifdef AHOCORASICK_UNICODE
+								"(u#O)",
+#else
+								"(y#O)",
+#endif
 								/*key*/ iter->buffer + 1, item->depth,
 								/*val*/ iter->state->output.object
 							);
 
 						case STORE_LENGTH:
 						case STORE_INTS:
-							return Py_BuildValue("(y#i)",
+							return Py_BuildValue(
+#ifdef AHOCORASICK_UNICODE
+								"(u#i)",
+#else
+								"(y#i)",
+#endif
 								/*key*/ iter->buffer + 1, item->depth,
 								/*val*/ iter->state->output.integer
 							);

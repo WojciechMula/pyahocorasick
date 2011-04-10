@@ -137,8 +137,8 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 		dump->output.integer = NODEID(node)->id;	// save number
 
 	dump->n		= node->n;
-	dump->byte	= node->byte;
 	dump->eow	= node->eow;
+	dump->letter	= node->letter;
 
 	tmp = NODEID(node)->fail;
 	if (tmp)
@@ -213,16 +213,18 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		* automaton->kind
 		* automaton->store
 		* automaton->version
+		* automaton->longest_word
 		* list of values
 	*/
 
-	PyObject* tuple = Py_BuildValue("O(iy#iiiO)",
+	PyObject* tuple = Py_BuildValue("O(iy#iiiiO)",
 		Py_TYPE(self),
 		state.id,
 		data.data, data.top,
 		automaton->kind,
 		automaton->store,
 		automaton->version,
+		automaton->longest_word,
 		data.values
 	);
 
@@ -289,7 +291,7 @@ automaton_unpickle(
 		if (LIKELY(node != NULL)) {
 			node->output	= dump->output;
 			node->fail		= dump->fail;
-			node->byte		= dump->byte;
+			node->letter	= dump->letter;
 			node->n			= dump->n;
 			node->eow		= dump->eow;
 			node->next		= NULL;

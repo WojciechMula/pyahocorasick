@@ -228,6 +228,7 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 		self.assertEqual(set(L), set(I))
 
 
+
 	def test_items_with_prefix_valid(self):
 		A = self.A
 		words = "he she her hers star ham".split()
@@ -250,6 +251,36 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 		L = [x for x in A.keys(conv("cat"))]
 		self.assertEqual(len(L), len(I))
 		self.assertEqual(set(L), set(I))
+
+
+	def test_items_with_valid_pattern(self):
+		A = self.A
+		words = "abcde aXcd aZcdef aYc Xbcdefgh".split()
+		for word in words:
+			A.add_word(conv(word), word)
+
+		I = ["abcde", "aXcd", "aZcdef"]
+		L = [x for x in A.keys(conv("a?cd"), conv("?"))]
+		self.assertEqual(set(I), set(L))
+	
+
+	def test_items_with_valid_pattern2(self):
+		A = self.A
+		words = "abcde aXcde aZcdef aYc Xbcdefgh".split()
+		for word in words:
+			A.add_word(conv(word), word)
+
+		L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_EXACT_LENGTH)]
+		I = ["abcde", "aXcde"]
+		self.assertEqual(set(I), set(L))
+
+		L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_MOST_PREFIX)]
+		I = ["aYc", "abcde", "aXcde"]
+		self.assertEqual(set(I), set(L))
+
+		L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_LEAST_PREFIX)]
+		I = ["abcde", "aXcde", "aZcdef"]
+		self.assertEqual(set(I), set(L))
 
 
 class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):

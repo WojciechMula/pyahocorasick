@@ -75,6 +75,10 @@ PyInit_ahocorasick(void) {
 	add_enum_const(STORE_LENGTH);
 	add_enum_const(STORE_INTS);
 	add_enum_const(STORE_ANY);
+
+	add_enum_const(MATCH_EXACT_LENGTH);
+	add_enum_const(MATCH_AT_MOST_PREFIX);
+	add_enum_const(MATCH_AT_LEAST_PREFIX);
 #undef add_enum_const
 
 #ifdef AHOCORASICK_UNICODE

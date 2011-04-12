@@ -25,27 +25,17 @@ typedef struct AutomatonItemsStackItem {
 
 #define StackItem AutomatonItemsStackItem
 
-static TrieNode*
-trie_find_and_store_path(TrieNode* root, const TRIE_LETTER_TYPE* word, const ssize_t wordlen, TRIE_LETTER_TYPE* buffer, size_t* n) {
-	TrieNode* node = root;
-	ssize_t i;
-	for (i=0; i < wordlen; i++) {
-		node = trienode_get_next(node, word[i]);
-		if (node)
-			buffer[i] = word[i];
-		else
-			return NULL;
-	}
-
-	*n = wordlen;
-	return node;
-}
-
-
 static PyObject*
-automaton_items_iter_new(Automaton* automaton, const TRIE_LETTER_TYPE* word, const ssize_t wordlen) {
+automaton_items_iter_new(
+	Automaton* automaton,
+	const TRIE_LETTER_TYPE* word,
+	const ssize_t wordlen,
+
+	const bool use_wildcard,
+	const TRIE_LETTER_TYPE wildcard,
+	const PatternMatchType matchtype
+) {
 	AutomatonItemsIter* iter;
-	size_t prefix_depth = 0;
 
 	iter = (AutomatonItemsIter*)PyObject_New(AutomatonItemsIter, &automaton_items_iter_type);
 	if (iter == NULL)
@@ -55,13 +45,12 @@ automaton_items_iter_new(Automaton* automaton, const TRIE_LETTER_TYPE* word, con
 	iter->version	= automaton->version;
 	iter->state	= NULL;
 	iter->type = ITER_KEYS;
+	iter->buffer = NULL;
+	iter->pattern = NULL;
+	iter->use_wildcard = use_wildcard;
+	iter->wildcard = wildcard;
+	iter->matchtype = matchtype;
 	list_init(&iter->stack);
-
-	StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
-	if (not new_item) {
-		PyErr_SetNone(PyExc_MemoryError);
-		return NULL;
-	}
 
 	iter->buffer = memalloc((automaton->longest_word + 1) * TRIE_LETTER_SIZE);
 	if (iter->buffer == NULL) {
@@ -69,20 +58,31 @@ automaton_items_iter_new(Automaton* automaton, const TRIE_LETTER_TYPE* word, con
 		PyErr_NoMemory();
 		return NULL;
 	}
-
-	TrieNode* node = automaton->root;
-	if (word != NULL)
-		node = trie_find_and_store_path(
-				node,
-				word,
-				wordlen,
-				iter->buffer + 1,
-				&prefix_depth);
+	
+	if (word) {
+		iter->pattern = (TRIE_LETTER_TYPE*)memalloc(wordlen * TRIE_LETTER_SIZE);
+		if (UNLIKELY(iter->pattern == NULL)) {
+			PyObject_Del((PyObject*)iter);
+			PyErr_NoMemory();
+			return NULL;
+		}
+		else {
+			iter->pattern_length = wordlen;
+			memcpy(iter->pattern, word, wordlen * TRIE_LETTER_SIZE);
+		}
+	}
 	else
-		prefix_depth = 0;
+		iter->pattern_length = 0;
+	
+	StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
+	if (not new_item) {
+		PyObject_Del((PyObject*)iter);
+		PyErr_NoMemory();
+		return NULL;
+	}
 
-	new_item->node = node;
-	new_item->depth = prefix_depth;
+	new_item->node = automaton->root;
+	new_item->depth = 0;
 	list_push_front(&iter->stack, (ListItem*)new_item);
 
 	Py_INCREF((PyObject*)iter->automaton);
@@ -96,6 +96,9 @@ static void
 automaton_items_iter_del(PyObject* self) {
 	if (iter->buffer)
 		memfree(iter->buffer);
+
+	if (iter->pattern)
+		memfree(iter->pattern);
 	
 	list_delete(&iter->stack);
 	Py_DECREF(iter->automaton);
@@ -123,26 +126,64 @@ automaton_items_iter_next(PyObject* self) {
 		if (item == NULL or item->node == NULL)
 			return NULL; /* Stop iteration */
 
+		bool output;
+		switch (iter->matchtype) {
+			case MATCH_EXACT_LENGTH:
+				output = (item->depth == iter->pattern_length);
+				break;
+
+			case MATCH_AT_MOST_PREFIX:
+				output = (item->depth <= iter->pattern_length);
+				break;
+				
+			case MATCH_AT_LEAST_PREFIX:
+			default:
+				output = (item->depth >= iter->pattern_length);
+				break;
+
+		}
+
+		if (iter->matchtype != MATCH_AT_LEAST_PREFIX and item->depth > iter->pattern_length)
+			continue;
+
 		iter->state = item->node;
-		const int n = iter->state->n;
-		int i;
-		for (i=0; i < n; i++) {
+		if ((item->depth >= iter->pattern_length) or
+		    (iter->use_wildcard and iter->pattern[item->depth] == iter->wildcard)) {
+
+			// branch all
+			const int n = iter->state->n;
+			int i;
+			for (i=0; i < n; i++) {
+				StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
+				if (not new_item) {
+					PyErr_NoMemory();
+					return NULL;
+				}
+
+				new_item->node  = iter->state->next[i];
+				new_item->depth = item->depth + 1;
+				list_push_front(&iter->stack, (ListItem*)new_item);
+			}
+		}
+		else {
 			StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
 			if (not new_item) {
 				PyErr_NoMemory();
 				return NULL;
 			}
 
-			new_item->node  = iter->state->next[i];
-			new_item->depth = item->depth + 1;
-			list_push_front(&iter->stack, (ListItem*)new_item);
+			new_item->node  = trienode_get_next(iter->state, iter->pattern[item->depth]);
+			if (new_item->node) {
+				new_item->depth = item->depth + 1;
+				list_push_front(&iter->stack, (ListItem*)new_item);
+			}
 		}
 
 		if (iter->type != ITER_VALUES)
 			// update keys when needed
 			iter->buffer[item->depth] = iter->state->letter;
 
-		if (iter->state->eow) {
+		if (output and iter->state->eow) {
 			PyObject* val;
 
 			switch (iter->type) {

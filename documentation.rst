@@ -18,33 +18,11 @@ class ``Automaton``.
 Constants
 ~~~~~~~~~
 
-There are two groups of constants.
-
-1. Type of values associated with strings in ``Automaton``.
-See Constructor section for details.
-
-``STORE_ANY``
-	Any Python object (default).
-
-``STORE_LENGTH``
-	Length of string.
-
-``STORE_INTS``
-	32-bit integers.
-
-
-2. Kind of ``Automaton`` object:
-
-``EMPTY``
-	There are no words saved in automaton.
-
-``TRIE``
-	There are some words, but methods related to Aho-Corasick algorithm
-	(``find_all``, ``iter``) won't work.
-
-``AHOCORASICK``
-	Aho-Corasick automaton has been constructed, full functionality is
-	available for user.
+* ``unicode`` --- see `Unicode and bytes`_
+* ``STORE_ANY``, ``STORE_INTS``, ``STORE_LENGTH`` --- see Constructor_
+* ``EMPTY``, ``TRIE``, ``AHOCORASICK`` --- see Members_
+* ``MATCH_EXACT_LENGTH``, ``MATCH_AT_MOST_PREFIX``, ``MATCH_AT_LEAST_PREFIX``
+  --- see description of method keys_
 
 
 Automaton class
@@ -59,13 +37,24 @@ Members
 #######
 
 ``kind`` [readonly]
-	One of ``EMPTY``, ``TRIE``, ``AHOCORASICK``.
+	One of values:
+
+	``EMPTY``
+		There are no words saved in automaton.
+
+	``TRIE``
+		There are some words, but methods related to Aho-Corasick algorithm
+		(``find_all``, ``iter``) won't work.
+
+	``AHOCORASICK``
+		Aho-Corasick automaton has been constructed, full functionality is
+		available for user.
 
 	Kind is maintained internally by ``Automaton`` object.
 	Some methods are not available when automaton kind is
 	``EMPTY`` or isn't an ``AHOCORASICK``. When called then
 	exception is raised, however testing this property could
-	be better (say faster, more elegant).
+	be better (faster, more elegant).
 
 ``store`` [readonly]
 	Type of values stored in trie. By default ``STORE_ANY``
@@ -78,8 +67,17 @@ Members
 Constructor
 ###########
 
-Constructor accepts just one argument: type of values, one of
-constants ``STORE_ANY``, ``STORE_INTS``, ``STORE_LENGTH``.
+Constructor accepts just one argument, a type of values,
+one of constants:
+
+``STORE_ANY``
+	Any Python object (default).
+
+``STORE_LENGTH``
+	Length of string.
+
+``STORE_INTS``
+	32-bit integers.
 
 
 Dictionary methods
@@ -89,16 +87,43 @@ Dictionary methods
 	Returns value associated with ``word``. Raises ``KeyError`` or
 	returns ``default`` value if ``word`` isn't present in dictionary.
 
-``keys([prefix]) => yield bytes object`` or ``iter()`` protocol
+.. _keys:
+
+``keys([prefix, [wildchar, [how]]]) => yield strings``
 	Returns iterator that iterate through words.
-	If prefix (a string) is given, then only words sharing this
+
+	If ``prefix`` (a string) is given, then only words sharing this
 	prefix are yielded.
+	
+	If ``wildchar`` (single character) is given, then prefix is
+	treated as a simple pattern with selected wildchar. Optional
+	parameter ``how`` controls which strings are matched:
 
-``values([prefix]) => yield object``
+	``MATCH_AT_LEAST_PREFIX`` [default]
+		Strings that have length greater or equal to a pattern's length
+		are yielded.
+
+	``MATCH_EXACT_LENGTH``
+		Only strings with the same length as a pattern's length
+		are yielded. In other words, literally match a pattern.
+
+	``MATCH_AT_MOST_PREFIX``
+		Strings that have length less or equal to a pattern's length
+		are yielded.
+
+	See `Example 2`_.
+
+
+``values([prefix, [wildchar, [how]]]) => yield object``
 	Return iterator that iterate through values associated with words.
+	Words are matched as in ``keys`` method.
 
-``items([prefix]) => yield tuple (bytes object, object)``
+``items([prefix, [wildchar, [how]]]) => yield tuple (string, object)``
 	Return iterator that iterate through words and associated values.
+	Words are matched as in ``keys`` method.
+
+``iter()`` protocol
+	Equivalent to ``obj.keys()``
 
 ``len()`` protocol
 	Returns number of distinct words.
@@ -165,7 +190,7 @@ Aho-Corasick
 	values).
 
 ``iter(string, [start, [end]])``
-	Returns iterator (object of class AutomatonSearchIter) that
+	Returns iterator (object of class AutomatonSearchIter_) that
 	does the same thing as ``find_all``, yielding tuples instead
 	of calling a user function.
 
@@ -208,6 +233,8 @@ Other
 	  of :enwiki:`Memory fragmentation|internal memory fragmentation`
 	  occurred in memory manager.
 
+
+.. _AutomatonSearchIter:
 
 AutomatonSearchIter class
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -290,6 +317,41 @@ Example
 	(6, (0, 'he'))
 
 
+
+.. _example 2:
+
+Example 2 %%%NEW%%%
+~~~~~~~~~~~~~~~~~~~
+
+Demonstration of keys_ behaviour.
+
+::
+
+	>>> import ahocorasick
+	>>> A = ahocorasick.Automaton() 
+
+	# add some words to trie
+	>>> for index, word in enumerate("cat catastropha rat rate bat".split()):
+	...   A.add_word(word, (index, word))
+
+	# prefix
+	>>> list(A.keys("cat"))
+	["cat", "catastropha"]
+
+	# pattern
+	>>> list(A.keys("?at", "?", ahocorasick.MATCH_EXACT_LENGTH))
+	["bat", "cat", "rat"]
+
+	>>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_MOST_PREFIX))
+	["bat", "cat", "rat", "rate"]
+
+	>>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_LEAST_PREFIX))
+	["rate"]
+
+
+
+.. _Unicode and bytes:
+
 Unicode and bytes %%%UPDATED%%%
 -------------------------------
 
@@ -299,9 +361,9 @@ settings (preprocessor definition ``AHOCORASICK_UNICODE``). Value
 of module member ``unicode`` informs about chosen type.
 
 .. warning::
-	If unicode is selected, then trie stores 2 or 4 bytes
-	per letter, depending on Python settings. This make trie
-	bigger then bytes are used.
+	If unicode is selected, then trie stores 2 or even 4 bytes
+	per letter, depending on Python settings. If bytes are
+	selected, then just one byte per letter is needed.
 
 
 License
@@ -312,3 +374,9 @@ Some portions has been realased into public domain.
 
 Full text of license is available in LICENSE file.
 
+
+Changelog
+---------
+
+2011-04-12
+	extend ``keys``/``values``/``items`` to match simple patterns

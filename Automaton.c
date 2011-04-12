@@ -596,21 +596,26 @@ automaton_find_all(PyObject* self, PyObject* args) {
 static PyObject*
 automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 #define automaton ((Automaton*)self)
-	PyObject* object;
+	PyObject* arg1 = NULL;
+	PyObject* arg2 = NULL;
+	PyObject* arg3 = NULL;
 	TRIE_LETTER_TYPE* word;
 	ssize_t wordlen;
 
+	TRIE_LETTER_TYPE wildcard;
+	bool use_wildcard;
+	PatternMatchType matchtype = MATCH_AT_LEAST_PREFIX;
+
+	// arg 1: prefix/prefix pattern
 	if (args) 
-		object = PyTuple_GetItem(args, 0);
+		arg1 = PyTuple_GetItem(args, 0);
 	else
-		object = NULL;
+		arg1 = NULL;
 	
-	if (object) {
-		object = pymod_get_string(object, &word, &wordlen);
-		if (object == NULL) {
-			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
-			return NULL;
-		}
+	if (arg1) {
+		arg1 = pymod_get_string(arg1, &word, &wordlen);
+		if (arg1 == NULL)
+			goto error;
 	}
 	else {
 		PyErr_Clear();
@@ -618,10 +623,76 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 		wordlen = 0;
 	}
 
+	// arg 2: wildcard
+	if (args)
+		arg2 = PyTuple_GetItem(args, 1);
+	else
+		arg2 = NULL;
+
+	if (arg2) {
+		TRIE_LETTER_TYPE* tmp;
+		ssize_t len;
+
+		arg2 = pymod_get_string(arg2, &tmp, &len);
+		if (arg2 == NULL)
+			goto error;
+		else {
+			if (len == 1) {
+				wildcard = tmp[0];
+				use_wildcard = true;
+			}
+			else {
+				PyErr_SetString(PyExc_ValueError, "wildcard have to be single character");
+				goto error;
+			}
+		}
+	}
+	else {
+		PyErr_Clear();
+		wildcard = 0;
+		use_wildcard = false;
+	}
+
+	// arg3: matchtype
+	matchtype = MATCH_AT_LEAST_PREFIX;
+	if (args) {
+		arg3 = PyTuple_GetItem(args, 2);
+		if (arg3) {
+			Py_ssize_t val = PyNumber_AsSsize_t(arg3, PyExc_OverflowError);
+			if (val == -1 and PyErr_Occurred())
+				goto error;
+
+			switch ((PatternMatchType)val) {
+				case MATCH_AT_LEAST_PREFIX:
+				case MATCH_AT_MOST_PREFIX:
+				case MATCH_EXACT_LENGTH:
+					matchtype = (PatternMatchType)val;
+					break;
+
+				default:
+					PyErr_SetString(PyExc_ValueError,
+						"third argument have to be one of MATCH_EXACT_LENGTH, "
+						"MATCH_AT_LEAST_PREFIX, MATCH_AT_LEAST_PREFIX"
+					);
+					goto error;
+			}
+		}
+		else
+			PyErr_Clear();
+	}
+
+
+	// 
 	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(
-									automaton, word, wordlen 
+									automaton,
+									word,
+									wordlen,
+									use_wildcard,
+									wildcard,
+									matchtype
 								);
-	Py_XDECREF(object);
+	Py_XDECREF(arg1);
+	Py_XDECREF(arg2);
 
 	if (iter) {
 		iter->type = type;
@@ -629,6 +700,12 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	}
 	else
 		return NULL;
+
+
+error:
+	Py_XDECREF(arg1);
+	Py_XDECREF(arg2);
+	return NULL;
 #undef automaton
 }
 

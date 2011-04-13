@@ -259,7 +259,7 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 		for word in words:
 			A.add_word(conv(word), word)
 
-		I = ["abcde", "aXcd", "aZcdef"]
+		I = ["aXcd"]
 		L = [x for x in A.keys(conv("a?cd"), conv("?"))]
 		self.assertEqual(set(I), set(L))
 	

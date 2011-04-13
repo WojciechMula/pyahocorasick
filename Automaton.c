@@ -603,7 +603,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	ssize_t wordlen;
 
 	TRIE_LETTER_TYPE wildcard;
-	bool use_wildcard;
+	bool use_wildcard = false;
 	PatternMatchType matchtype = MATCH_AT_LEAST_PREFIX;
 
 	// arg 1: prefix/prefix pattern
@@ -677,8 +677,13 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 					goto error;
 			}
 		}
-		else
+		else {
 			PyErr_Clear();
+			if (use_wildcard)
+				matchtype = MATCH_EXACT_LENGTH;
+			else
+				matchtype = MATCH_AT_LEAST_PREFIX;
+		}
 	}
 
 

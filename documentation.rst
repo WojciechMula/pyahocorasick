@@ -99,13 +99,13 @@ Dictionary methods
 	treated as a simple pattern with selected wildchar. Optional
 	parameter ``how`` controls which strings are matched:
 
-	``MATCH_AT_LEAST_PREFIX`` [default]
-		Strings that have length greater or equal to a pattern's length
-		are yielded.
-
-	``MATCH_EXACT_LENGTH``
+	``MATCH_EXACT_LENGTH`` [default]
 		Only strings with the same length as a pattern's length
 		are yielded. In other words, literally match a pattern.
+
+	``MATCH_AT_LEAST_PREFIX``
+		Strings that have length greater or equal to a pattern's length
+		are yielded.
 
 	``MATCH_AT_MOST_PREFIX``
 		Strings that have length less or equal to a pattern's length

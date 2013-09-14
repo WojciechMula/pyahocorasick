@@ -2,17 +2,96 @@
                           pyahocorasick
 ========================================================================
 
-:Author:		Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-:Last update:	$Date$
+.. contents::
 
-.. contents:: Contents
+Introduction
+============
 
+**pyahocorasick** is a Python module implements two kinds of data
+structures: `trie`__ and `Aho-Corasick string matching automaton`__.
+
+**Trie** is a dictionary indexed by strings, which allow to retrieve
+associated items in a time proportional to string length. **Aho-Corasick
+automaton** allows to find all occurrences of strings from given set in
+a single run over text.
+
+(BTW in order to use Aho-Corasick automaton, a trie have to be created;
+this is the reason why these two distinct entities exist in a single
+module.)
+
+__ http://en.wikipedia.org/wiki/trie
+__ http://en.wikipedia.org/wiki/Aho-Corasick%20algorithm
+
+
+There are two versions:
+
+* **C extension**, compatible only with Python3;
+* pure python module, compatible with Python 2 and 3.
+
+Python module API is similar, but isn't exactly the same as C extension.
+
+
+License
+=======
+
+Library is licensed under very liberal two-clauses BSD license.
+Some portions has been realased into public domain.
+
+Full text of license is available in LICENSE file.
+
+
+Author
+======
+
+Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
+
+
+See also
+========
+
+* Module `ahocorasick`__ by Danny Yoo --- seems unmaintained (last
+  update in 2005) and is licensed under GPL.
+
+* Article about `different trie representations`__ --- this is
+  an effect of experiments I made while working on this module.
+
+__ https://hkn.eecs.berkeley.edu/~dyoo/python/ahocorasick/
+__ http://0x80.pl/articles/trie-representation.html
+
+
+Installation
+============
+
+Just run:
+
+		$ python setup.py install
+
+If compilation succed, module is ready to use.
+
+
+API
+===
 
 Module
 ------
 
 Module ``ahocorasick`` contains several constants and
 class ``Automaton``.
+
+.. _Unicode and bytes:
+
+Unicode and bytes
+-----------------
+
+Type of strings accepted and returned by ``Automaton`` methods
+can be either **unicode** or **bytes**, depending on compile time
+settings (preprocessor definition ``AHOCORASICK_UNICODE``). Value
+of module member ``unicode`` informs about chosen type.
+
+.. warning::
+	If unicode is selected, then trie stores 2 or even 4 bytes
+	per letter, depending on Python settings. If bytes are
+	selected, then just one byte per letter is needed.
 
 
 Constants
@@ -230,8 +309,10 @@ Other
 	* ``total_size``	--- total size of trie in bytes (about
 	  ``nodes_count * size_of node + links_count * size of pointer``).
 	  The real size occupied by structure could be larger, because
-	  of :enwiki:`Memory fragmentation|internal memory fragmentation`
-	  occurred in memory manager.
+	  of `internal memory fragmentation`__ occurred in memory manager.
+
+
+__ http://en.wikipedia.org/Memory%20fragmentation
 
 
 .. _AutomatonSearchIter:
@@ -320,8 +401,8 @@ Example
 
 .. _example 2:
 
-Example 2 %%%NEW%%%
-~~~~~~~~~~~~~~~~~~~
+Example 2
+~~~~~~~~~
 
 Demonstration of keys_ behaviour.
 
@@ -350,33 +431,12 @@ Demonstration of keys_ behaviour.
 
 
 
-.. _Unicode and bytes:
+Major updates
+-------------
 
-Unicode and bytes %%%UPDATED%%%
--------------------------------
-
-Type of strings accepted and returned by ``Automaton`` methods
-can be either **unicode** or **bytes**, depending on compile time
-settings (preprocessor definition ``AHOCORASICK_UNICODE``). Value
-of module member ``unicode`` informs about chosen type.
-
-.. warning::
-	If unicode is selected, then trie stores 2 or even 4 bytes
-	per letter, depending on Python settings. If bytes are
-	selected, then just one byte per letter is needed.
-
-
-License
--------
-
-Library is licensed under very liberal two-clauses BSD license.
-Some portions has been realased into public domain.
-
-Full text of license is available in LICENSE file.
-
-
-Changelog
----------
+2011-04-13
+	* select support for either unicode or bytes
+	* simple pattern matching
 
 2011-04-12
 	extend ``keys``/``values``/``items`` to match simple patterns

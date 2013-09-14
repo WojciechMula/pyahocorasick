@@ -1,8 +1,0 @@
-pyahocorasick module installation
-=================================
-
-Just run
-
-		$ python setup.py install
-
-If compilation succed, module is ready to use.

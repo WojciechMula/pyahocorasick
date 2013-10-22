@@ -1,13 +1,10 @@
-# -*- coding: iso-8859-2 -*-
+# -*- coding: utf-8 -*-
 """
 	Aho-Corasick string search algorithm.
 	
-	Author    : Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
+	Author    : Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
+	WWW       : http://0x80.pl
 	License   : public domain
-	Date      : $Date$
-
-	$Id$
 """
 
 nil = object()	# used to distinguish from None
@@ -192,15 +189,16 @@ if __name__ == '__main__':
 	s = "he rshershidamanza "
 
 	t.make_automaton()
-	#t.print()
 	print("="*10)
 	for res in t.items():
 		print(res)
 
 	for res in t.iter(s):
-		print(res)
-
-	#input()
+		print
+		print('%s' % s)
+		pos, matches = res
+		for fragment in matches:
+			print('%s%s' % ((pos - len(fragment) + 1)*' ', fragment))
 
 # vim: ts=4 sw=4 nowrap
 

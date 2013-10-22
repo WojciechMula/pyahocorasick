@@ -161,19 +161,33 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		self.assertEqual(A.longest_prefix(conv("")), 0)
 
 
-	def test_stats1(self):
+	def test_stats_have_valid_structure(self):
 		A = self.A
 		for i, w in enumerate(self.words):
 			A.add_word(conv(w), i+1)
 
+		reference = {
+			'longest_word': 8,
+			'total_size': 696,
+			'sizeof_node': 24,
+			'nodes_count': 25,
+			'words_count': 5,
+			'links_count': 24
+		}
+
 		s = A.get_stats()
-		print(s)
-		self.assertTrue(len(s) > 0)
+
+		self.assertEqual(len(s), len(reference))
+
+		for key in reference:
+			self.assertIn(key, s)
+
+		for key in (key for key in reference if key != 'sizeof_node'):
+			self.assertEqual(reference[key], s[key])
 
 
-	def test_stats2(self):
+	def test_stats_for_empty_tire_are_empty(self):
 		s = self.A.get_stats()
-		print(s)
 		self.assertTrue(len(s) > 0)
 		for key in s:
 			if key != "sizeof_node":

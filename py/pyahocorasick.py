@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 	Aho-Corasick string search algorithm.
-	
+
 	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
 	WWW       : http://0x80.pl
 	License   : public domain
@@ -64,7 +64,7 @@ class Trie(object):
 		for _, value in self.items():
 			yield value
 
-	
+
 	def items(self):
 		L = []
 		def aux(node, s):
@@ -79,7 +79,7 @@ class Trie(object):
 		aux(self.root, '')
 		return iter(L)
 
-	
+
 	def __len__(self):
 		stack = [self.root]
 		n = 0
@@ -122,7 +122,7 @@ class Trie(object):
 
 	def match(self, word):
 		return (self.__get_node(word) is not None)
-		
+
 
 	def make_automaton(self):
 		queue = []
@@ -167,8 +167,10 @@ class Trie(object):
 
 			tmp = state
 			output = []
-			while tmp is not nil and tmp.output is not nil:
-				output.append(tmp.output)
+			while tmp is not nil:
+				if tmp.output is not nil:
+					output.append(tmp.output)
+
 				tmp = tmp.fail
 
 			if output:
@@ -176,29 +178,46 @@ class Trie(object):
 
 
 
-
-
 if __name__ == '__main__':
-	words = "a ab bc bca c caa".split()
-	words = "he hers his she hi him man".split()
 
-	t = Trie();
-	for w in words:
-		t.add_word(w, w)
+	def demo():
+		words = "he hers his she hi him man".split()
 
-	s = "he rshershidamanza "
+		t = Trie();
+		for w in words:
+			t.add_word(w, w)
 
-	t.make_automaton()
-	print("="*10)
-	for res in t.items():
-		print(res)
+		s = "he rshershidamanza "
 
-	for res in t.iter(s):
-		print
-		print('%s' % s)
-		pos, matches = res
-		for fragment in matches:
-			print('%s%s' % ((pos - len(fragment) + 1)*' ', fragment))
+		t.make_automaton()
+		for res in t.items():
+			print(res)
+
+		for res in t.iter(s):
+			print
+			print('%s' % s)
+			pos, matches = res
+			for fragment in matches:
+				print('%s%s' % ((pos - len(fragment) + 1)*' ', fragment))
+
+	demo()
+
+
+	def bug():
+		patterns = ['GT-C3303','SAMSUNG-GT-C3303K/']
+		text = 'SAMSUNG-GT-C3303i/1.0 NetFront/3.5 Profile/MIDP-2.0 Configuration/CLDC-1.1'
+
+		t = Trie()
+		for pattern in patterns:
+			ret = t.add_word(pattern, (0, pattern))
+
+		t.make_automaton()
+
+		res = list(t.iter(text))
+
+		assert len(res) == 1, 'failed'
+
+	bug()
 
 # vim: ts=4 sw=4 nowrap
 

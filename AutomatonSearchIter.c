@@ -66,62 +66,80 @@ automaton_search_iter_iter(PyObject* self) {
 }
 
 
+enum {
+	OutputValue,
+	OutputNone,
+	OutputError
+};
+
+
+static int
+automaton_build_output(PyObject* self, PyObject** result) {
+	TrieNode* node;
+
+	while (iter->output && !iter->output->eow) {
+		iter->output = iter->output->fail;
+	}
+
+	if (iter->output) {
+		node = iter->output;
+		iter->output = iter->output->fail;
+		switch (iter->automaton->store) {
+			case STORE_LENGTH:
+			case STORE_INTS:
+				*result = Py_BuildValue("ii", iter->index + iter->shift, node->output.integer);
+				return OutputValue;
+
+			case STORE_ANY:
+				*result = Py_BuildValue("iO", iter->index + iter->shift, node->output.object);
+				return OutputValue;
+
+			default:
+				PyErr_SetString(PyExc_ValueError, "inconsistent internal state!");
+				return OutputError;
+		}
+	}
+
+	return OutputNone;
+}
+
+
 static PyObject*
 automaton_search_iter_next(PyObject* self) {
+	PyObject* output;
+
 	if (iter->version != iter->automaton->version) {
 		PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
 		return NULL;
 	}
 
 return_output:
-	if (iter->output and iter->output->eow) {
-		TrieNode* node = iter->output;
-		PyObject* tuple;
-		switch (iter->automaton->store) {
-			case STORE_LENGTH:
-			case STORE_INTS:
-				tuple = Py_BuildValue("ii",
-							iter->index + iter->shift,
-							node->output.integer);
-				break;
+	switch (automaton_build_output(self, &output)) {
+		case OutputValue:
+			return output;
 
-			case STORE_ANY:
-				tuple = Py_BuildValue("iO",
-							iter->index + iter->shift,
-							node->output.object);
-				break;
+		case OutputNone:
+			break;
 
-			default:
-				PyErr_SetString(PyExc_ValueError, "inconsistent internal state!");
-				return NULL;
-		}
-
-		// next element to output
-		iter->output = iter->output->fail;
-
-		// yield value
-		return tuple;
+		case OutputError:
+			return NULL;
 	}
-	else
-		iter->index += 1;
 
+	iter->index += 1;
 	while (iter->index < iter->end) {
-#define NEXT(byte) ahocorasick_next(iter->state, iter->automaton->root, (byte))
 		// process single char
 		iter->state = ahocorasick_next(
 						iter->state,
 						iter->automaton->root,
 						iter->data[iter->index]
 						);
-		
+
 		ASSERT(iter->state);
 
-		if (iter->state->eow) {
-			iter->output = iter->state;
-			goto return_output;
-		}
-		else
-			iter->index += 1;
+		iter->output = iter->state;
+		goto return_output;
+
+		iter->index += 1;
 
 	} // while 
 	

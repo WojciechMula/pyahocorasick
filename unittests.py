@@ -650,6 +650,22 @@ class TestTrieStoreLengths(unittest.TestCase):
 			self.assertEqual(len(key), value)
 
 
+class TestBugAutomatonSearch(TestAutomatonBase):
+	"""Bug in search"""
+
+	def setUp(self):
+		self.A = ahocorasick.Automaton()
+		self.words = ['GT-C3303','SAMSUNG-GT-C3303K/']
+
+
+	def test_bug(self):
+		self.add_words_and_make_automaton()
+		text = 'SAMSUNG-GT-C3303i/1.0 NetFront/3.5 Profile/MIDP-2.0 Configuration/CLDC-1.1'
+
+		res  = list(self.A.iter(conv(text)))
+
+		self.assertEqual([(15, 'GT-C3303')], res)
+
 if __name__ == '__main__':
 	unittest.main()
 

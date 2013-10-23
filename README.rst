@@ -434,6 +434,9 @@ Demonstration of keys_ behaviour.
 Major updates
 -------------
 
+2013-10-23
+	* fixed bug in constructing output values while seaching
+
 2011-04-13
 	* select support for either unicode or bytes
 	* simple pattern matching

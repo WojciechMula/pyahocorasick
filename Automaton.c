@@ -46,7 +46,7 @@ check_kind(const int kind) {
 		default:
 			PyErr_SetString(
 				PyExc_ValueError,
-				"store must have value EMPTY, TRIE or AHOCORASICK"
+				"kind must have value EMPTY, TRIE or AHOCORASICK"
 			);
 			return false;
 	}
@@ -491,9 +491,10 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 			ASSERT(child);
 
 			item = (AutomatonQueueItem*)list_item_new(sizeof(AutomatonQueueItem));
-			item->node = child;
-			if (item)
+			if (item) {
+				item->node = child;
 				list_append(&queue, (ListItem*)item);
+			}
 			else
 				goto no_mem;
 

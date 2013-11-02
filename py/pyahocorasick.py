@@ -135,8 +135,10 @@ class Trie(object):
 		stack = [self.root]
 		n = 0
 		while stack:
-			n += 1
 			node = stack.pop()
+			if node.output is not nil:
+				n += 1
+
 			for child in node.children.values():
 				stack.append(child)
 
@@ -244,7 +246,7 @@ class Trie(object):
 				tmp = tmp.fail
 
 			if output:
-				yield (index + start, output)
+				yield (index, output)
 
 
 	def find_all(self, string, callback):

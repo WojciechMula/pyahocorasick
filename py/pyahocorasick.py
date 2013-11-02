@@ -7,6 +7,8 @@
 	License   : public domain
 """
 
+from collections import deque
+
 nil = object()	# used to distinguish from None
 
 class TrieNode(object):
@@ -132,7 +134,8 @@ class Trie(object):
 		Calculates number of words in a trie.
 		"""
 
-		stack = [self.root]
+		stack = deque()
+		stack.append(self.root)
 		n = 0
 		while stack:
 			node = stack.pop()
@@ -199,7 +202,7 @@ class Trie(object):
 		Converts trie to Aho-Corasick automaton.
 		"""
 
-		queue = []
+		queue = deque()
 
 		# 1.
 		for i in range(256):
@@ -213,7 +216,7 @@ class Trie(object):
 
 		# 2.
 		while queue:
-			r = queue.pop(0);
+			r = queue.popleft()
 			for node in r.children.values():
 				queue.append(node)
 				state = r.fail

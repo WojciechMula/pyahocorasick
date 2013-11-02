@@ -10,14 +10,27 @@
 nil = object()	# used to distinguish from None
 
 class TrieNode(object):
+	"""
+	Node of trie/Aho-Corasick automaton
+	"""
+
 	__slots__ = ['char', 'output', 'fail', 'children']
+
 	def __init__(self, char):
-		self.char = char
-		self.output = nil
-		self.fail = nil
-		self.children = {}
+		"""
+		Constructs an ampty node
+		"""
+
+		self.char = char		# character
+		self.output = nil		# an output function for this node
+		self.fail = nil			# fail link used by Aho-Corasick automaton
+		self.children = {}		# children
 
 	def __repr__(self):
+		"""
+		Textual representation of node.
+		"""
+
 		if self.output is not nil:
 			return "<TrieNode '%s' '%s'>" % (self.char, self.output)
 		else:
@@ -25,11 +38,26 @@ class TrieNode(object):
 
 
 class Trie(object):
+	"""
+	Trie/Aho-Corasic automaton
+	"""
+
 	def __init__(self):
+		"""
+		Construct an empty trie
+		"""
+
 		self.root = TrieNode('')
 
 
 	def __get_node(self, word):
+		"""
+		Private function retrieving a final node of trie
+		for given word
+
+		Returns node or None, if word doesn't present in a trie.
+		"""
+
 		node = self.root
 		for c in word:
 			try:
@@ -41,6 +69,13 @@ class Trie(object):
 
 
 	def get(self, word, default=nil):
+		"""
+		Retrieves output value associated with word.
+
+		If there is not word returns default value,
+		and if default is not given rises KeyError.
+		"""
+
 		node = self.__get_node(word)
 		output = nil
 		if node:
@@ -56,16 +91,28 @@ class Trie(object):
 
 
 	def keys(self):
+		"""
+		Generator returning all keys (i.e. word) stored in trie
+		"""
+
 		for key, _ in self.items():
 			yield key
 
 
 	def values(self):
+		"""
+		Generator returning all values associated with words stored in a trie.
+		"""
+
 		for _, value in self.items():
 			yield value
 
 
 	def items(self):
+		"""
+		Generator returning all keys and values stored in a trie.
+		"""
+
 		L = []
 		def aux(node, s):
 			s = s + node.char
@@ -81,6 +128,10 @@ class Trie(object):
 
 
 	def __len__(self):
+		"""
+		Calculates number of words in a trie.
+		"""
+
 		stack = [self.root]
 		n = 0
 		while stack:
@@ -93,6 +144,11 @@ class Trie(object):
 
 
 	def add_word(self, word, value):
+		"""
+		Adds word and associated value.
+
+		If word already exist associated value is replaced.
+		"""
 		if not word:
 			return
 
@@ -109,10 +165,18 @@ class Trie(object):
 
 
 	def clear(self):
+		"""
+		Clears trie.
+		"""
+
 		self.root = TrieNode('')
 
 
 	def exists(self, word):
+		"""
+		Checks if whole word is present in a trie.
+		"""
+
 		node = self.__get_node(word)
 		if node:
 			return bool(node.output != nil)
@@ -121,10 +185,18 @@ class Trie(object):
 
 
 	def match(self, word):
+		"""
+		Checks if word is a prefix of any existing word in a trie.
+		"""
+
 		return (self.__get_node(word) is not None)
 
 
 	def make_automaton(self):
+		"""
+		Converts trie to Aho-Corasick automaton.
+		"""
+
 		queue = []
 
 		# 1.
@@ -149,17 +221,15 @@ class Trie(object):
 				node.fail = state.children.get(node.char, self.root)
 
 
-	def find_all(self, string, callback, start=None, end=None):
-		for index, output in self.iter():
-			callback(index, output)
-
-
-	def iter(self, string, start=None, end=None):
-		start = start if start is not None else 0
-		end = end if end is not None else len(string)
-
+	def iter(self, string):
+		"""
+		Generator performs Aho-Corasick search string algorithm, yielding
+		tuples containing two values:
+		- position in string
+		- outputs associated with matched strings
+		"""
 		state = self.root
-		for index, c in enumerate(string[start:end]):
+		for index, c in enumerate(string):
 			while c not in state.children:
 				state = state.fail
 
@@ -175,6 +245,14 @@ class Trie(object):
 
 			if output:
 				yield (index + start, output)
+
+
+	def find_all(self, string, callback):
+		"""
+		Wrapper on iter method, callback gets an iterator result
+		"""
+		for index, output in self.iter(string):
+			callback(index, output)
 
 
 

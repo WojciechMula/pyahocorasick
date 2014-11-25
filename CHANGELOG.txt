@@ -1,0 +1,9 @@
+2013-10-23
+	* fixed bug in constructing output values while seaching
+
+2011-04-13
+	* select support for either unicode or bytes
+	* simple pattern matching
+
+2011-04-12
+	extend ``keys``/``values``/``items`` to match simple patterns

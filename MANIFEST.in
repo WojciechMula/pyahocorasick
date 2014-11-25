@@ -1,0 +1,4 @@
+include README.rst
+include dump2dot.py
+include *.h
+include *.c

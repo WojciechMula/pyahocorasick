@@ -62,9 +62,9 @@ __ http://0x80.pl/articles/trie-representation.html
 Installation
 ============
 
-Just run:
+Just run::
 
-		$ python setup.py install
+		python setup.py install
 
 If compilation succed, module is ready to use.
 
@@ -429,17 +429,3 @@ Demonstration of keys_ behaviour.
 	>>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_LEAST_PREFIX))
 	["rate"]
 
-
-
-Major updates
--------------
-
-2013-10-23
-	* fixed bug in constructing output values while seaching
-
-2011-04-13
-	* select support for either unicode or bytes
-	* simple pattern matching
-
-2011-04-12
-	extend ``keys``/``values``/``items`` to match simple patterns

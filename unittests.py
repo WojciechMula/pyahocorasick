@@ -166,10 +166,11 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		for i, w in enumerate(self.words):
 			A.add_word(conv(w), i+1)
 
+		platform_dependent = None
 		reference = {
 			'longest_word': 8,
-			'total_size': 696,
-			'sizeof_node': 24,
+			'total_size': platform_dependent,
+			'sizeof_node': platform_dependent,
 			'nodes_count': 25,
 			'words_count': 5,
 			'links_count': 24
@@ -182,7 +183,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 		for key in reference:
 			self.assertIn(key, s)
 
-		for key in (key for key in reference if key != 'sizeof_node'):
+		for key in (key for key in reference if reference[key] != platform_dependent):
 			self.assertEqual(reference[key], s[key])
 
 

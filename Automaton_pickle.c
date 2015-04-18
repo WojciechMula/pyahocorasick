@@ -36,7 +36,7 @@ Unpickling (automaton_unpickle, called in Automaton constructor)
 
 typedef struct NodeID {
 	TrieNode* fail;	///< original fail value
-	int id;			///< id
+	Py_uintptr_t id;			///< id
 } NodeID;
 
 typedef struct DumpState {

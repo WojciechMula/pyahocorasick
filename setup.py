@@ -15,15 +15,20 @@ module = Extension(
         ('AHOCORASICK_UNICODE', ''),    # when defined unicode strings are supported
     ],
     depends = [
+        'common.h',
         'Automaton.c',
+        'Automaton.h',
         'Automaton_pickle.c',
         'AutomatonItemsIter.c',
+        'AutomatonItemsIter.h',
         'AutomatonSearchIter.c',
+        'AutomatonSearchIter.h',
         'trie.c',
+        'trie.h',
         'slist.c',
         'utils.c',
-        'trie.c',
         'trienode.c',
+        'trienode.h',
     ],
 )
 

@@ -18,6 +18,7 @@ trienode_new(const TRIE_LETTER_TYPE letter, char eow) {
 	TrieNode* node = (TrieNode*)memalloc(sizeof(TrieNode));
 	if (node) {
 		node->output.integer = 0;
+		node->output.object = NULL;
 		node->fail		= NULL;
 
 		node->n		= 0;
@@ -30,7 +31,7 @@ trienode_new(const TRIE_LETTER_TYPE letter, char eow) {
 }
 
 
-static TrieNode* PURE ALWAYS_INLINE
+static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter) {
 	ASSERT(node);
 	int i;

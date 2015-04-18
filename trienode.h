@@ -20,7 +20,7 @@
 typedef struct TrieNode {
 	union {
 		PyObject*	object;		///< valid when kind = STORE_ANY
-		int			integer;	///< valid when kind in [STORE_LENGTH, STORE_INTS]
+		Py_uintptr_t integer;	///< valid when kind in [STORE_LENGTH, STORE_INTS]
 	} output; ///< output function, valid when eow is true
 	struct TrieNode*	fail;	///< fail node
 

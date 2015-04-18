@@ -17,7 +17,7 @@
 static PyTypeObject automaton_type;
 
 
-static bool ALWAYS_INLINE
+static bool
 check_store(const int store) {
 	switch (store) {
 		case STORE_LENGTH:
@@ -35,7 +35,7 @@ check_store(const int store) {
 }
 
 
-static bool ALWAYS_INLINE
+static bool
 check_kind(const int kind) {
 	switch (kind) {
 		case EMPTY:

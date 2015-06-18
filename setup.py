@@ -43,7 +43,7 @@ setup(
     author_email     = "wojciech_mula@poczta.onet.pl",
     maintainer       = "Wojciech Muła",
     maintainer_email = "wojciech_mula@poczta.onet.pl",
-    url              = "http://github.com/WojciechMula/pyhocorasick",
+    url              = "http://github.com/WojciechMula/pyahocorasick",
     platforms        = ["Linux", "Windows"],
     license          = "BSD (3 clauses)",
     long_description = get_readme(),

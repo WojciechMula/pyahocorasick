@@ -41,7 +41,7 @@ class TrieNode(object):
 
 class Trie(object):
 	"""
-	Trie/Aho-Corasic automaton
+	Trie/Aho-Corasick automation
 	"""
 
 	def __init__(self):
@@ -57,7 +57,7 @@ class Trie(object):
 		Private function retrieving a final node of trie
 		for given word
 
-		Returns node or None, if word doesn't present in a trie.
+		Returns node or None, if the trie doesn't contain the word.
 		"""
 
 		node = self.root
@@ -74,7 +74,7 @@ class Trie(object):
 		"""
 		Retrieves output value associated with word.
 
-		If there is not word returns default value,
+		If there is no word returns default value,
 		and if default is not given rises KeyError.
 		"""
 
@@ -152,7 +152,7 @@ class Trie(object):
 		"""
 		Adds word and associated value.
 
-		If word already exist associated value is replaced.
+		If word already exists, its value is replaced.
 		"""
 		if not word:
 			return
@@ -179,7 +179,7 @@ class Trie(object):
 
 	def exists(self, word):
 		"""
-		Checks if whole word is present in a trie.
+		Checks if whole word is present in the trie.
 		"""
 
 		node = self.__get_node(word)
@@ -191,7 +191,7 @@ class Trie(object):
 
 	def match(self, word):
 		"""
-		Checks if word is a prefix of any existing word in a trie.
+		Checks if word is a prefix of any existing word in the trie.
 		"""
 
 		return (self.__get_node(word) is not None)

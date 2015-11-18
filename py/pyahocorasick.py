@@ -20,7 +20,7 @@ class TrieNode(object):
 
 	def __init__(self, char):
 		"""
-		Constructs an ampty node
+		Constructs an empty node
 		"""
 
 		self.char = char		# character

@@ -157,20 +157,29 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 	// first argument - required string or buffer
 	object = PyTuple_GetItem(args, 0);
 	if (object) {
-#ifdef AHOCORASICK_UNICODE
-		if (PyUnicode_Check(object))
-			len = PyUnicode_GET_SIZE(object);
-		else {
-			PyErr_SetString(PyExc_TypeError, "string required");
-			return NULL;
-		}
+#ifdef PY3K
+    #ifdef AHOCORASICK_UNICODE
+        if (PyUnicode_Check(object))
+            len = PyUnicode_GET_SIZE(object);
+        else {
+            PyErr_SetString(PyExc_TypeError, "string required");
+            return NULL;
+        }
+    #else
+        if (PyBytes_Check(object))
+            len = PyBytes_GET_SIZE(object);
+        else {
+            PyErr_SetString(PyExc_TypeError, "string or bytes object required");
+            return NULL;
+        }
+    #endif
 #else
-		if (PyBytes_Check(object))
-			len = PyBytes_GET_SIZE(object);
-		else {
-			PyErr_SetString(PyExc_TypeError, "string or bytes object required");
-			return NULL;
-		}
+        if (PyString_Check(object)) {
+            len = PyString_GET_SIZE(object);
+        } else {
+            PyErr_SetString(PyExc_TypeError, "string required 2");
+            return NULL;
+        }
 #endif
 	}
 	else

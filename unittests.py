@@ -12,13 +12,17 @@
 	$Id$
 """
 
+import sys
 import unittest
 import ahocorasick
 
 if ahocorasick.unicode:
 	conv = lambda x: x
 else:
-	conv = lambda x: bytes(x, 'ascii')
+    if sys.version_info.major >= 3:
+        conv = lambda x: bytes(x, 'ascii')
+    else:
+	    conv = lambda x: x
 
 
 class TestTrieStorePyObjectsBase(unittest.TestCase):

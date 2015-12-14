@@ -16,26 +16,39 @@
 /* returns bytes or unicode internal buffer */
 static PyObject*
 pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-#ifdef AHOCORASICK_UNICODE
-	if (PyUnicode_Check(obj)) {
-		*word = PyUnicode_AS_UNICODE(obj);
-		*wordlen = PyUnicode_GET_SIZE(obj);
-		Py_INCREF(obj);
-		return obj;
-	}
-	else {
-		PyErr_SetString(PyExc_TypeError, "string expected");
-		return NULL;
-	}
-#else
-	if (PyBytes_Check(obj)) {
-		*word = (TRIE_LETTER_TYPE*)PyBytes_AS_STRING(obj);
-		*wordlen = PyBytes_GET_SIZE(obj);
-		Py_INCREF(obj);
-		return obj;
-	}
-	else {
-		PyErr_SetString(PyExc_TypeError, "bytes expected");
+#ifdef PY3K
+#   ifdef AHOCORASICK_UNICODE
+        if (PyUnicode_Check(obj)) {
+            *word = PyUnicode_AS_UNICODE(obj);
+            *wordlen = PyUnicode_GET_SIZE(obj);
+            Py_INCREF(obj);
+            return obj;
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError, "string expected");
+            return NULL;
+        }
+#   else
+        if (PyBytes_Check(obj)) {
+            *word = (TRIE_LETTER_TYPE*)PyBytes_AS_STRING(obj);
+            *wordlen = PyBytes_GET_SIZE(obj);
+            Py_INCREF(obj);
+            return obj;
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError, "bytes expected");
+            return NULL;
+        }
+#   endif
+#else // PY_MAJOR_VERSION == 3
+	if (PyString_Check(obj)) {
+        *word = PyString_AS_STRING(obj);
+        *wordlen = PyString_GET_SIZE(obj);
+
+        Py_INCREF(obj);
+        return obj;
+    } else {
+		PyErr_SetString(PyExc_TypeError, "string1 required");
 		return NULL;
 	}
 #endif

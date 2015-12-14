@@ -34,6 +34,7 @@ ahocorasick_module_methods[] = {
 };
 
 
+#ifdef PY3K
 static
 PyModuleDef ahocorasick_module = {
 	PyModuleDef_HEAD_INIT,
@@ -42,9 +43,16 @@ PyModuleDef ahocorasick_module = {
 	-1,
 	ahocorasick_module_methods
 };
+#endif
+
+#ifdef PY3K
+#define init_function PyInit_ahocorasick
+#else
+#define init_function initahocorasick
+#endif
 
 PyMODINIT_FUNC
-PyInit_ahocorasick(void) {
+init_function(void) {
 	PyObject* module;
 
 	automaton_as_sequence.sq_length   = automaton_len;
@@ -52,7 +60,11 @@ PyInit_ahocorasick(void) {
 
 	automaton_type.tp_as_sequence = &automaton_as_sequence;
 	
+#ifdef PY3K
 	module = PyModule_Create(&ahocorasick_module);
+#else
+    module = Py_InitModule("ahocorasick", ahocorasick_module_methods);
+#endif
 	if (module == NULL)
 		return NULL;
 

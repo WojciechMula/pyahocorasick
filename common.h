@@ -17,6 +17,15 @@
 
 #define DEBUG
 
+#if PY_MAJOR_VERSION >= 3
+    #define PY3K
+#else
+    #ifdef AHOCORASICK_UNICODE
+        #warning "No support for unicode in version for Python2"
+    #endif
+    #undef AHOCORASICK_UNICODE
+#endif
+
 // setup supported character set
 #ifdef AHOCORASICK_UNICODE
 #	ifdef Py_UNICODE_WIDE

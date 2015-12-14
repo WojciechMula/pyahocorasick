@@ -219,7 +219,12 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		* list of values
 	*/
 
-	PyObject* tuple = Py_BuildValue("O(ky#iiiiO)",
+	PyObject* tuple = Py_BuildValue(
+#ifdef PY3K
+        "O(ky#iiiiO)",
+#else
+        "O(is#iiiiO)",
+#endif
 		Py_TYPE(self),
 		state.id,
 		data.data, data.top,

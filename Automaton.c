@@ -78,7 +78,13 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		KeysStore		store;
 		PyObject*		values = NULL;
 
-		if (not PyArg_ParseTuple(args, "ky#iiiiO", &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
+#ifdef PY3K
+        const char* fmt = "ky#iiiiO";
+#else
+        const char* fmt = "is#iiii0";
+#endif
+
+		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
 			goto error;
 		}
@@ -760,7 +766,8 @@ automaton_iter(PyObject* self, PyObject* args) {
 
 	object = PyTuple_GetItem(args, 0);
 	if (object) {
-#ifdef AHOCORASICK_UNICODE
+#ifdef PY3K
+    #ifdef AHOCORASICK_UNICODE
 		if (PyUnicode_Check(object)) {
 			start	= 0;
 			end		= PyUnicode_GET_SIZE(object);
@@ -769,7 +776,7 @@ automaton_iter(PyObject* self, PyObject* args) {
 			PyErr_SetString(PyExc_TypeError, "string required");
 			return NULL;
 		}
-#else
+    #else
 		if (PyBytes_Check(object)) {
 			start 	= 0;
 			end		= PyBytes_GET_SIZE(object);
@@ -778,6 +785,15 @@ automaton_iter(PyObject* self, PyObject* args) {
 			PyErr_SetString(PyExc_TypeError, "bytes required");
 			return NULL;
 		}
+    #endif
+#else
+        if (PyString_Check(object)) {
+			start	= 0;
+			end		= PyString_GET_SIZE(object);
+        } else {
+			PyErr_SetString(PyExc_TypeError, "string required");
+			return NULL;
+        }
 #endif
 	}
 	else

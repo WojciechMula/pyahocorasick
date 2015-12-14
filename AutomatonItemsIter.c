@@ -214,10 +214,14 @@ automaton_items_iter_next(PyObject* self) {
 					switch (iter->automaton->store) {
 						case STORE_ANY:
 							return Py_BuildValue(
-#ifdef AHOCORASICK_UNICODE
+#ifdef PY3K
+    #ifdef AHOCORASICK_UNICODE
 								"(u#O)",
-#else
+    #else
 								"(y#O)",
+    #endif
+#else
+                                "(s#O)",
 #endif
 								/*key*/ iter->buffer + 1, item->depth,
 								/*val*/ iter->state->output.object
@@ -226,10 +230,14 @@ automaton_items_iter_next(PyObject* self) {
 						case STORE_LENGTH:
 						case STORE_INTS:
 							return Py_BuildValue(
-#ifdef AHOCORASICK_UNICODE
+#ifdef PY3K
+    #ifdef AHOCORASICK_UNICODE
 								"(u#i)",
-#else
+    #else
 								"(y#i)",
+    #endif
+#else
+                                "(s#i)",
 #endif
 								/*key*/ iter->buffer + 1, item->depth,
 								/*val*/ iter->state->output.integer

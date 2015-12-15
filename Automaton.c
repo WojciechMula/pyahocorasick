@@ -85,7 +85,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 #ifdef PY3K
         const char* fmt = "iy#iiiiO";
 #else
-        const char* fmt = "is#iiii0";
+        const char* fmt = "is#iiiiO";
 #endif
 
 		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {

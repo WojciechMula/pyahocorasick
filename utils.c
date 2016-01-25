@@ -1,10 +1,10 @@
 /*
 	This is part of pyahocorasick Python module.
-	
+
 	Helpers functions.
 	This file is included directly.
 
-	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
+	Author    : Wojciech Muï¿½a, wojciech_mula@poczta.onet.pl
 	WWW       : http://0x80.pl/proj/pyahocorasick/
 	License   : public domain
 	Date      : $Date$
@@ -100,7 +100,7 @@ pymod_parse_start_end(
 		start = max + start;
 
 	if (start < min or start >= max) {
-		PyErr_Format(PyExc_IndexError, "start index not in range %d..%d", min, max);
+		PyErr_Format(PyExc_IndexError, "start index not in range %zu..%zu", min, max);
 		return -1;
 	}
 
@@ -123,7 +123,7 @@ pymod_parse_start_end(
 		end = max - 1 + end;
 
 	if (end < min or end >= max) {
-		PyErr_Format(PyExc_IndexError, "end index not in range %d..%d", min, max);
+		PyErr_Format(PyExc_IndexError, "end index not in range %zu..%zu", min, max);
 		return -1;
 	}
 
@@ -132,4 +132,3 @@ pymod_parse_start_end(
 #undef start
 #undef end
 }
-

@@ -89,6 +89,14 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 			goto error;
 		}
 
+        printf("unpickle\n");
+        printf("\tautomaton->count = %d\n", count);
+        printf("\tautomaton->kind = %d\n", kind);
+        printf("\tautomaton->store = %d\n", store);
+        printf("\tautomaton->version = %d\n", version);
+        printf("\tautomaton->longest_word = %d\n", longest_word);
+        printf("end\n");
+
 		if (not check_store(store) or not check_kind(kind))
 			goto error;
 

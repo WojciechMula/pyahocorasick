@@ -96,7 +96,7 @@ pymod_parse_start_end(
 	if (start < 0)
 		start = max + start;
 
-	if (start < min or start > max) {
+	if (start < min or start >= max) {
 		PyErr_Format(PyExc_IndexError, "start index not in range %d..%d", min, max);
 		return -1;
 	}

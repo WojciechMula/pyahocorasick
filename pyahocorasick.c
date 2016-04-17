@@ -47,8 +47,10 @@ PyModuleDef ahocorasick_module = {
 
 #ifdef PY3K
 #define init_function PyInit_ahocorasick
+#define init_return(value) return (value)
 #else
 #define init_function initahocorasick
+#define init_return(unused) return
 #endif
 
 PyMODINIT_FUNC
@@ -66,11 +68,12 @@ init_function(void) {
     module = Py_InitModule("ahocorasick", ahocorasick_module_methods);
 #endif
 	if (module == NULL)
-		return NULL;
+		init_return(NULL);
+
 
 	if (PyType_Ready(&automaton_type) < 0) {
 		Py_DECREF(module);
-		return NULL;
+		init_return(NULL);
 	}
 	else
 		PyModule_AddObject(module, "Automaton", (PyObject*)&automaton_type);
@@ -95,5 +98,5 @@ init_function(void) {
 	PyModule_AddIntConstant(module, "unicode", 0);
 #endif
 
-	return module;
+	init_return(module);
 }

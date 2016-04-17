@@ -46,11 +46,12 @@ typedef struct DumpState {
 // replace fail with pairs (fail, id)
 static int
 pickle_dump_replace_fail_with_id(TrieNode* node, const int depth, void* extra) {
+    ASSERT(sizeof(NodeID*) <= sizeof(TrieNode*));
 #define state ((DumpState*)extra)
 	NodeID* repl = (NodeID*)memalloc(sizeof(NodeID));
 	if (LIKELY(repl != NULL)) {
 		state->id += 1;
-		state->total_size += trienode_get_size(node) - sizeof(TrieNode*);
+		state->total_size += trienode_get_size(node)/* - sizeof(TrieNode*)*/;
 
 		repl->id   = state->id;
 		repl->fail = node->fail;
@@ -116,7 +117,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	TrieNode* tmp;
 
 	// we do not save last pointer in array
-	TrieNode** arr = (TrieNode**)(self->data + self->top + sizeof(TrieNode) - sizeof(TrieNode*));
+	TrieNode** arr = (TrieNode**)(self->data + self->top + sizeof(TrieNode)/* - sizeof(TrieNode*)*/);
 
 	// append python object to the list
 	if (node->eow and self->values) {
@@ -151,7 +152,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	}
 
 	// advance pointer
-	self->top += trienode_get_size(node) - sizeof(TrieNode*);
+	self->top += trienode_get_size(node)/* - sizeof(TrieNode*)*/;
 
 	return 1;
 #undef NODEID
@@ -235,6 +236,14 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		data.values
 	);
 
+    printf("pickle\n");
+    printf("\tautomaton->count = %d\n", state.id);
+    printf("\tautomaton->kind = %d\n", automaton->kind);
+    printf("\tautomaton->store = %d\n", automaton->store);
+    printf("\tautomaton->version = %d\n", automaton->version);
+    printf("\tautomaton->longest_word = %d\n", automaton->longest_word);
+    printf("end\n");
+
 	if (tuple) {
 		// revert all changes
 		trie_traverse(automaton->root, pickle_dump_undo_replace, NULL);
@@ -283,7 +292,7 @@ automaton_unpickle(
 	size_t i, j;
 
     if (UNLIKELY(size < count*(sizeof(TrieNode) - sizeof(TrieNode*)))) {
-        PyErr_SetString(PyExc_ValueError, "binary data truncated 2");
+        PyErr_SetString(PyExc_ValueError, "binary data truncated (2)");
         return NULL;
     }
 

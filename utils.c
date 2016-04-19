@@ -4,12 +4,8 @@
 	Helpers functions.
 	This file is included directly.
 
-	Author    : Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
+	Author    : Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
 	License   : public domain
-	Date      : $Date$
-
-	$Id$
 */
 
 

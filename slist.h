@@ -9,13 +9,8 @@
 	* pop first
 	* get first/last
 
-	Author    : Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
+	Author    : Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
 	License   : public domain
-	Date      : $Date$
-
-	$Id$
-
 */
 #ifndef ahocorasick_slist_h_included
 #define ahocorasick_slist_h_included

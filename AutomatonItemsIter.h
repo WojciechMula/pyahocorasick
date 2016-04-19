@@ -6,12 +6,8 @@
 	words and associated values. Object of this class is
 	returned by 'keys'/'values'/'items' methods of Automaton class.
 
-	Author    : Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
+	Author    : Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
 	License   : 3-clauses BSD (see LICENSE)
-	Date      : $Date$
-
-	$Id$
 */
 #ifndef ahocorasick_AutomatonItemsIter_h_included
 #define ahocorasick_AutomatonItemsIter_h_included

@@ -6,13 +6,8 @@
 	automaton. Object of this class is returnd by 'iter' method
 	of Automaton class.
 
-	Author    : Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
+	Author    : Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
 	License   : 3-clauses BSD (see LICENSE)
-	Date      : $Date$
-
-	$Id$
-
 */
 #ifndef ahocorasick_AutomatonSearchIter_h_included
 #define ahocorasick_AutomatonSearchIter_h_included

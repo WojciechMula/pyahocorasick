@@ -3,12 +3,8 @@
 	
 	Trie declarations
 
-	Author    : Wojciech Mu≥a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
+	Author    : Wojciech Mu≈Ça, wojciech_mula@poczta.onet.pl
 	License   : 3-clauses BSD (see LICENSE)
-	Date      : $Date$
-
-	$Id$
 */
 
 #ifndef ahocorasick_trie_h_included

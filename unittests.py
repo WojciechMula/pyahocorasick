@@ -542,6 +542,7 @@ class TestAutomatonIterInvalidate(TestAutomatonBase):
 
 print_dumps = False
 
+@unittest.skip("bug #5")
 class TestPickle(TestAutomatonBase):
 	"Test pickling/unpickling"
 

@@ -48,4 +48,7 @@ trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter);
 static TrieNode*
 trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child);
 
+static TrieNode* PURE
+trienode_get_ith_unsafe(TrieNode* node, size_t letter);
+
 #endif

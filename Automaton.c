@@ -453,23 +453,20 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 	// 1. setup nodes at 1-st level
 	ASSERT(automaton->root);
 
-	for (i=0; i < 256; i++) {
-		TrieNode* child = trienode_get_next(automaton->root, i);
-		if (child) {
-			// fail edges go to root
-			child->fail = automaton->root;
+	for (i=0; i < automaton->root->n; i++) {
+		TrieNode* child = trienode_get_ith_unsafe(automaton->root, i);
+        ASSERT(child);
+		// fail edges go to the root
+		// every other letters loop on root - implicit (see automaton_next)
+		child->fail = automaton->root;
 
-			item = (AutomatonQueueItem*)list_item_new(sizeof(AutomatonQueueItem));
-			if (item) {
-				item->node = child;
-				list_append(&queue, (ListItem*)item);
-			}
-			else
-				goto no_mem;
+		item = (AutomatonQueueItem*)list_item_new(sizeof(AutomatonQueueItem));
+		if (item) {
+			item->node = child;
+			list_append(&queue, (ListItem*)item);
 		}
 		else
-			// loop on root - implicit (see automaton_next)
-			;
+			goto no_mem;
 	}
 
 	// 2. make links

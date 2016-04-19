@@ -168,14 +168,14 @@ Dictionary methods
 
 .. _keys:
 
-``keys([prefix, [wildchar, [how]]]) => yield strings``
+``keys([prefix, [wildcard, [how]]]) => yield strings``
 	Returns iterator that iterate through words.
 
 	If ``prefix`` (a string) is given, then only words sharing this
 	prefix are yielded.
 	
-	If ``wildchar`` (single character) is given, then prefix is
-	treated as a simple pattern with selected wildchar. Optional
+	If ``wildcard`` (single character) is given, then prefix is
+	treated as a simple pattern with selected wildcard. Optional
 	parameter ``how`` controls which strings are matched:
 
 	``MATCH_EXACT_LENGTH`` [default]
@@ -190,14 +190,14 @@ Dictionary methods
 		Strings that have length less or equal to a pattern's length
 		are yielded.
 
-	See `Example 2`_.
+	See `Example 2`_ and the section below.
 
 
-``values([prefix, [wildchar, [how]]]) => yield object``
+``values([prefix, [wildcard, [how]]]) => yield object``
 	Return iterator that iterate through values associated with words.
 	Words are matched as in ``keys`` method.
 
-``items([prefix, [wildchar, [how]]]) => yield tuple (string, object)``
+``items([prefix, [wildcard, [how]]]) => yield tuple (string, object)``
 	Return iterator that iterate through words and associated values.
 	Words are matched as in ``keys`` method.
 
@@ -206,6 +206,18 @@ Dictionary methods
 
 ``len()`` protocol
 	Returns number of distinct words.
+
+
+Wildcards
+^^^^^^^^^
+
+Methods ``keys``, ``values`` and ``items`` accept variant with **wildcard**.
+A wildcard character is equivalent to a question mark used in glob patterns (?)
+or a dot from regular expressions (.). In case of these function a programmer
+can pick any character.
+
+It is not possible to escape a wildcard and thus match it exactly ---
+simply select another char, not present in the pattern.
 
 
 Trie

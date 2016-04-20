@@ -217,7 +217,10 @@ or a dot from regular expressions (.). In case of these function a programmer
 can pick any character.
 
 It is not possible to escape a wildcard and thus match it exactly ---
-simply select another char, not present in the pattern.
+simply select another char, not present in the pattern. For example::
+
+    automaton.keys("hi?", "?")  # would match "him", "his"
+    automaton.keys("XX?", "X")  # would match "me?", "he?" or "it?"
 
 
 Trie

@@ -3,7 +3,7 @@
     
     Unit tests
 
-    Author    : Wojciech Mu�a, wojciech_mula@poczta.onet.pl
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl/proj/pyahocorasick/
     License   : public domain
     Date      : $Date$
@@ -541,7 +541,6 @@ class TestAutomatonIterInvalidate(TestAutomatonBase):
 
 print_dumps = False
 
-@unittest.skip("bug #5")
 class TestPickle(TestAutomatonBase):
     "Test pickling/unpickling"
 
@@ -549,6 +548,8 @@ class TestPickle(TestAutomatonBase):
         import pickle
 
         A = self.add_words_and_make_automaton();
+        reduced = A.__reduce__()
+        self.assertEqual(len(reduced), 2)
         if print_dumps:
             print(pickle.dumps(A))
 
@@ -559,6 +560,40 @@ class TestPickle(TestAutomatonBase):
         dump = pickle.dumps(A)
         B = pickle.loads(dump)
 
+        self.compare_automatons(A, B)
+
+
+    def test_unicode(self):
+        # sample Russian words from issue #8
+        import pickle
+
+        test_sentences_rus = ["!ASM Print",
+        "!ASM Print, tyre компания er",
+        "!ASM Print, рекламно-производственная компания rr",
+        "!Action Pact!",
+        "!T.O.O.H.!",
+        "!YES, лингвистический центр",
+        "!ts, магазин",
+        "!ФЕСТ",
+        '"100-th" department store',
+        '"1000 мелочей"',
+        '"1001 мелочь"',
+        '"19 отряд Федеральной противопожарной службы по Ленинградской области"',
+        '"У Друзей"',
+        '"ШТОРЫ и не только..."']
+
+        A = ahocorasick.Automaton()
+        for sentences in test_sentences_rus[-7:]:
+            for index, word in enumerate(sentences.split(' ')):
+                A.add_word(word, (index, word))
+
+        dump = pickle.dumps(A)
+        B = pickle.loads(dump)
+
+        self.compare_automatons(A, B)
+
+
+    def compare_automatons(self, A, B):
         if print_dumps:
             print([x for x in B.items()])
             print([x for x in B.iter(self.string)])

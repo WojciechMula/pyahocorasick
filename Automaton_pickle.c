@@ -213,7 +213,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		* list of values
 	*/
 
-	PyObject* tuple = Py_BuildValue("O(iy#iiiiO)",
+	PyObject* tuple = Py_BuildValue("O(ky#iiiiO)",
 		Py_TYPE(self),
 		state.id,
 		data.data, data.top,
@@ -272,11 +272,11 @@ automaton_unpickle(
 	size_t i, j;
 
 	ASSERT(count);
-	ASSERT(size >= count*(sizeof(TrieNode) - sizeof(TrieNode*)));
 
-	id2node = (TrieNode**)memalloc((count+1)*sizeof(TrieNode));
-	if (id2node == NULL) 
+	id2node = (TrieNode**)memalloc((count+1) * sizeof(TrieNode));
+	if (id2node == NULL) {
 		goto no_mem;
+    }
 
 	// 1. make nodes
 	id = 1;
@@ -292,12 +292,17 @@ automaton_unpickle(
 			node->eow		= dump->eow;
 			node->next		= NULL;
 		}
-		else 
+		else
 			goto no_mem;
 
 		if (node->n > 0) {
 			node->next = (TrieNode**)memalloc(node->n * sizeof(TrieNode*));
 			if (LIKELY(node->next != NULL)) {
+                if (UNLIKELY(ptr + sizeof(TrieNode) - sizeof(TrieNode*) > data + size)) {
+                    PyErr_SetString(PyExc_ValueError, "binary data truncated");
+                    goto exception;
+                }
+
 				next = (TrieNode**)(ptr + sizeof(TrieNode) - sizeof(TrieNode*));
 				for (j=0; j < node->n; j++)
 					node->next[j] = next[j];

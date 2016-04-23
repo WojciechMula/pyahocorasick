@@ -78,7 +78,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		KeysStore		store;
 		PyObject*		values = NULL;
 
-		if (not PyArg_ParseTuple(args, "iy#iiiiO", &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
+		if (not PyArg_ParseTuple(args, "ky#iiiiO", &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
 			goto error;
 		}

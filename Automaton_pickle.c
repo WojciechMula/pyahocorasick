@@ -164,6 +164,12 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 static PyObject*
 automaton___reduce__(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
+    // 0. for an empty automaton do nothing
+    if (automaton->count == 0) {
+        // the class constructor feeded with an empty argument build an empty automaton
+        return Py_BuildValue("O()", Py_TYPE(self));
+    }
+
 	// 1. numerate nodes
 	DumpState	state;
 	state.id		= 0;
@@ -271,7 +277,10 @@ automaton_unpickle(
 	void* ptr;
 	size_t i, j;
 
-	ASSERT(count);
+    if (UNLIKELY(size < count*(sizeof(TrieNode) - sizeof(TrieNode*)))) {
+        PyErr_SetString(PyExc_ValueError, "binary data truncated 2");
+        return NULL;
+    }
 
 	id2node = (TrieNode**)memalloc((count+1) * sizeof(TrieNode));
 	if (id2node == NULL) {

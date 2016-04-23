@@ -593,6 +593,17 @@ class TestPickle(TestAutomatonBase):
         self.compare_automatons(A, B)
 
 
+    def test_empty(self):
+        # sample Russian words from issue #8
+        import pickle
+
+        A = ahocorasick.Automaton()
+        dump = pickle.dumps(A)
+        B = pickle.loads(dump)
+
+        self.compare_automatons(A, B)
+
+
     def compare_automatons(self, A, B):
         if print_dumps:
             print([x for x in B.items()])

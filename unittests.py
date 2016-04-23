@@ -1,687 +1,686 @@
-# -*- coding: iso-8859-2 -*-
 """
-	This is part of pyahocorasick Python module.
-	
-	Unit tests
+    This is part of pyahocorasick Python module.
+    
+    Unit tests
 
-	Author    : Wojciech Mu³a, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl/proj/pyahocorasick/
-	License   : public domain
-	Date      : $Date$
+    Author    : Wojciech Mu¿a, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl/proj/pyahocorasick/
+    License   : public domain
+    Date      : $Date$
 
-	$Id$
+    $Id$
 """
 
 import unittest
 import ahocorasick
 
 if ahocorasick.unicode:
-	conv = lambda x: x
+    conv = lambda x: x
 else:
-	conv = lambda x: bytes(x, 'ascii')
+    conv = lambda x: bytes(x, 'ascii')
 
 
 class TestTrieStorePyObjectsBase(unittest.TestCase):
-	def setUp(self):
-		self.A = ahocorasick.Automaton();
-		self.words = "word python aho corasick \x00\x00\x00".split()
-		self.inexisting = "test foo bar dword".split()
+    def setUp(self):
+        self.A = ahocorasick.Automaton();
+        self.words = "word python aho corasick \x00\x00\x00".split()
+        self.inexisting = "test foo bar dword".split()
 
 
 class TestTrieMethods(TestTrieStorePyObjectsBase):
-	"Test basic methods related to trie structure"
+    "Test basic methods related to trie structure"
 
-	def test_empty(self):
-		A = self.A
-		self.assertTrue(A.kind == ahocorasick.EMPTY)
-		self.assertTrue(len(A) == 0)
-
-
-	def test_add_word(self):
-		A = self.A
-		self.assertTrue(A.kind == ahocorasick.EMPTY)
-
-		n = 0
-		for word in self.words:
-			n += 1
-			A.add_word(conv(word), None)
-			self.assertEqual(A.kind, ahocorasick.TRIE)
-			self.assertEqual(len(A), n)
-
-		# dupliacted entry
-		A.add_word(conv(self.words[0]), None)
-		self.assertTrue(A.kind == ahocorasick.TRIE)
-		self.assertTrue(len(A) == n)
+    def test_empty(self):
+        A = self.A
+        self.assertTrue(A.kind == ahocorasick.EMPTY)
+        self.assertTrue(len(A) == 0)
 
 
-	def test_add_empty_word(self):
-		if ahocorasick.unicode:
-			self.assertFalse(self.A.add_word("", None))
-		else:
-			self.assertFalse(self.A.add_word(b"", None))
+    def test_add_word(self):
+        A = self.A
+        self.assertTrue(A.kind == ahocorasick.EMPTY)
 
-		self.assertEqual(len(self.A), 0)
-		self.assertEqual(self.A.kind, ahocorasick.EMPTY)
+        n = 0
+        for word in self.words:
+            n += 1
+            A.add_word(conv(word), None)
+            self.assertEqual(A.kind, ahocorasick.TRIE)
+            self.assertEqual(len(A), n)
 
-
-	def test_clear(self):
-		A = self.A
-		self.assertTrue(A.kind == ahocorasick.EMPTY)
-
-		for w in self.words:
-			A.add_word(conv(w), w)
-
-		self.assertEqual(len(A), len(self.words))
-
-		A.clear()
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
-		self.assertEqual(len(A), 0)
+        # dupliacted entry
+        A.add_word(conv(self.words[0]), None)
+        self.assertTrue(A.kind == ahocorasick.TRIE)
+        self.assertTrue(len(A) == n)
 
 
-	def test_exists(self):
-		A = self.A
-		words = "word python aho corasick \x00\x00\x00".split()
+    def test_add_empty_word(self):
+        if ahocorasick.unicode:
+            self.assertFalse(self.A.add_word("", None))
+        else:
+            self.assertFalse(self.A.add_word(b"", None))
 
-		for w in self.words:
-			A.add_word(conv(w), w)
-
-		for w in self.words:
-			self.assertTrue(A.exists(conv(w)))
-
-		for w in self.inexisting:
-			self.assertFalse(A.exists(conv(w)))
+        self.assertEqual(len(self.A), 0)
+        self.assertEqual(self.A.kind, ahocorasick.EMPTY)
 
 
-	def test_contains(self):
-		A = self.A
-		for w in self.words:
-			A.add_word(conv(w), w)
+    def test_clear(self):
+        A = self.A
+        self.assertTrue(A.kind == ahocorasick.EMPTY)
 
-		for w in self.words:
-			self.assertTrue(conv(w) in A)
+        for w in self.words:
+            A.add_word(conv(w), w)
 
-		for w in self.inexisting:
-			self.assertTrue(conv(w) not in A)
+        self.assertEqual(len(A), len(self.words))
 
-
-	def test_match(self):
-		A = self.A
-		for word in self.words:
-			A.add_word(conv(word), word)
-
-		prefixes = "w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
-
-		for word in prefixes:
-			self.assertTrue(A.match(conv(word)))
-
-		inexisting = "wa apple pyTon \x00\x00\x00\x00".split()
-		for word in inexisting:
-			self.assertFalse(A.match(conv(word)))
+        A.clear()
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
+        self.assertEqual(len(A), 0)
 
 
-	def test_get1(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
+    def test_exists(self):
+        A = self.A
+        words = "word python aho corasick \x00\x00\x00".split()
 
-		for i, w in enumerate(self.words):
-			self.assertEqual(A.get(conv(w)), i+1)
+        for w in self.words:
+            A.add_word(conv(w), w)
 
+        for w in self.words:
+            self.assertTrue(A.exists(conv(w)))
 
-	def test_get2(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
-
-		for w in self.inexisting:
-			self.assertEqual(A.get(conv(w), None), None)
+        for w in self.inexisting:
+            self.assertFalse(A.exists(conv(w)))
 
 
-	def test_get3(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
+    def test_contains(self):
+        A = self.A
+        for w in self.words:
+            A.add_word(conv(w), w)
 
-		for w in self.inexisting:
-			with self.assertRaises(KeyError):
-				A.get(conv(w))
+        for w in self.words:
+            self.assertTrue(conv(w) in A)
 
-	
-	def test_longest_prefix(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
-
-		# there is "word"
-		self.assertEqual(A.longest_prefix(conv("wo")), 2)
-		self.assertEqual(A.longest_prefix(conv("working")), 3)
-		self.assertEqual(A.longest_prefix(conv("word")), 4)
-		self.assertEqual(A.longest_prefix(conv("wordbook")), 4)
-		self.assertEqual(A.longest_prefix(conv("void")), 0)
-		self.assertEqual(A.longest_prefix(conv("")), 0)
+        for w in self.inexisting:
+            self.assertTrue(conv(w) not in A)
 
 
-	def test_stats_have_valid_structure(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
+    def test_match(self):
+        A = self.A
+        for word in self.words:
+            A.add_word(conv(word), word)
 
-		platform_dependent = None
-		reference = {
-			'longest_word': 8,
-			'total_size': platform_dependent,
-			'sizeof_node': platform_dependent,
-			'nodes_count': 25,
-			'words_count': 5,
-			'links_count': 24
-		}
+        prefixes = "w wo wor word p py pyt pyth pytho python \x00 \x00\x00 \x00\x00\x00".split()
 
-		s = A.get_stats()
+        for word in prefixes:
+            self.assertTrue(A.match(conv(word)))
 
-		self.assertEqual(len(s), len(reference))
-
-		for key in reference:
-			self.assertIn(key, s)
-
-		for key in (key for key in reference if reference[key] != platform_dependent):
-			self.assertEqual(reference[key], s[key])
+        inexisting = "wa apple pyTon \x00\x00\x00\x00".split()
+        for word in inexisting:
+            self.assertFalse(A.match(conv(word)))
 
 
-	def test_stats_for_empty_tire_are_empty(self):
-		s = self.A.get_stats()
-		self.assertTrue(len(s) > 0)
-		for key in s:
-			if key != "sizeof_node":
-				self.assertEqual(s[key], 0)
+    def test_get1(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
+
+        for i, w in enumerate(self.words):
+            self.assertEqual(A.get(conv(w)), i+1)
+
+
+    def test_get2(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
+
+        for w in self.inexisting:
+            self.assertEqual(A.get(conv(w), None), None)
+
+
+    def test_get3(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
+
+        for w in self.inexisting:
+            with self.assertRaises(KeyError):
+                A.get(conv(w))
+
+    
+    def test_longest_prefix(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
+
+        # there is "word"
+        self.assertEqual(A.longest_prefix(conv("wo")), 2)
+        self.assertEqual(A.longest_prefix(conv("working")), 3)
+        self.assertEqual(A.longest_prefix(conv("word")), 4)
+        self.assertEqual(A.longest_prefix(conv("wordbook")), 4)
+        self.assertEqual(A.longest_prefix(conv("void")), 0)
+        self.assertEqual(A.longest_prefix(conv("")), 0)
+
+
+    def test_stats_have_valid_structure(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
+
+        platform_dependent = None
+        reference = {
+            'longest_word': 8,
+            'total_size': platform_dependent,
+            'sizeof_node': platform_dependent,
+            'nodes_count': 25,
+            'words_count': 5,
+            'links_count': 24
+        }
+
+        s = A.get_stats()
+
+        self.assertEqual(len(s), len(reference))
+
+        for key in reference:
+            self.assertIn(key, s)
+
+        for key in (key for key in reference if reference[key] != platform_dependent):
+            self.assertEqual(reference[key], s[key])
+
+
+    def test_stats_for_empty_tire_are_empty(self):
+        s = self.A.get_stats()
+        self.assertTrue(len(s) > 0)
+        for key in s:
+            if key != "sizeof_node":
+                self.assertEqual(s[key], 0)
 
 
 class TestTrieIterators(TestTrieStorePyObjectsBase):
-	"Test iterators walking over trie"
+    "Test iterators walking over trie"
 
-	def test_iter(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
+    def test_iter(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
 
-		L = [word for word in A]
-		K = list(map(conv, self.words))
-		self.assertEqual(len(L), len(K))
-		self.assertEqual(set(L), set(K))
-
-
-	def test_keys(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
-
-		L = [word for word in A.keys()]
-		K = [conv(word) for word in self.words]
-		self.assertEqual(len(L), len(K))
-		self.assertEqual(set(L), set(K))
+        L = [word for word in A]
+        K = list(map(conv, self.words))
+        self.assertEqual(len(L), len(K))
+        self.assertEqual(set(L), set(K))
 
 
-	def test_values(self):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
+    def test_keys(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
 
-		L = [x for x in A.values()]
-		V = list(range(1, len(self.words)+1))
-		self.assertEqual(len(L), len(V))
-		self.assertEqual(set(L), set(V))
-
-
-	def test_items(self):
-		A = self.A
-		I = []
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
-			I.append((conv(w), i+1))
-
-		L = [x for x in A.items()]
-		self.assertEqual(len(L), len(I))
-		self.assertEqual(set(L), set(I))
+        L = [word for word in A.keys()]
+        K = [conv(word) for word in self.words]
+        self.assertEqual(len(L), len(K))
+        self.assertEqual(set(L), set(K))
 
 
+    def test_values(self):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
 
-	def test_items_with_prefix_valid(self):
-		A = self.A
-		words = "he she her hers star ham".split()
-		for word in words:
-			A.add_word(conv(word), word)
-
-		I = list(map(conv, "he her hers".split()))
-		L = [x for x in A.keys(conv("he"))]
-		self.assertEqual(len(L), len(I))
-		self.assertEqual(set(L), set(I))
+        L = [x for x in A.values()]
+        V = list(range(1, len(self.words)+1))
+        self.assertEqual(len(L), len(V))
+        self.assertEqual(set(L), set(V))
 
 
-	def test_items_with_prefix_invalid(self):
-		A = self.A
-		words = "he she her hers star ham".split()
-		for word in words:
-			A.add_word(conv(word), word)
+    def test_items(self):
+        A = self.A
+        I = []
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
+            I.append((conv(w), i+1))
 
-		I = []
-		L = [x for x in A.keys(conv("cat"))]
-		self.assertEqual(len(L), len(I))
-		self.assertEqual(set(L), set(I))
+        L = [x for x in A.items()]
+        self.assertEqual(len(L), len(I))
+        self.assertEqual(set(L), set(I))
 
 
-	def test_items_with_valid_pattern(self):
-		A = self.A
-		words = "abcde aXcd aZcdef aYc Xbcdefgh".split()
-		for word in words:
-			A.add_word(conv(word), word)
 
-		I = ["aXcd"]
-		L = [x for x in A.keys(conv("a?cd"), conv("?"))]
-		self.assertEqual(set(I), set(L))
-	
+    def test_items_with_prefix_valid(self):
+        A = self.A
+        words = "he she her hers star ham".split()
+        for word in words:
+            A.add_word(conv(word), word)
 
-	def test_items_with_valid_pattern2(self):
-		A = self.A
-		words = "abcde aXcde aZcdef aYc Xbcdefgh".split()
-		for word in words:
-			A.add_word(conv(word), word)
+        I = list(map(conv, "he her hers".split()))
+        L = [x for x in A.keys(conv("he"))]
+        self.assertEqual(len(L), len(I))
+        self.assertEqual(set(L), set(I))
 
-		L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_EXACT_LENGTH)]
-		I = ["abcde", "aXcde"]
-		self.assertEqual(set(I), set(L))
 
-		L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_MOST_PREFIX)]
-		I = ["aYc", "abcde", "aXcde"]
-		self.assertEqual(set(I), set(L))
+    def test_items_with_prefix_invalid(self):
+        A = self.A
+        words = "he she her hers star ham".split()
+        for word in words:
+            A.add_word(conv(word), word)
 
-		L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_LEAST_PREFIX)]
-		I = ["abcde", "aXcde", "aZcdef"]
-		self.assertEqual(set(I), set(L))
+        I = []
+        L = [x for x in A.keys(conv("cat"))]
+        self.assertEqual(len(L), len(I))
+        self.assertEqual(set(L), set(I))
+
+
+    def test_items_with_valid_pattern(self):
+        A = self.A
+        words = "abcde aXcd aZcdef aYc Xbcdefgh".split()
+        for word in words:
+            A.add_word(conv(word), word)
+
+        I = ["aXcd"]
+        L = [x for x in A.keys(conv("a?cd"), conv("?"))]
+        self.assertEqual(set(I), set(L))
+    
+
+    def test_items_with_valid_pattern2(self):
+        A = self.A
+        words = "abcde aXcde aZcdef aYc Xbcdefgh".split()
+        for word in words:
+            A.add_word(conv(word), word)
+
+        L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_EXACT_LENGTH)]
+        I = ["abcde", "aXcde"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_MOST_PREFIX)]
+        I = ["aYc", "abcde", "aXcde"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_LEAST_PREFIX)]
+        I = ["abcde", "aXcde", "aZcdef"]
+        self.assertEqual(set(I), set(L))
 
 
 class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
-	"Test invalidating iterator when trie is changed"
+    "Test invalidating iterator when trie is changed"
 
-	def helper(self, method):
-		A = self.A
-		for i, w in enumerate(self.words):
-			A.add_word(conv(w), i+1)
+    def helper(self, method):
+        A = self.A
+        for i, w in enumerate(self.words):
+            A.add_word(conv(w), i+1)
 
-		it = method()
-		w  = next(it)
-		# word already exists, just change associated value
-		# iterator is still valid
-		A.add_word(conv(self.words[0]), 2)
-		w  = next(it)
+        it = method()
+        w  = next(it)
+        # word already exists, just change associated value
+        # iterator is still valid
+        A.add_word(conv(self.words[0]), 2)
+        w  = next(it)
 
-		# new word, iterator is invalidated
-		A.add_word(conv("should fail"), 1)
-		with self.assertRaises(ValueError):
-			w = next(it)
-
-
-	def test_keys(self):
-		self.helper(self.A.keys)
+        # new word, iterator is invalidated
+        A.add_word(conv("should fail"), 1)
+        with self.assertRaises(ValueError):
+            w = next(it)
 
 
-	def test_values(self):
-		self.helper(self.A.values)
+    def test_keys(self):
+        self.helper(self.A.keys)
 
 
-	def test_items(self):
-		self.helper(self.A.items)
+    def test_values(self):
+        self.helper(self.A.values)
+
+
+    def test_items(self):
+        self.helper(self.A.items)
 
 
 class TestAutomatonBase(unittest.TestCase):
-	def setUp(self):
-		self.A = ahocorasick.Automaton();
-		self.words  = "he her hers she".split()
-		self.string = "_sherhershe_"
-		self.correct_positons = [
-			(3, "she"),
-			(3, "he"),
-			(4, "her"),
-			(6, "he"),
-			(7, "her"),
-			(8, "hers"),
-			(10, "she"),
-			(10, "he")
-		]
+    def setUp(self):
+        self.A = ahocorasick.Automaton();
+        self.words  = "he her hers she".split()
+        self.string = "_sherhershe_"
+        self.correct_positons = [
+            (3, "she"),
+            (3, "he"),
+            (4, "her"),
+            (6, "he"),
+            (7, "her"),
+            (8, "hers"),
+            (10, "she"),
+            (10, "he")
+        ]
 
 
-	def add_words(self):
-		for word in self.words:
-			self.A.add_word(conv(word), word)
+    def add_words(self):
+        for word in self.words:
+            self.A.add_word(conv(word), word)
 
 
-	def add_words_and_make_automaton(self):
-		self.add_words()
-		self.A.make_automaton()
-		return self.A
+    def add_words_and_make_automaton(self):
+        self.add_words()
+        self.A.make_automaton()
+        return self.A
 
 
 class TestAutomatonConstruction(TestAutomatonBase):
-	"Test converting trie to Aho-Corasick automaton"
+    "Test converting trie to Aho-Corasick automaton"
 
-	def test_make_automaton1(self):
-		A = self.A
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
-		A.make_automaton()
-		# empty trie is never converted to automaton
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
-
-
-	def test_make_automaton2(self):
-		A = self.A
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
-
-		self.add_words()
-		self.assertEqual(A.kind, ahocorasick.TRIE)
-
-		A.make_automaton()
-		self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
+    def test_make_automaton1(self):
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
+        A.make_automaton()
+        # empty trie is never converted to automaton
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
 
 
-	def test_make_automaton2(self):
-		A = self.A
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
+    def test_make_automaton2(self):
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
 
-		self.add_words()
-		self.assertEqual(A.kind, ahocorasick.TRIE)
+        self.add_words()
+        self.assertEqual(A.kind, ahocorasick.TRIE)
 
-		A.make_automaton()
-		self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
+        A.make_automaton()
+        self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
 
-		A.add_word(conv("rollback?"), True)
-		self.assertEqual(A.kind, ahocorasick.TRIE)
+
+    def test_make_automaton2(self):
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
+
+        self.add_words()
+        self.assertEqual(A.kind, ahocorasick.TRIE)
+
+        A.make_automaton()
+        self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
+
+        A.add_word(conv("rollback?"), True)
+        self.assertEqual(A.kind, ahocorasick.TRIE)
 
 
 class TestAutomatonSearch(TestAutomatonBase):
-	"Test searching using constructed automaton (method find_all)"
+    "Test searching using constructed automaton (method find_all)"
 
-	def test_find_all1(self):
-		"no action is performed until automaton is constructed"
-		A = self.A
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
-		
-		self.assertEqual(A.find_all(self.string, conv("any arg")), None)
+    def test_find_all1(self):
+        "no action is performed until automaton is constructed"
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
+        
+        self.assertEqual(A.find_all(self.string, conv("any arg")), None)
 
-		A.add_word(conv("word"), None)
-		self.assertEqual(A.kind, ahocorasick.TRIE)
-		self.assertEqual(A.find_all(self.string, conv("any arg")), None)
-
-
-	def test_find_all2(self):
-		A = self.add_words_and_make_automaton()
-
-		L = []
-		def callback(index, word):
-			L.append((index, word))
-
-		A.find_all(conv(self.string), callback)
-
-		C = self.correct_positons
-		self.assertEqual(L, C)
+        A.add_word(conv("word"), None)
+        self.assertEqual(A.kind, ahocorasick.TRIE)
+        self.assertEqual(A.find_all(self.string, conv("any arg")), None)
 
 
-	def test_find_all3(self):
-		A = self.add_words_and_make_automaton()
+    def test_find_all2(self):
+        A = self.add_words_and_make_automaton()
 
-		L = []
-		def callback(index, word):
-			L.append((index, word))
+        L = []
+        def callback(index, word):
+            L.append((index, word))
 
-		start = 4
-		end = 9
+        A.find_all(conv(self.string), callback)
 
-		L = []
-		A.find_all(conv(self.string[start:end]), callback)
-		C = [(pos+start, word) for pos, word in L]
+        C = self.correct_positons
+        self.assertEqual(L, C)
 
-		L = []
-		A.find_all(conv(self.string), callback, start, end)
 
-		self.assertEqual(L, C)
+    def test_find_all3(self):
+        A = self.add_words_and_make_automaton()
+
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        start = 4
+        end = 9
+
+        L = []
+        A.find_all(conv(self.string[start:end]), callback)
+        C = [(pos+start, word) for pos, word in L]
+
+        L = []
+        A.find_all(conv(self.string), callback, start, end)
+
+        self.assertEqual(L, C)
 
 
 class TestAutomatonIterSearch(TestAutomatonBase):
-	"Test searching using constructed automaton (iterator)"
+    "Test searching using constructed automaton (iterator)"
 
-	def test_iter1(self):
-		A = self.A
-		self.assertEqual(A.kind, ahocorasick.EMPTY)
-		with self.assertRaises(AttributeError):
-			A.iter(conv(self.string))
+    def test_iter1(self):
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.EMPTY)
+        with self.assertRaises(AttributeError):
+            A.iter(conv(self.string))
 
-		A.add_word(conv("word"), None)
-		self.assertEqual(A.kind, ahocorasick.TRIE)
-		with self.assertRaises(AttributeError):
-			A.iter(conv(self.string))
-
-
-	def test_iter2(self):
-		A = self.add_words_and_make_automaton()
-
-		L = []
-		for index, word in A.iter(conv(self.string)):
-			L.append((index, word))
-
-		C = self.correct_positons
-		self.assertEqual(L, C)
+        A.add_word(conv("word"), None)
+        self.assertEqual(A.kind, ahocorasick.TRIE)
+        with self.assertRaises(AttributeError):
+            A.iter(conv(self.string))
 
 
-	def test_iter3(self):
-		A = self.add_words_and_make_automaton()
+    def test_iter2(self):
+        A = self.add_words_and_make_automaton()
 
-		start = 4
-		end = 9
+        L = []
+        for index, word in A.iter(conv(self.string)):
+            L.append((index, word))
 
-		C = []
-		for index, word in A.iter(conv(self.string[start:end])):
-			C.append((index + start, word))
-
-		L = []
-		for index, word in A.iter(conv(self.string), start, end):
-			L.append((index, word))
-
-		self.assertEqual(L, C)
+        C = self.correct_positons
+        self.assertEqual(L, C)
 
 
-	def test_iter_set(self):
-		A = self.add_words_and_make_automaton()
-		parts = "_sh erhe rshe _".split()
+    def test_iter3(self):
+        A = self.add_words_and_make_automaton()
 
-		it = A.iter(conv(""))
-		print()
-		for part in parts:
-			it.set(conv(part))
-			print(part, ":")
-			for item in it:
-				print(item)
+        start = 4
+        end = 9
+
+        C = []
+        for index, word in A.iter(conv(self.string[start:end])):
+            C.append((index + start, word))
+
+        L = []
+        for index, word in A.iter(conv(self.string), start, end):
+            L.append((index, word))
+
+        self.assertEqual(L, C)
 
 
-	def test_iter_compare_with_find_all(self):
-		A = self.add_words_and_make_automaton()
+    def test_iter_set(self):
+        A = self.add_words_and_make_automaton()
+        parts = "_sh erhe rshe _".split()
 
-		# results from find_all
-		L = []
-		def callback(index, word):
-			L.append((index, word))
+        it = A.iter(conv(""))
+        print()
+        for part in parts:
+            it.set(conv(part))
+            print(part, ":")
+            for item in it:
+                print(item)
 
-		A.find_all(conv(self.string), callback)
 
-		# results from iterator
-		C = []
-		for index, word in A.iter(conv(self.string)):
-			C.append((index, word))
+    def test_iter_compare_with_find_all(self):
+        A = self.add_words_and_make_automaton()
 
-		self.assertEqual(L, C)
+        # results from find_all
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        A.find_all(conv(self.string), callback)
+
+        # results from iterator
+        C = []
+        for index, word in A.iter(conv(self.string)):
+            C.append((index, word))
+
+        self.assertEqual(L, C)
 
 
 class TestAutomatonIterInvalidate(TestAutomatonBase):
-	"Test if searching iterator is invalidated when trie/automaton change"
+    "Test if searching iterator is invalidated when trie/automaton change"
 
-	def test_iter1(self):
-		A = self.add_words_and_make_automaton()
+    def test_iter1(self):
+        A = self.add_words_and_make_automaton()
 
-		it = A.iter(conv(self.string))
-		w  = next(it)
-		A.add_word(conv("should fail"), 1)
-		with self.assertRaises(ValueError):
-			w = next(it)
+        it = A.iter(conv(self.string))
+        w  = next(it)
+        A.add_word(conv("should fail"), 1)
+        with self.assertRaises(ValueError):
+            w = next(it)
 
 
-	def test_iter2(self):
-		A = self.add_words_and_make_automaton()
+    def test_iter2(self):
+        A = self.add_words_and_make_automaton()
 
-		it = A.iter(conv(self.string))
-		w  = next(it)
-		A.clear()
-		with self.assertRaises(ValueError):
-			w = next(it)
+        it = A.iter(conv(self.string))
+        w  = next(it)
+        A.clear()
+        with self.assertRaises(ValueError):
+            w = next(it)
 
 
 print_dumps = False
 
 @unittest.skip("bug #5")
 class TestPickle(TestAutomatonBase):
-	"Test pickling/unpickling"
+    "Test pickling/unpickling"
 
-	def test_pickle(self):
-		import pickle
+    def test_pickle(self):
+        import pickle
 
-		A = self.add_words_and_make_automaton();
-		if print_dumps:
-			print(pickle.dumps(A))
+        A = self.add_words_and_make_automaton();
+        if print_dumps:
+            print(pickle.dumps(A))
 
 
-	def test_unpickle(self):
-		import pickle
-		A = self.add_words_and_make_automaton();
-		dump = pickle.dumps(A)
-		B = pickle.loads(dump)
+    def test_unpickle(self):
+        import pickle
+        A = self.add_words_and_make_automaton();
+        dump = pickle.dumps(A)
+        B = pickle.loads(dump)
 
-		if print_dumps:
-			print([x for x in B.items()])
-			print([x for x in B.iter(self.string)])
+        if print_dumps:
+            print([x for x in B.items()])
+            print([x for x in B.iter(self.string)])
 
-		self.assertEqual(len(A), len(B))
+        self.assertEqual(len(A), len(B))
 
-		AL = set(key for key in A.keys())
-		BL = set(key for key in B.keys())
-		self.assertEqual(AL, BL)
+        AL = set(key for key in A.keys())
+        BL = set(key for key in B.keys())
+        self.assertEqual(AL, BL)
 
 
 class TestTrieStoreInts(unittest.TestCase):
-	"Test storing plain ints as values (instead of python objects)"
+    "Test storing plain ints as values (instead of python objects)"
 
-	def setUp(self):
-		self.A = ahocorasick.Automaton(ahocorasick.STORE_INTS);
-		self.words = "word python aho corasick \x00\x00\x00".split()
-
-
-	def test_add_word1(self):
-		A = self.A
-
-		# by default next values are stored
-		for word in self.words:
-			A.add_word(conv(word))
-
-		I = list(range(1, len(self.words) + 1))
-		L = [A.get(conv(word)) for word in self.words]
-		self.assertEqual(I, L)
+    def setUp(self):
+        self.A = ahocorasick.Automaton(ahocorasick.STORE_INTS);
+        self.words = "word python aho corasick \x00\x00\x00".split()
 
 
-	def test_add_word2(self):
-		A = self.A
+    def test_add_word1(self):
+        A = self.A
 
-		# store arbitrary ints
-		for i, word in enumerate(self.words):
-			A.add_word(conv(word), i + 123)
+        # by default next values are stored
+        for word in self.words:
+            A.add_word(conv(word))
 
-		I = list(range(123, 123 + len(self.words)))
-		L = [A.get(conv(word)) for word in self.words]
-		self.assertEqual(I, L)
-
-
-	def test_add_word3(self):
-		# not a number
-		with self.assertRaises(TypeError):
-			self.A.add_word(conv("xyz"), None)
-
-	
-	def test_iter(self):
-		A = self.A
-		for word in self.words:
-			A.add_word(conv(word));
-
-		I = set(range(1, len(A) + 1))
-		L1 = [val for val in A.values()]
-		L2 = [val for key, val in A.items()]
-
-		self.assertEqual(L1, L2)
-		self.assertEqual(set(L1), I)
+        I = list(range(1, len(self.words) + 1))
+        L = [A.get(conv(word)) for word in self.words]
+        self.assertEqual(I, L)
 
 
-	def test_find_all_and_iter(self):
-		words  = "he her hers she".split()
-		string = "_sherhershe_"
+    def test_add_word2(self):
+        A = self.A
 
-		A = self.A
-		for word in words:
-			A.add_word(conv(word))
+        # store arbitrary ints
+        for i, word in enumerate(self.words):
+            A.add_word(conv(word), i + 123)
 
-		A.make_automaton()
+        I = list(range(123, 123 + len(self.words)))
+        L = [A.get(conv(word)) for word in self.words]
+        self.assertEqual(I, L)
 
-		# find_all()
-		C = []
-		def callback(index, value):
-			C.append((index, value))
-		
-		A.find_all(conv(string), callback);
 
-		# iter()
-		L = [(index, value) for index, value in A.iter(conv(string))]
+    def test_add_word3(self):
+        # not a number
+        with self.assertRaises(TypeError):
+            self.A.add_word(conv("xyz"), None)
 
-		#
-		self.assertEqual(C, L)
+    
+    def test_iter(self):
+        A = self.A
+        for word in self.words:
+            A.add_word(conv(word));
+
+        I = set(range(1, len(A) + 1))
+        L1 = [val for val in A.values()]
+        L2 = [val for key, val in A.items()]
+
+        self.assertEqual(L1, L2)
+        self.assertEqual(set(L1), I)
+
+
+    def test_find_all_and_iter(self):
+        words  = "he her hers she".split()
+        string = "_sherhershe_"
+
+        A = self.A
+        for word in words:
+            A.add_word(conv(word))
+
+        A.make_automaton()
+
+        # find_all()
+        C = []
+        def callback(index, value):
+            C.append((index, value))
+        
+        A.find_all(conv(string), callback);
+
+        # iter()
+        L = [(index, value) for index, value in A.iter(conv(string))]
+
+        #
+        self.assertEqual(C, L)
 
 
 class TestTrieStoreLengths(unittest.TestCase):
-	"""Test storing plain ints -- length of words --- as values
-	(instead of python objects)"""
+    """Test storing plain ints -- length of words --- as values
+    (instead of python objects)"""
 
-	def setUp(self):
-		self.A = ahocorasick.Automaton(ahocorasick.STORE_LENGTH);
-		self.words = "word python aho corasick \x00\x00\x00".split()
+    def setUp(self):
+        self.A = ahocorasick.Automaton(ahocorasick.STORE_LENGTH);
+        self.words = "word python aho corasick \x00\x00\x00".split()
 
 
-	def test_add_word1(self):
-		A = self.A
+    def test_add_word1(self):
+        A = self.A
 
-		# by default next values are stored
-		for word in self.words:
-			A.add_word(conv(word))
+        # by default next values are stored
+        for word in self.words:
+            A.add_word(conv(word))
 
-		for key, value in A.items():
-			self.assertEqual(len(key), value)
+        for key, value in A.items():
+            self.assertEqual(len(key), value)
 
 
 class TestBugAutomatonSearch(TestAutomatonBase):
-	"""Bug in search"""
+    """Bug in search"""
 
-	def setUp(self):
-		self.A = ahocorasick.Automaton()
-		self.words = ['GT-C3303','SAMSUNG-GT-C3303K/']
+    def setUp(self):
+        self.A = ahocorasick.Automaton()
+        self.words = ['GT-C3303','SAMSUNG-GT-C3303K/']
 
 
-	def test_bug(self):
-		self.add_words_and_make_automaton()
-		text = 'SAMSUNG-GT-C3303i/1.0 NetFront/3.5 Profile/MIDP-2.0 Configuration/CLDC-1.1'
+    def test_bug(self):
+        self.add_words_and_make_automaton()
+        text = 'SAMSUNG-GT-C3303i/1.0 NetFront/3.5 Profile/MIDP-2.0 Configuration/CLDC-1.1'
 
-		res  = list(self.A.iter(conv(text)))
+        res  = list(self.A.iter(conv(text)))
 
-		self.assertEqual([(15, 'GT-C3303')], res)
+        self.assertEqual([(15, 'GT-C3303')], res)
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()
 

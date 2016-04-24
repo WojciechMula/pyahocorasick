@@ -76,6 +76,7 @@ pymod_parse_start_end(
 		return -1;
 
 	start = PyNumber_AsSsize_t(obj, PyExc_IndexError);
+    Py_DECREF(obj);
 	if (start == -1 and PyErr_Occurred())
 		return -1;
 
@@ -99,6 +100,7 @@ pymod_parse_start_end(
 		return -1;
 
 	end = PyNumber_AsSsize_t(obj, PyExc_IndexError);
+    Py_DECREF(obj);
 	if (end == -1 and PyErr_Occurred())
 		return -1;
 

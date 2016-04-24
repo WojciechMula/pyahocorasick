@@ -97,7 +97,7 @@ pymod_parse_start_end(
 		start = max + start;
 
 	if (start < min or start >= max) {
-		PyErr_Format(PyExc_IndexError, "start index not in range %d..%d", min, max);
+		PyErr_Format(PyExc_IndexError, "start index not in range %zd..%zd", min, max);
 		return -1;
 	}
 
@@ -121,7 +121,7 @@ pymod_parse_start_end(
 		end = max - 1 + end;
 
 	if (end < min or end > max) {
-		PyErr_Format(PyExc_IndexError, "end index not in range %d..%d", min, max);
+		PyErr_Format(PyExc_IndexError, "end index not in range %zd..%zd", min, max);
 		return -1;
 	}
 

@@ -3,4 +3,7 @@ dist/
 *.pyc
 *.dot
 *.swp
+*.so
+*.sh
+*.o
 MANIFEST

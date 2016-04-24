@@ -31,12 +31,6 @@ def test():
         for start in range(0, len(data) - 20):
             ac.iter(data, start)
 
-        if loop % 10 == 0:
-            print('.', end='')
-            sys.stdout.flush()
-    else:
-        print(end='\n')
-
 
 if __name__ == '__main__':
     

@@ -117,7 +117,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	TrieNode* tmp;
 
 	// we do not save last pointer in array
-	TrieNode** arr = (TrieNode**)(self->data + self->top + sizeof(TrieNode)/* - sizeof(TrieNode*)*/);
+	TrieNode** arr = (TrieNode**)(self->data + self->top + sizeof(TrieNode) - sizeof(TrieNode*));
 
 	// append python object to the list
 	if (node->eow and self->values) {
@@ -152,7 +152,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	}
 
 	// advance pointer
-	self->top += trienode_get_size(node)/* - sizeof(TrieNode*)*/;
+	self->top += trienode_get_size(node) - sizeof(TrieNode*);
 
 	return 1;
 #undef NODEID
@@ -224,7 +224,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 #ifdef PY3K
         "O(ky#iiiiO)",
 #else
-        "O(is#iiiiO)",
+        "O(ks#iiiiO)",
 #endif
 		Py_TYPE(self),
 		state.id,
@@ -235,14 +235,6 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		automaton->longest_word,
 		data.values
 	);
-
-    printf("pickle\n");
-    printf("\tautomaton->count = %d\n", state.id);
-    printf("\tautomaton->kind = %d\n", automaton->kind);
-    printf("\tautomaton->store = %d\n", automaton->store);
-    printf("\tautomaton->version = %d\n", automaton->version);
-    printf("\tautomaton->longest_word = %d\n", automaton->longest_word);
-    printf("end\n");
 
 	if (tuple) {
 		// revert all changes
@@ -292,8 +284,8 @@ automaton_unpickle(
 	size_t i, j;
 
     if (UNLIKELY(size < count*(sizeof(TrieNode) - sizeof(TrieNode*)))) {
-        PyErr_SetString(PyExc_ValueError, "binary data truncated (2)");
-        return NULL;
+        PyErr_SetString(PyExc_ValueError, "binary data truncated (1)");
+        return false;
     }
 
 	id2node = (TrieNode**)memalloc((count+1) * sizeof(TrieNode));
@@ -322,7 +314,7 @@ automaton_unpickle(
 			node->next = (TrieNode**)memalloc(node->n * sizeof(TrieNode*));
 			if (LIKELY(node->next != NULL)) {
                 if (UNLIKELY(ptr + sizeof(TrieNode) - sizeof(TrieNode*) > data + size)) {
-                    PyErr_SetString(PyExc_ValueError, "binary data truncated");
+                    PyErr_SetString(PyExc_ValueError, "binary data truncated (2)");
                     goto exception;
                 }
 
@@ -339,7 +331,7 @@ automaton_unpickle(
 		id2node[id++] = node;
 		ptr += trienode_get_size(node) - sizeof(TrieNode*);
 		if (UNLIKELY(ptr > data + size)) {
-			PyErr_SetString(PyExc_ValueError, "binary data truncated");
+			PyErr_SetString(PyExc_ValueError, "binary data truncated (3)");
 			goto exception;
 		}
 	}

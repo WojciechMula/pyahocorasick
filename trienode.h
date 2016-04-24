@@ -38,7 +38,7 @@ static TrieNode*
 trienode_new(const TRIE_LETTER_TYPE letter, const char eow);
 
 /* returns child node linked by edge labeled with letter */
-static TrieNode* PURE ALWAYS_INLINE
+static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter);
 
 /* link with child node by edge labeled with letter */

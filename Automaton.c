@@ -81,21 +81,13 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 #ifdef PY3K
         const char* fmt = "ky#iiiiO";
 #else
-        const char* fmt = "is#iiiiO";
+        const char* fmt = "ks#iiiiO";
 #endif
 
 		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
 			goto error;
 		}
-
-        printf("unpickle\n");
-        printf("\tautomaton->count = %d\n", count);
-        printf("\tautomaton->kind = %d\n", kind);
-        printf("\tautomaton->store = %d\n", store);
-        printf("\tautomaton->version = %d\n", version);
-        printf("\tautomaton->longest_word = %d\n", longest_word);
-        printf("end\n");
 
 		if (not check_store(store) or not check_kind(kind))
 			goto error;
@@ -304,8 +296,8 @@ automaton_clear(PyObject* self, PyObject* args) {
 static int
 automaton_contains(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	ssize_t wordlen;
-	TRIE_LETTER_TYPE* word;
+	ssize_t wordlen = 0;
+	TRIE_LETTER_TYPE* word = NULL;
 	PyObject* py_word;
 
 	py_word = pymod_get_string(args, &word, &wordlen);
@@ -607,8 +599,8 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	PyObject* arg1 = NULL;
 	PyObject* arg2 = NULL;
 	PyObject* arg3 = NULL;
-	TRIE_LETTER_TYPE* word;
-	ssize_t wordlen;
+	TRIE_LETTER_TYPE* word = NULL;
+	ssize_t wordlen = 0;
 
 	TRIE_LETTER_TYPE wildcard;
 	bool use_wildcard = false;
@@ -639,7 +631,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 	if (arg2) {
 		TRIE_LETTER_TYPE* tmp;
-		ssize_t len;
+		ssize_t len = 0;
 
 		arg2 = pymod_get_string(arg2, &tmp, &len);
 		if (arg2 == NULL)

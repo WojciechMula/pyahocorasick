@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     This is part of pyahocorasick Python module.
     

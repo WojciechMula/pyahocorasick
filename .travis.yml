@@ -1,0 +1,12 @@
+# Use new trusty images, should yield newer compilers and packages
+sudo: false
+language: c
+
+matrix:
+  include:
+    - compiler: gcc
+    - compiler: clang
+
+script:
+  - make
+

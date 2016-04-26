@@ -2,6 +2,9 @@
                           pyahocorasick
 ========================================================================
 
+.. image:: https://travis-ci.org/WojciechMula/pyahocorasick.svg?branch=master
+    :target: https://travis-ci.org/WojciechMula/pyahocorasick
+
 .. contents::
 
 Introduction

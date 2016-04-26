@@ -4,7 +4,18 @@ from sys import version_info as version
 
 def get_readme():
     with open('README.rst', 'rt') as f:
-        return f.read()
+        body = f.read()
+
+        marker1 = '.. image'
+        marker2 = '.. contents'
+        
+        s = body.index(marker1)
+        e = body.index(marker2)
+
+        body = body[:s] + body[e:]
+
+        return body
+
 
 if version.major not in [2, 3]:
     raise ValueError("Python %s is not supported" % version)

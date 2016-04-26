@@ -1,6 +1,9 @@
-# Use new trusty images, should yield newer compilers and packages
-sudo: false
 language: c
+addons:
+    apt:
+        packages:
+        - python3
+        - python3-dev
 
 matrix:
   include:

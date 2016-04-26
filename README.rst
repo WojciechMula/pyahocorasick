@@ -25,7 +25,7 @@ __ http://en.wikipedia.org/wiki/Aho-Corasick%20algorithm
 
 There are two versions:
 
-* **C extension**, compatible only with Python3;
+* **C extension**, compatible with Python 2 and 3;
 * pure python module, compatible with Python 2 and 3.
 
 Python module API is similar, but isn't exactly the same as C extension.
@@ -35,15 +35,23 @@ License
 =======
 
 Library is licensed under very liberal two-clauses BSD license.
-Some portions has been realased into public domain.
+Some portions has been released into public domain.
 
 Full text of license is available in LICENSE file.
 
 
-Author
-======
+Authors
+=======
 
-Wojciech Muła, wojciech_mula@poczta.onet.pl
+The main author: Wojciech Muła, wojciech_mula@poczta.onet.pl
+
+This library wouldn't be possible without help of many people,
+who contributed in various ways. They created `pull requests`__,
+reported bugs (on GitHub__ or via direct messages), proposed
+fixes, or spent their valuable time on testing. Thank you.
+
+__ https://github.com/WojciechMula/pyahocorasick/pull
+__ https://github.com/WojciechMula/pyahocorasick/issues
 
 
 See also
@@ -173,7 +181,7 @@ Dictionary methods
 
 	If ``prefix`` (a string) is given, then only words sharing this
 	prefix are yielded.
-	
+
 	If ``wildcard`` (single character) is given, then prefix is
 	treated as a simple pattern with selected wildcard. Optional
 	parameter ``how`` controls which strings are matched:
@@ -244,7 +252,7 @@ Trie
 
 ``clear() => None``
 	Removes all words from dictionary.
-	
+
 	**This method invalidates all iterators.**
 
 ``exists(word) => bool`` or ``word in ...``
@@ -340,7 +348,7 @@ by ``iter`` method of ``Automaton``. Iterator has additional method.
 
 ``set(string, [reset]) => None``
 	Sets new string to process. When ``reset`` is ``False`` (default),
-	then processing is continued, i.e internal state of automaton and
+	then processing is continued, i.e. internal state of automaton and
 	index aren't touched. This allow to process larger strings in chunks,
 	for example::
 
@@ -376,8 +384,8 @@ Example
 ::
 
 	>>> import ahocorasick
-	>>> A = ahocorasick.Automaton() 
-		
+	>>> A = ahocorasick.Automaton()
+
 	# add some words to trie
 	>>> for index, word in enumerate("he her hers she".split()):
 	...   A.add_word(word, (index, word))
@@ -397,7 +405,7 @@ Example
 	Traceback (most recent call last):
 	  File "<stdin>", line 1, in <module>
 	KeyError
-	>>> 
+	>>>
 
 	# convert trie to Aho-Corasick automaton
 	A.make_automaton()
@@ -405,7 +413,7 @@ Example
 	# then find all occurrences in string
 	for item in A.iter("_hershe_"):
 	...  print(item)
-	... 
+	...
 	(2, (0, 'he'))
 	(3, (1, 'her'))
 	(4, (2, 'hers'))
@@ -424,7 +432,7 @@ Demonstration of keys_ behaviour.
 ::
 
 	>>> import ahocorasick
-	>>> A = ahocorasick.Automaton() 
+	>>> A = ahocorasick.Automaton()
 
 	# add some words to trie
 	>>> for index, word in enumerate("cat catastropha rat rate bat".split()):

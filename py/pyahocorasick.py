@@ -251,6 +251,45 @@ class Trie(object):
 			if output:
 				yield (index, output)
 
+	def iter_long(self, string):
+		"""
+		Generator performs a modified Aho-Corasick search string algorithm,
+		which maches only the longest word.
+
+		"""
+		state = self.root
+		last  = None
+
+		index = 0
+		while index < len(string):
+			c = string[index]
+
+			if c in state.children:
+				state = state.children[c]
+
+				if state.output is not nil:
+					# save the last node on the path
+					last = (state.output, index)
+
+				index += 1
+			else:
+				if last:
+					# return the saved match
+					yield last
+
+					# and start over, as we don't want overlapped results
+					# Note: this leads to quadratic complexity in the worst case
+					index = last[1] + 1
+					state = self.root
+					last  = None
+				else:
+					# if no output, perform classic Aho-Corasick algorithm
+					while c not in state.children:
+						state = state.fail
+
+		# corner case
+		if last:
+			yield last
 
 	def find_all(self, string, callback):
 		"""

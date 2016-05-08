@@ -55,6 +55,8 @@ module = Extension(
         'AutomatonItemsIter.h',
         'AutomatonSearchIter.c',
         'AutomatonSearchIter.h',
+        'AutomatonSearchIterLong.c',
+        'AutomatonSearchIterLong.h',
         'trie.c',
         'trie.h',
         'slist.c',

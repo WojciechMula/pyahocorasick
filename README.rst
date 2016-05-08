@@ -215,6 +215,9 @@ Dictionary methods
 ``iter()`` protocol
 	Equivalent to ``obj.keys()``
 
+``iter_long()`` protocol
+	Searches for the longest, non-overlapping words.
+
 ``len()`` protocol
 	Returns number of distinct words.
 
@@ -304,6 +307,10 @@ Aho-Corasick
 		def find_all(self, string, callback):
 			for index, value in self.iter(string):
 				callback(index, value)
+
+``iter_long(string, [start, [end]])``
+	Returns iterator (object of class AutomatonSearchIterLong) that
+	searches for longest, non-overlapping matches.
 
 
 Other

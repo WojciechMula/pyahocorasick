@@ -41,7 +41,7 @@ class TrieNode(object):
 
 class Trie(object):
 	"""
-	Trie/Aho-Corasick automation
+	Trie/Aho-Corasick automaton.
 	"""
 
 	def __init__(self):

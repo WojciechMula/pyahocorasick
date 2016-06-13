@@ -158,7 +158,7 @@ class Trie(object):
 			return
 
 		node = self.root
-		for i, c in enumerate(word):
+		for c in word:
 			try:
 				node = node.children[c]
 			except KeyError:

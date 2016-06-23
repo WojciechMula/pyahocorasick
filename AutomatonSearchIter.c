@@ -240,7 +240,7 @@ PyMethodDef automaton_search_iter_methods[] = {
 
 
 static PyTypeObject automaton_search_iter_type = {
-	PyVarObject_HEAD_INIT(&PyType_Type, 0)
+	PyVarObject_HEAD_INIT(NULL, 0)
 	"ahocorasick.AutomatonSearchIter",			/* tp_name */
 	sizeof(AutomatonSearchIter),				/* tp_size */
 	0,											/* tp_itemsize? */

@@ -716,6 +716,33 @@ class TestTrieStoreLengths(unittest.TestCase):
             self.assertEqual(len(key), value)
 
 
+class TestSizeOf(unittest.TestCase):
+    def setUp(self):
+        self.A = ahocorasick.Automaton();
+        words = "word python aho corasick tree bark branch root".split()
+        for word in words:
+            self.A.add_word(conv(word), 1)
+
+
+    def test_sizeof(self):
+        import sys
+
+        size1 = sys.getsizeof(self.A)
+
+        # grow memory
+        self.A.add_word("kitten", "fluffy")
+
+        size2 = sys.getsizeof(self.A)
+
+        # just change the assigned value, no changes to the trie structure
+        self.A.add_word("word", "other value")
+
+        size3 = sys.getsizeof(self.A)
+
+        self.assertTrue(size2 > size1)
+        self.assertTrue(size3 == size2)
+
+
 class TestBugAutomatonSearch(TestAutomatonBase):
     """Bug in search"""
 

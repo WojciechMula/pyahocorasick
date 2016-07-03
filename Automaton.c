@@ -953,6 +953,28 @@ error:
 }
 
 
+#define automaton___sizeof___doc \
+	"returns size of internal structures (excluding size of associated objects, when type is STORE_ANY)"
+
+
+static PyObject*
+automaton___sizeof__(PyObject* self, PyObject* args) {
+#define automaton ((Automaton*)self)
+    Py_ssize_t size = sizeof(Automaton);
+
+	if (automaton->kind != EMPTY) {
+        if (automaton->stats.version != automaton->version) {
+            get_stats(automaton);
+        }
+
+        size += automaton->stats.total_size;
+    }
+
+    return Py_BuildValue("i", size);
+#undef automaton
+}
+
+
 
 #include "Automaton_pickle.c"
 
@@ -975,6 +997,7 @@ PyMethodDef automaton_methods[] = {
 	method(get_stats,		METH_NOARGS),
 	method(dump,			METH_NOARGS),
 	method(__reduce__,		METH_VARARGS),
+	method(__sizeof__,		METH_VARARGS),
 
 	{NULL, NULL, 0, NULL}
 };

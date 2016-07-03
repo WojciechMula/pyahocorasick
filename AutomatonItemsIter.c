@@ -256,7 +256,7 @@ automaton_items_iter_next(PyObject* self) {
 #undef iter
 
 static PyTypeObject automaton_items_iter_type = {
-	PyVarObject_HEAD_INIT(&PyType_Type, 0)
+	PyVarObject_HEAD_INIT(NULL, 0)
 	"AutomatonItemsIter",						/* tp_name */
 	sizeof(AutomatonItemsIter),					/* tp_size */
 	0,											/* tp_itemsize? */

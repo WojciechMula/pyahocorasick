@@ -1007,7 +1007,7 @@ PyMemberDef automaton_members[] = {
 };
 
 static PyTypeObject automaton_type = {
-	PyVarObject_HEAD_INIT(&PyType_Type, 0)
+	PyVarObject_HEAD_INIT(NULL, 0)
 	"ahocorasick.Automaton",					/* tp_name */
 	sizeof(Automaton),							/* tp_size */
 	0,											/* tp_itemsize? */

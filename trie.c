@@ -58,10 +58,13 @@ trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 
 	node = root;
 	ssize_t i;
-	for (i=0; i < wordlen; i++) {
-		node = trienode_get_next(node, word[i]);
-		if (node == NULL)
-			return NULL;
+
+	if (node != NULL) {
+		for (i=0; i < wordlen; i++) {
+			node = trienode_get_next(node, word[i]);
+			if (node == NULL)
+				return NULL;
+		}
 	}
 		
 	return node;

@@ -147,6 +147,12 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
             with self.assertRaises(KeyError):
                 A.get(conv(w))
 
+    def test_get_from_an_empty_automaton(self):
+        A = ahocorasick.Automaton()
+        
+        r = A.get('foo', None)
+        self.assertEqual(r, None)
+
     
     def test_longest_prefix(self):
         A = self.A

@@ -131,7 +131,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	if (self->values)
 		dump->output.integer = 0;
 	else
-		dump->output.integer = NODEID(node)->id;	// save number
+		dump->output.integer = node->output.integer;
 
 	dump->n		= node->n;
 	dump->eow	= node->eow;
@@ -210,6 +210,11 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	if (data.error)
 		goto exception;
 
+	if (automaton->store != STORE_ANY) { // always pickle a Python object
+		data.values = Py_None;
+		Py_INCREF(data.values);
+	}
+
 	/* 3: save tuple:
 		* count
 		* binary data
@@ -222,9 +227,9 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 
 	PyObject* tuple = Py_BuildValue(
 #ifdef PY3K
-        "O(ky#iiiiO)",
+        "O(ky#iiiiiO)",
 #else
-        "O(ks#iiiiO)",
+        "O(ks#iiiiiO)",
 #endif
 		Py_TYPE(self),
 		state.id,
@@ -232,9 +237,14 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		automaton->kind,
 		automaton->store,
 		automaton->version,
+		automaton->count,
 		automaton->longest_word,
 		data.values
 	);
+
+    if (data.values == Py_None) {
+        data.values = NULL;
+    }
 
 	if (tuple) {
 		// revert all changes
@@ -363,7 +373,6 @@ automaton_unpickle(
 	}
 
 	automaton->root  = id2node[1];
-	automaton->count = PyList_Size(values);
 
 	memfree(id2node);
 	return 1;

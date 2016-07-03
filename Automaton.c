@@ -66,25 +66,26 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 7)) {
+	if (UNLIKELY(PyTuple_Size(args) == 8)) {
 		
 		// unpickle: count, data, kind, store, version, values
 		size_t			count;
 		void*			data;
 		size_t			size;
 		int				version;
+		int				word_count;
 		int				longest_word;
 		AutomatonKind	kind;
 		KeysStore		store;
 		PyObject*		values = NULL;
 
 #ifdef PY3K
-        const char* fmt = "ky#iiiiO";
+        const char* fmt = "ky#iiiiiO";
 #else
-        const char* fmt = "ks#iiiiO";
+        const char* fmt = "ks#iiiiiO";
 #endif
 
-		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &longest_word, &values)) {
+		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &word_count, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
 			goto error;
 		}
@@ -93,17 +94,23 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 			goto error;
 
 		if (kind != EMPTY) {
+			if (values == Py_None) {
+				Py_XDECREF(values);
+				values = NULL;
+			}
+
 			if (automaton_unpickle(automaton, count, data, size, values)) {
 				automaton->kind		= kind;
 				automaton->store	= store;
 				automaton->version	= version;
+				automaton->count    = word_count;
 				automaton->longest_word	= longest_word;
 			}
 			else
 				goto error;
 		}
 
-		Py_DECREF(values);
+		Py_XDECREF(values);
 	}
 	else {
 		// construct new object

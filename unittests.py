@@ -7,9 +7,6 @@
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl/proj/pyahocorasick/
     License   : public domain
-    Date      : $Date$
-
-    $Id$
 """
 
 import sys
@@ -612,13 +609,54 @@ class TestPickle(TestAutomatonBase):
     def compare_automatons(self, A, B):
         if print_dumps:
             print([x for x in B.items()])
-            print([x for x in B.iter(self.string)])
+            print([x for x in A.items()])
 
         self.assertEqual(len(A), len(B))
 
-        AL = set(key for key in A.keys())
-        BL = set(key for key in B.keys())
-        self.assertEqual(AL, BL)
+        for item in zip(A.items(), B.items()):
+            (AK, AV), (BK, BV) = item
+
+            self.assertEqual(AK, BK)
+            self.assertEqual(AV, BV)
+
+
+class TestPickleStoreInts(unittest.TestCase):
+    "Test pickling/unpickling for automaton of kind STORE_INTS/STORE_LEN"
+
+
+    def add_words_and_make_automaton(self):
+        A = ahocorasick.Automaton(ahocorasick.STORE_INTS)
+        words = "tree trie bark branch barrier brag".split()
+
+        for index, word in enumerate(words):
+            A.add_word(word, index)
+
+        A.make_automaton()
+
+        return A
+
+
+    def test_pickle_and_unpickle(self):
+        import pickle
+        A = self.add_words_and_make_automaton();
+        dump = pickle.dumps(A)
+        B = pickle.loads(dump)
+
+        self.compare_automatons(A, B)
+
+
+    def compare_automatons(self, A, B):
+        if print_dumps:
+            print([x for x in B.items()])
+            print([x for x in A.items()])
+
+        self.assertEqual(len(A), len(B))
+
+        for item in zip(A.items(), B.items()):
+            (AK, AV), (BK, BV) = item
+
+            self.assertEqual(AK, BK)
+            self.assertEqual(AV, BV)
 
 
 class TestTrieStoreInts(unittest.TestCase):

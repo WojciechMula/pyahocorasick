@@ -17,6 +17,16 @@
 
 #define DEBUG
 
+#if defined(_MSC_VER)       // Visual Studio compiler
+#   define WINDOWS
+#endif
+
+#if defined(WINDOWS)
+#   include "windows.h"
+#else
+#	include "posix.h"
+#endif
+
 #if PY_MAJOR_VERSION >= 3
     #define PY3K
 #else

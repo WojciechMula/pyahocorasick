@@ -1,6 +1,6 @@
 /*
 	This is part of pyahocorasick Python module.
-	
+
 	Trie implementation
 
 	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
@@ -10,7 +10,7 @@
 #include "trienode.h"
 
 static TrieNode*
-trienode_new(const TRIE_LETTER_TYPE letter, char eow) {
+trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
 	TrieNode* node = (TrieNode*)memalloc(sizeof(TrieNode));
 	if (node) {
 		node->output.integer = 0;
@@ -30,8 +30,10 @@ trienode_new(const TRIE_LETTER_TYPE letter, char eow) {
 
 static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter) {
-	ASSERT(node);
+
 	int i;
+
+	ASSERT(node);
 	for (i=0; i < node->n; i++)
 		if ((node)->next[i]->letter == letter)
 			return node->next[i];
@@ -50,12 +52,16 @@ trienode_get_ith_unsafe(TrieNode* node, size_t index) {
 
 static TrieNode*
 trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child) {
+
+	int n;
+	TrieNode** next;
+
 	ASSERT(node);
 	ASSERT(child);
 	ASSERT(trienode_get_next(node, letter) == NULL);
 
-	const int n = node->n;
-	TrieNode** next = (TrieNode**)memrealloc(node->next, (n + 1) * sizeof(TrieNode*));
+	n = node->n;
+	next = (TrieNode**)memrealloc(node->next, (n + 1) * sizeof(TrieNode*));
 	if (next) {
 		node->next = next;
 		node->next[n] = child;

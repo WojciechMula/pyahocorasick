@@ -27,14 +27,14 @@ typedef enum {
 
 
 typedef struct AutomatonStatistics {
-	int		version;
+	int			version;
 
-	int		nodes_count;		///< total number of nodes
-	int		words_count;		///< len(automaton)
-	int		longest_word;		///< longest word
-	int		links_count;		///< links count
-	int		sizeof_node;		///< size of single node (a C structure)
-	int		total_size;			///< total size in bytes
+	ssize_t		nodes_count;		///< total number of nodes
+	ssize_t		words_count;		///< len(automaton)
+	ssize_t		longest_word;		///< longest word
+	ssize_t		links_count;		///< links count
+	ssize_t		sizeof_node;		///< size of single node (a C structure)
+	ssize_t		total_size;			///< total size in bytes
 } AutomatonStatistics;
 
 
@@ -58,8 +58,8 @@ static bool
 automaton_unpickle(
 	Automaton* automaton,
 	const size_t count,
-	void* data,
-	const ssize_t size,
+	uint8_t* data,
+	const size_t size,
 	PyObject* values
 );
 

@@ -1,6 +1,6 @@
 /*
 	This is part of pyahocorasick Python module.
-	
+
 	Trie implementation
 
 	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
@@ -12,6 +12,11 @@
 
 static TrieNode*
 trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen, bool* new_word) {
+
+	TrieNode* node;
+	TrieNode* child;
+	int i;
+
 	if (automaton->kind == EMPTY) {
 		ASSERT(automaton->root == NULL);
 		automaton->root = trienode_new('\0', false);
@@ -19,10 +24,8 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
 			return NULL;
 	}
 
-	TrieNode* node = automaton->root;
-	TrieNode* child;
+	node = automaton->root;
 
-	int i;
 	for (i=0; i < wordlen; i++) {
 		const TRIE_LETTER_TYPE letter = word[i];
 
@@ -55,9 +58,9 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
 static TrieNode* PURE
 trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 	TrieNode* node;
+	size_t i;
 
 	node = root;
-	ssize_t i;
 
 	if (node != NULL) {
 		for (i=0; i < wordlen; i++) {
@@ -66,7 +69,7 @@ trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 				return NULL;
 		}
 	}
-		
+
 	return node;
 }
 
@@ -75,9 +78,9 @@ static int PURE
 trie_longest(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 	TrieNode* node;
 	int len = 0;
+	size_t i;
 
 	node = root;
-	ssize_t i;
 	for (i=0; i < wordlen; i++) {
 		node = trienode_get_next(node, word[i]);
 		if (node == NULL)
@@ -116,10 +119,11 @@ trie_traverse_aux(
 	trie_traverse_callback callback,
 	void *extra
 ) {
+	int i;
+
 	if (callback(node, depth, extra) == 0)
 		return 0;
 
-	int i;
 	for (i=0; i < node->n; i++) {
 		TrieNode* child = node->next[i];
 		ASSERT(child);

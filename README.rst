@@ -77,7 +77,37 @@ Just run::
 
 		python setup.py install
 
-If compilation succed, module is ready to use.
+If compilation succeed, module is ready to use.
+
+
+Windows building for Python 2.7
+-------------------------------
+
+Prerequisites:
+
+* The latest `Python 2.7`__
+* `Microsoft Visual C++ Compiler for Python 2.7`__ (basically Visual Studio 2008)
+
+__ https://www.python.org/download/releases/2.7/
+__ https://www.microsoft.com/en-us/download/details.aspx?id=44266
+
+Procedure (a copy of **Christian Long's** answer at `Stack Overflow`__):
+
+1. From **Start Menu** run "Visual C++ 2008 Command Prompt".
+2. Set two environment variables::
+
+	SET DISTUTILS_USE_SDK=1
+	SET MSSdk=1
+
+3. Changed current directory to ``pyahocorasick`` directory::
+
+	cd <your path>
+
+4. Then standard Python's build procedure could be used::
+
+	python setup.py install
+
+__ http://stackoverflow.com/questions/26140192/microsoft-visual-c-compiler-for-python-2-7
 
 
 API

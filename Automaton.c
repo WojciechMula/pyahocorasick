@@ -1,6 +1,6 @@
 /*
 	This is part of pyahocorasick Python module.
-	
+
 	Automaton class implementation.
 	(this file includes Automaton_pickle.c)
 
@@ -9,6 +9,7 @@
 */
 
 #include "Automaton.h"
+#include "slist.h"
 
 static PyTypeObject automaton_type;
 
@@ -67,7 +68,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->root  = NULL;
 
 	if (UNLIKELY(PyTuple_Size(args) == 8)) {
-		
+
 		// unpickle: count, data, kind, store, version, values
 		size_t			count;
 		void*			data;
@@ -167,7 +168,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 	TRIE_LETTER_TYPE* word = NULL;
 	ssize_t wordlen = 0;
-	int integer = 0;
+	Py_uintptr_t integer = 0;
 
 	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (not py_word)
@@ -223,7 +224,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 					if (not new_word and node->eow)
 						// replace
 						Py_DECREF(node->output.object);
-				
+
 					Py_INCREF(py_value);
 					node->output.object = py_value;
 					break;
@@ -235,8 +236,8 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			if (new_word) {
 				automaton->version += 1; // change version only when new word appeared
 				if (wordlen > automaton->longest_word)
-					automaton->longest_word = wordlen;
-					
+					automaton->longest_word = (int)wordlen;
+
 				Py_RETURN_TRUE;
 			}
 			else {
@@ -254,6 +255,9 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 static void
 clear_aux(TrieNode* node, KeysStore store) {
+
+	int i;
+
 	if (node) {
 		switch (store) {
 			case STORE_INTS:
@@ -267,9 +271,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 				break;
 		}
 
-		const int n = node->n;
-		int i;
-		for (i=0; i < n; i++) {
+		for (i=0; i < node->n; i++) {
 			TrieNode* child = node->next[i];
 			if (child != node) // avoid self-loops!
 				clear_aux(child, store);
@@ -306,12 +308,13 @@ automaton_contains(PyObject* self, PyObject* args) {
 	ssize_t wordlen = 0;
 	TRIE_LETTER_TYPE* word = NULL;
 	PyObject* py_word;
+	TrieNode* node;
 
 	py_word = pymod_get_string(args, &word, &wordlen);
 	if (py_word == NULL)
 		return -1;
 
-	TrieNode* node = trie_find(automaton->root, word, wordlen);
+	node = trie_find(automaton->root, word, wordlen);
 	Py_DECREF(py_word);
 
 	return (node and node->eow);
@@ -352,12 +355,13 @@ automaton_match(PyObject* self, PyObject* args) {
 	ssize_t wordlen;
 	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
+	TrieNode* node;
 
 	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
-	TrieNode* node = trie_find(automaton->root, word, wordlen);;
+	node = trie_find(automaton->root, word, wordlen);;
 
 	Py_DECREF(py_word);
 	if (node)
@@ -377,12 +381,13 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
 	ssize_t wordlen;
 	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
+	int len;
 
 	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
-	const int len = trie_longest(automaton->root, word, wordlen);
+	len = trie_longest(automaton->root, word, wordlen);
 	Py_DECREF(py_word);
 
 	return Py_BuildValue("i", len);
@@ -402,12 +407,13 @@ automaton_get(PyObject* self, PyObject* args) {
 	TRIE_LETTER_TYPE* word;
 	PyObject* py_word;
 	PyObject* py_def;
+	TrieNode* node;
 
 	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
 	if (py_word == NULL)
 		return NULL;
 
-	TrieNode* node = trie_find(automaton->root, word, wordlen);
+	node = trie_find(automaton->root, word, wordlen);
 
 	if (node and node->eow) {
 		switch (automaton->store) {
@@ -450,12 +456,18 @@ typedef struct AutomatonQueueItem {
 static PyObject*
 automaton_make_automaton(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	if (automaton->kind != TRIE)
-		Py_RETURN_FALSE;
 
 	AutomatonQueueItem* item;
 	List queue;
 	int i;
+
+	TrieNode* node;
+	TrieNode* child;
+	TrieNode* state;
+
+
+	if (automaton->kind != TRIE)
+		Py_RETURN_FALSE;
 
 	list_init(&queue);
 
@@ -479,9 +491,6 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 	}
 
 	// 2. make links
-	TrieNode* node;
-	TrieNode* child;
-	TrieNode* state;
 	while (true) {
 		AutomatonQueueItem* item = (AutomatonQueueItem*)list_pop_first(&queue);
 		if (item == NULL)
@@ -491,8 +500,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 			memfree(item);
 		}
 
-		const size_t n = node->n;
-		for (i=0; i < n; i++) {
+		for (i=0; i < node->n; i++) {
 			child = node->next[i];
 			ASSERT(child);
 
@@ -517,7 +525,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 			child->fail = trienode_get_next(state, child->letter);
 			if (child->fail == NULL)
 				child->fail = automaton->root;
-			
+
 			ASSERT(child->fail);
 		}
 	}
@@ -541,8 +549,6 @@ no_mem:
 static PyObject*
 automaton_find_all(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	if (automaton->kind != AHOCORASICK)
-		Py_RETURN_NONE;
 
 	ssize_t wordlen;
 	ssize_t start;
@@ -551,6 +557,13 @@ automaton_find_all(PyObject* self, PyObject* args) {
 	PyObject* py_word;
 	PyObject* callback;
 	PyObject* callback_ret;
+
+	ssize_t i;
+	TrieNode* state;
+	TrieNode* tmp;
+
+	if (automaton->kind != AHOCORASICK)
+		Py_RETURN_NONE;
 
 	// arg 1
 	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
@@ -570,10 +583,6 @@ automaton_find_all(PyObject* self, PyObject* args) {
 	// parse start/end
 	if (pymod_parse_start_end(args, 2, 3, 0, wordlen, &start, &end))
 		return NULL;
-
-	ssize_t i;
-	TrieNode* state;
-	TrieNode* tmp;
 
 	state = automaton->root;
 	for (i=start; i < end; i++) {
@@ -613,12 +622,14 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	bool use_wildcard = false;
 	PatternMatchType matchtype = MATCH_AT_LEAST_PREFIX;
 
+	AutomatonItemsIter* iter;
+
 	// arg 1: prefix/prefix pattern
-	if (args) 
+	if (args)
 		arg1 = PyTuple_GetItem(args, 0);
 	else
 		arg1 = NULL;
-	
+
 	if (arg1) {
 		arg1 = pymod_get_string(arg1, &word, &wordlen);
 		if (arg1 == NULL)
@@ -693,16 +704,15 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 		}
 	}
 
+	//
+	iter = (AutomatonItemsIter*)automaton_items_iter_new(
+					automaton,
+					word,
+					wordlen,
+					use_wildcard,
+					wildcard,
+					matchtype);
 
-	// 
-	AutomatonItemsIter* iter = (AutomatonItemsIter*)automaton_items_iter_new(
-									automaton,
-									word,
-									wordlen,
-									use_wildcard,
-									wildcard,
-									matchtype
-								);
 	Py_XDECREF(arg1);
 	Py_XDECREF(arg2);
 
@@ -762,14 +772,14 @@ static PyObject*
 automaton_iter(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
+	PyObject* object;
+	ssize_t start;
+	ssize_t end;
+
 	if (automaton->kind != AHOCORASICK) {
 		PyErr_SetString(PyExc_AttributeError, "not an automaton yet; add some words and call make_automaton");
 		return NULL;
 	}
-
-	PyObject* object;
-	ssize_t start;
-	ssize_t end;
 
 	object = PyTuple_GetItem(args, 0);
 	if (object) {
@@ -812,8 +822,8 @@ automaton_iter(PyObject* self, PyObject* args) {
 	return automaton_search_iter_new(
 		automaton,
 		object,
-		start,
-		end
+		(int)start,
+		(int)end
 	);
 #undef automaton
 }
@@ -821,14 +831,17 @@ automaton_iter(PyObject* self, PyObject* args) {
 
 static void
 get_stats_aux(TrieNode* node, AutomatonStatistics* stats, int depth) {
+
+	int i;
+
 	stats->nodes_count	+= 1;
 	stats->words_count	+= (int)(node->eow);
 	stats->links_count	+= node->n;
 	stats->total_size	+= trienode_get_size(node);
+
 	if (depth > stats->longest_word)
 		stats->longest_word = depth;
 
-	int i;
 	for (i=0; i < node->n; i++)
 		get_stats_aux(node->next[i], stats, depth + 1);
 }
@@ -844,7 +857,7 @@ get_stats(Automaton* automaton) {
 
 	if (automaton->kind != EMPTY)
 		get_stats_aux(automaton->root, &automaton->stats, 0);
-	
+
 	automaton->stats.version		= automaton->version;
 }
 
@@ -855,10 +868,13 @@ get_stats(Automaton* automaton) {
 static PyObject*
 automaton_get_stats(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
+
+	PyObject* dict;
+
 	if (automaton->stats.version != automaton->version)
 		get_stats(automaton);
-	
-	PyObject* dict = Py_BuildValue(
+
+	dict = Py_BuildValue(
 		"{s:i,s:i,s:i,s:i,s:i,s:i}",
 #define emit(name) #name, automaton->stats.name
 		emit(nodes_count),
@@ -897,8 +913,8 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 		Dump->error = 1; \
 		return 0; \
 	}
-		
-	
+
+
 	// 1.
 	tuple = Py_BuildValue("ii", node, (int)(node->eow));
 	append_tuple(Dump->nodes)
@@ -929,10 +945,11 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 static PyObject*
 automaton_dump(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
+	DumpAux dump;
+
 	if (automaton->kind == EMPTY)
 		Py_RETURN_NONE;
-	
-	DumpAux dump;
+
 	dump.nodes = 0;
 	dump.edges = 0;
 	dump.fail  = 0;
@@ -1037,7 +1054,7 @@ PyMemberDef automaton_members[] = {
 };
 
 static PyTypeObject automaton_type = {
-	PyVarObject_HEAD_INIT(&PyType_Type, 0)
+	PY_OBJECT_HEAD_INIT
 	"ahocorasick.Automaton",					/* tp_name */
 	sizeof(Automaton),							/* tp_size */
 	0,											/* tp_itemsize? */

@@ -214,7 +214,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 		iter->shift += (iter->index >= 0) ? iter->index : 0;
 
 	iter->index		= -1;
-	iter->end		= len;
+	iter->end		= (int)len;
 
 	if (reset) {
 		iter->state  = iter->automaton->root;
@@ -240,7 +240,7 @@ PyMethodDef automaton_search_iter_methods[] = {
 
 
 static PyTypeObject automaton_search_iter_type = {
-	PyVarObject_HEAD_INIT(&PyType_Type, 0)
+	PY_OBJECT_HEAD_INIT
 	"ahocorasick.AutomatonSearchIter",			/* tp_name */
 	sizeof(AutomatonSearchIter),				/* tp_size */
 	0,											/* tp_itemsize? */

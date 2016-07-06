@@ -18,11 +18,11 @@
 #include "common.h"
 
 /** base structure for list */
-#define LISTITEM_data struct ListItem* __next;
+#define LISTITEM_data struct ListItem* __next
 
 /** list item node */
 typedef struct ListItem {
-	LISTITEM_data
+	LISTITEM_data;
 } ListItem;
 
 /** Create new item */

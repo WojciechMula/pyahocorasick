@@ -21,5 +21,20 @@ rem setuptools settings
 SET DISTUTILS_USE_SDK=1
 SET MSSdk=1
 
+python setup.py build
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO "Build error"
+	EXIT /B 3
+)
+
 python setup.py install
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO "Install error"
+	EXIT /B 3
+)
+
 python unittests.py
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO "Tests failed"
+	EXIT /B 3
+)

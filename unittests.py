@@ -802,6 +802,105 @@ class TestBugAutomatonSearch(TestAutomatonBase):
 
         self.assertEqual([(15, 'GT-C3303')], res)
 
+
+class TestIntSequenceBase(unittest.TestCase):
+    def setUp(self):
+        self.A = ahocorasick.Automaton(ahocorasick.STORE_ANY, ahocorasick.KEY_SEQUENCE);
+
+class TestIntSequence__TrieMethods(TestIntSequenceBase):
+
+	def test_add__case_1(self):
+		A = self.A
+		
+		ret = A.add_word((1, 2, 3), "foo")
+		self.assertTrue(ret)
+		self.assertTrue(A.kind == ahocorasick.TRIE)
+
+		self.assertEqual(len(A), 1)
+		self.assertTrue((1, 2, 3) in A)
+
+
+	def test_add__case_2(self):
+		A = self.A
+		
+		A.add_word((1, 2, 3), "foo")
+		ret = A.add_word((1, 2, 3), "bar")
+		self.assertFalse(ret)
+
+
+	def test_add__case_3(self):
+		A = self.A
+		
+		A.add_word((1, 2, 3), "foo")
+		A.add_word((1, 2, 3, 4, 5), "bar")
+		A.add_word((1, 3, 4, 5), "baz")
+
+		self.assertEqual(len(A), 3);
+		self.assertEqual(A.get((1, 2, 3)), 			"foo");
+		self.assertEqual(A.get((1, 2, 3, 4, 5)), 	"bar");
+		self.assertEqual(A.get((1, 3, 4, 5)), 		"baz");
+
+
+	def test_add__case_4(self):
+		A = self.A
+		
+		ret = A.add_word((), "foo")
+		self.assertFalse(ret)
+
+
+	def test_add__case_5__wrong_argument_type(self):
+		A = self.A
+	
+		with self.assertRaises(TypeError) as e:
+			A.add_word("hello!", "foo")
+
+		self.assertEqual(str(e.exception), "argument is not a supported sequence type")
+
+
+	def test_add__case_6__wrong_item_type(self):
+		A = self.A
+	
+		with self.assertRaises(ValueError) as e:
+			A.add_word((1, 2, "hello!"), "foo")
+
+		self.assertEqual(str(e.exception), "item #2 is not a number")
+
+
+	def test_add__case_7__wrong_value(self):
+		A = self.A
+	
+		with self.assertRaises(ValueError) as e:
+			A.add_word((1, -1, 12), "foo")
+
+		self.assertEqual(str(e.exception), "item #1: value -1 ouside range [0..65535]")
+
+
+	def test_add__case_8__wrong_value(self):
+		A = self.A
+	
+		with self.assertRaises(ValueError) as e:
+			A.add_word((2**42, 0, 12), "foo")
+
+		self.assertEqual(str(e.exception), "item #0: value 4398046511104 ouside range [0..65535]");
+
+
+	def test_match(self):
+		A = self.A
+		
+		ret = A.add_word((1, 2, 3), "foo")
+		self.assertTrue(A.match((1,)))
+		self.assertTrue(A.match((1, 2)))
+		self.assertTrue(A.match((1, 2, 3)))
+
+
+	def test_longest_prefix(self):
+		A = self.A
+		
+		ret = A.add_word((1, 2, 3, 4, 5, 6), "foo")
+		self.assertEqual(A.longest_prefix((1, 2, 3, 111, 1111, 11111)), 3);
+		self.assertEqual(A.longest_prefix((111, 1111, 11111)), 0);
+
+
 if __name__ == '__main__':
     unittest.main()
 

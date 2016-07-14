@@ -63,6 +63,67 @@ pymod_get_string_from_tuple(PyObject* tuple, int index, TRIE_LETTER_TYPE** word,
 		return NULL;
 }
 
+
+static bool
+__read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+	Py_ssize_t i;
+	Py_ssize_t size = PyTuple_Size(obj);
+
+	*wordlen = size;
+	*word = (TRIE_LETTER_TYPE*)malloc(size * TRIE_LETTER_SIZE); // XXX: automaton should keep the buffer to avoid continual allocated and free
+	if (*word == NULL) {
+		PyErr_NoMemory();
+		return false;
+	}
+
+	for (i=0; i < size; i++) {
+		Py_ssize_t value = PyNumber_AsSsize_t(PyTuple_GetItem(obj, i), PyExc_ValueError);
+		if (value == -1 && PyErr_Occurred()) {
+			PyErr_Format(PyExc_ValueError, "item #%zd is not a number", i);
+			free(*word);
+			return NULL;
+		}
+
+		const Py_ssize_t min = 0;		// XXX: both min and max values will be configured
+		const Py_ssize_t max = 65535;
+
+		if (value < min || value > max) {
+			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd ouside range [%zd..%zd]", i, value, min, max);
+			free(*word);
+			return NULL;
+		}
+
+		(*word)[i] = (TRIE_LETTER_TYPE)value;
+	}
+
+	return true;
+}
+
+
+static bool
+pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+	if (PyTuple_Check(obj)) {
+		return __read_sequence__from_tuple(obj, word, wordlen);
+		return true;
+	} else {
+		PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");
+		return false;
+	}
+}
+
+
+static bool
+pymod_get_sequence_from_tuple(PyObject* tuple, int index, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+	PyObject* obj;
+
+	obj = PyTuple_GetItem(tuple, index);
+	if (obj)
+		return pymod_get_sequence(obj, word, wordlen);
+	else
+		return false;
+}
+
+
 /* parse optional indexes used in few functions [start, [end]] */
 static int
 pymod_parse_start_end(
@@ -132,3 +193,48 @@ pymod_parse_start_end(
 #undef end
 }
 
+
+struct Input {
+	Py_ssize_t 			wordlen;
+	TRIE_LETTER_TYPE* 	word;
+	PyObject* 			py_word;
+};
+
+
+bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
+#define automaton ((Automaton*)self)
+	if (automaton->key_type == KEY_STRING) {
+		input->py_word = pymod_get_string(tuple, &input->word, &input->wordlen);
+		if (not input->py_word)
+			return false;
+	} else {
+		if (not pymod_get_sequence(tuple, &input->word, &input->wordlen)) {
+			return false;
+		}
+
+		input->py_word = NULL;
+	}
+#undef automaton
+
+	return true;
+}
+
+
+bool prepare_input_from_tuple(PyObject* self, PyObject* args, int index, struct Input* input) {
+	PyObject* tuple;
+
+	tuple = PyTuple_GetItem(args, index);
+	if (tuple)
+		return prepare_input(self, tuple, input);
+	else
+		return false;
+}
+
+
+void destroy_input(struct Input* input) {
+	if (input->py_word) {
+		Py_DECREF(input->py_word);
+	} else {
+		free(input->word);
+	}
+}

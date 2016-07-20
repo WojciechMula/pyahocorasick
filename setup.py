@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
+
 from sys import version_info as version
+
 
 def get_readme():
     with open('README.rst', 'rt') as f:

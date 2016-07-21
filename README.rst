@@ -89,6 +89,9 @@ See also:
     - and `Authors`_ and `License`_ .
 
 
+.. contents::
+
+
 Introduction
 ============
 
@@ -111,7 +114,7 @@ before you can search strings. In several applicatiosn where you search several
 pre-defined "needles" in variable "haystacks" this is actually an advantage.
 
 **Aho-Corasick automatons** are commonly used for fast multi-pattern matching
-in  intrusion detection systems (such as snort), anti-viruses and many other
+in intrusion detection systems (such as snort), anti-viruses and many other
 applications that need fast matching against a pre-defined set of string keys.
 
 Internally an Aho-Corasick automaton is typically based on a Trie with extra
@@ -232,22 +235,22 @@ Trie methods
 The Automaton class has the following trie methods:
 
 ``add_word(key, [value]) => bool``
-    Add a ``key`` key to the dict-like trie and associate this key with a
+    Add a ``key`` string to the dict-like trie and associate this key with a
     ``value``.  ``value`` is optional or mandatory depending how the Automaton
     instance was created.
     Return True if the ``word`` key is inserted and did not exists in the trie
     or False otherwise.
 
-    If the Automaton was created without argument (the default) as ``Automaton()``
-    or with ``Automaton(ahocorasik.STORE_ANY)`` then the ``value`` is required and can
-    be any Python object.
+    If the Automaton was created without argument (the default) as
+    ``Automaton()`` or with ``Automaton(ahocorasik.STORE_ANY)`` then the
+    ``value`` is required and can be any Python object.
 
-    If the Automaton was created with ``Automaton(ahocorasik.STORE_LENGTH)`` then 
-    associating a ``value`` is not allowed --- ``len(word)`` is saved
+    If the Automaton was created with ``Automaton(ahocorasik.STORE_LENGTH)``
+    then associating a ``value`` is not allowed --- ``len(word)`` is saved
     automatically as a value instead.
 
-    If the Automaton was created with ``Automaton(ahocorasik.STORE_INTS)`` then the
-    ``value``is optional. If provided it must be an integer, otherwise it
+    If the Automaton was created with ``Automaton(ahocorasik.STORE_INTS)`` then
+    the ``value``is optional. If provided it must be an integer, otherwise it
     defaults to ``len(automaton)`` which is therefore the order index in which
     keys are added to the trie.
 
@@ -282,9 +285,9 @@ implements a subset of dict-like methods.
 
 ``get(key[, default])``
     Return the value associated with the ``key`` string.
-    Return the the optional ``default`` value if provided.
     Raise a ``KeyError`` if the key is not found in the trie and no default is
     provided.
+    Return the optional ``default`` value if provided and the key is not present in the trie.
 
 .. _keys:
 
@@ -295,7 +298,7 @@ implements a subset of dict-like methods.
     this prefix are yielded.
 
     If the optional ``wildcard`` is provided as a single character string, then
-    the ``prefix`` is treated as a simple pattern using this ``wildcard`` as a wildcard. 
+    the ``prefix`` is treated as a simple pattern using this ``wildcard`` as a wildcard.
     
     The optional ``how`` argument is used to control how strings are matched using
     one of these possible values:
@@ -314,23 +317,16 @@ implements a subset of dict-like methods.
 
 ``values([prefix, [wildcard, [how]]]) => yield object``
     Return an iterator of values associated with each keys.
-    Keys are are matched optionally to the prefix using the same logic and arguments as in 
-    the ``keys`` method.
+    Keys are are matched optionally to the prefix using the same logic and
+    arguments as in the ``keys`` method.
 
 ``items([prefix, [wildcard, [how]]]) => yield tuple (string, object)``
-    Return an iterator of tuples of (key, value)
-    Keys are are matched optionally to the prefix using the same logic and arguments as in 
-    the ``keys`` method.
-
-``iter()``
-    Iterate over keys. Equivalent to calling ``keys()``.
-
-    Note that the behaviour and arguments for this method are different when the
-    Automaton has been transformed (with ``make_automaton()``)  in an Aho-
-    Corasick automaton.
+    Return an iterator of tuples of (key, value).
+    Keys are are matched optionally to the prefix using the same logic and
+    arguments as in the ``keys`` method.
 
 ``len()``
-    Returns number of distinct keys added to the trie.
+    Return the number of distinct keys added to the trie.
 
 
 Wildcards
@@ -359,9 +355,10 @@ Aho-Corasick methods
     **This method invalidates all iterators.**
 
 ``iter(string, [start, [end]])``
-    Return an iterator of tuples (end_index, value) for keys matching ``string``.
-    * ``end_index`` is the end index of matched-to key string in the trie
-    * ``value`` is the value associated with that key string in the trie
+    Return an iterator of tuples (end_index, value) for keys found in ``string``.
+
+    - ``end_index`` is the end index of matched-to key string in the trie
+    - ``value`` is the value associated with that key string in the trie
 
     This performs the Aho-Corasick search procedure using the provided ``string``
     as an input. 
@@ -370,8 +367,8 @@ Aho-Corasick methods
     search to a ``string`` slice as in ``string[start:end]``.
 
 ``find_all(string, callback, [start, [end]])``
-    Iterate over tuples (end_index, value) for keys matching ``string``.
-    Invoke the ``callback`` callable for each matching tuple.  
+    Iterate over tuples (end_index, value) for keys found in ``string``.
+    Invoke the ``callback`` callable for each matching tuple.
     ``callback`` must be accepting two arguments:
     * ``end_index`` is the end index of matched-to key string in the trie
     * ``value`` is the value associated with that key string in the trie
@@ -425,11 +422,12 @@ Other methods
 #############
 
 ``dump() => (list of nodes, list of edges, list of fail links)``
-    Returns 3 lists describing the Automaton as a graph:
+    Returns a three-tuple of lists describing the Automaton as a graph of
+    (nodes, edges, failure links):
 
     * nodes: each item is a pair (node id, end of word marker)
     * edges: each item is a triple (node id, label char, child node id)
-    * fail: each item is a pair (source node id, node if connected by fail node)
+    * failure links: each item is a pair (source node id, node if connected by fail node)
 
     For each of these the node id is a unique number and a label is a single byte.
 
@@ -456,13 +454,20 @@ Other methods
 __ http://en.wikipedia.org/Memory%20fragmentation
 
 
+``__sizeof__() => int``
+    Return the approximate size in bytes occupied by the Automaton instance in
+    memory excluding the size of associated objects when the Automaton is
+    created with ``Automaton()`` or ``Automaton(ahocorasick.STORE_ANY).
+    Also available by calling sys.getsizeof(automaton instance).
+
+
 .. _AutomatonSearchIter:
 
 AutomatonSearchIter class
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This class is not available directly but instances of ``AutomatonSearchIter`
-are returned by the the ``iter`` method of an ``Automaton``. This iterator has
+are returned by the ``iter`` method of an ``Automaton``. This iterator has
 the following methods:
 
 ``set(string, [reset]) => None``

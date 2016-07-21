@@ -10,7 +10,8 @@
 approximate multi-pattern string search meaning that you can find multiple key
 strings occurences at once in some input text.  It is implemented in C and
 tested on Python 2.7 and 3.4+. It works on Linux, Mac and Windows. The license_
-is BSD-3-clause.
+is BSD-3-clause. Some utilities, tests and Python are deicated to the Public
+Domain.
 
 Download
 ========
@@ -658,8 +659,10 @@ __ https://github.com/WojciechMula/pyahocorasick/issues
 License
 =======
 
-Library is licensed under very liberal BSD-3-clause license.
+Library is licensed under very liberal BSD-3-Clause__ license.
 Some portions of the code are dedicated to the public domain such as the pure
 Python automaton.
 
 Full text of license is available in LICENSE file.
+
+__ http://spdx.org/licenses/BSD-3-Clause.html

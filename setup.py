@@ -1,6 +1,20 @@
 # -*- coding: utf-8 -*-
-from distutils.core import setup, Extension
+
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : BSD-3-Clause (see LICENSE)
+"""
+
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
+
 from sys import version_info as version
+
 
 def get_readme():
     with open('README.rst', 'rt') as f:
@@ -27,6 +41,7 @@ if version.major == 3:
 else:
     macros = []
 
+
 module = Extension(
     'ahocorasick',
     sources = [
@@ -51,20 +66,23 @@ module = Extension(
     ],
 )
 
+
 setup(
     name             = 'pyahocorasick',
     version          = '1.1.0',
 
     ext_modules      = [module],
 
-    description      = "Aho-Corasick automaton",
+    description      = ("pyahocorasick is a fast and memory efficient library for "
+                        "fast exact or approximate multi-pattern string search. "
+                        "It is implemented in C and tested on Python 2.7 and 3.4+."),
     author           = "Wojciech Muła",
     author_email     = "wojciech_mula@poczta.onet.pl",
     maintainer       = "Wojciech Muła",
     maintainer_email = "wojciech_mula@poczta.onet.pl",
     url              = "http://github.com/WojciechMula/pyahocorasick",
-    platforms        = ["Linux", "Windows"],
-    license          = "BSD (3 clauses)",
+    platforms        = ["Linux", "MacOSX", "Windows"],
+    license          = " BSD-3-Clause and Public-Domain",
     long_description = get_readme(),
     keywords         = [
         "aho-corasick",

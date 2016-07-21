@@ -10,6 +10,7 @@
 	* get first/last
 
 	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
 	License   : public domain
 */
 #ifndef ahocorasick_slist_h_included

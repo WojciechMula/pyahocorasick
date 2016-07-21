@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
     This is part of pyahocorasick Python module.
-    
-    Unit tests
+
+    Unit tests for the C-based ahocorasick module.
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl/proj/pyahocorasick/
@@ -11,7 +11,9 @@
 
 import sys
 import unittest
+
 import ahocorasick
+
 
 if ahocorasick.unicode:
     conv = lambda x: x
@@ -19,7 +21,7 @@ else:
     if sys.version_info.major >= 3:
         conv = lambda x: bytes(x, 'ascii')
     else:
-	    conv = lambda x: x
+        conv = lambda x: x
 
 
 class TestTrieStorePyObjectsBase(unittest.TestCase):
@@ -81,7 +83,6 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
     def test_exists(self):
         A = self.A
-        words = "word python aho corasick \x00\x00\x00".split()
 
         for w in self.words:
             A.add_word(conv(w), w)
@@ -123,16 +124,16 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
     def test_get1(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         for i, w in enumerate(self.words):
-            self.assertEqual(A.get(conv(w)), i+1)
+            self.assertEqual(A.get(conv(w)), i + 1)
 
 
     def test_get2(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         for w in self.inexisting:
             self.assertEqual(A.get(conv(w), None), None)
@@ -141,7 +142,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
     def test_get3(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         for w in self.inexisting:
             with self.assertRaises(KeyError):
@@ -149,15 +150,15 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
     def test_get_from_an_empty_automaton(self):
         A = ahocorasick.Automaton()
-        
+
         r = A.get('foo', None)
         self.assertEqual(r, None)
 
-    
+
     def test_longest_prefix(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         # there is "word"
         self.assertEqual(A.longest_prefix(conv("wo")), 2)
@@ -171,7 +172,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
     def test_stats_have_valid_structure(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         platform_dependent = None
         reference = {
@@ -208,7 +209,7 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
     def test_iter(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         L = [word for word in A]
         K = list(map(conv, self.words))
@@ -219,7 +220,7 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
     def test_keys(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         L = [word for word in A.keys()]
         K = [conv(word) for word in self.words]
@@ -230,10 +231,10 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
     def test_values(self):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         L = [x for x in A.values()]
-        V = list(range(1, len(self.words)+1))
+        V = list(range(1, len(self.words) + 1))
         self.assertEqual(len(L), len(V))
         self.assertEqual(set(L), set(V))
 
@@ -242,8 +243,8 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         A = self.A
         I = []
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
-            I.append((conv(w), i+1))
+            A.add_word(conv(w), i + 1)
+            I.append((conv(w), i + 1))
 
         L = [x for x in A.items()]
         self.assertEqual(len(L), len(I))
@@ -284,7 +285,7 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         I = ["aXcd"]
         L = [x for x in A.keys(conv("a?cd"), conv("?"))]
         self.assertEqual(set(I), set(L))
-    
+
 
     def test_items_with_valid_pattern2(self):
         A = self.A
@@ -311,14 +312,14 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
     def helper(self, method):
         A = self.A
         for i, w in enumerate(self.words):
-            A.add_word(conv(w), i+1)
+            A.add_word(conv(w), i + 1)
 
         it = method()
-        w  = next(it)
+        w = next(it)
         # word already exists, just change associated value
         # iterator is still valid
         A.add_word(conv(self.words[0]), 2)
-        w  = next(it)
+        w = next(it)
 
         # new word, iterator is invalidated
         A.add_word(conv("should fail"), 1)
@@ -341,7 +342,7 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
 class TestAutomatonBase(unittest.TestCase):
     def setUp(self):
         self.A = ahocorasick.Automaton();
-        self.words  = "he her hers she".split()
+        self.words = "he her hers she".split()
         self.string = "_sherhershe_"
         self.correct_positons = [
             (3, "she"),
@@ -388,7 +389,7 @@ class TestAutomatonConstruction(TestAutomatonBase):
         self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
 
 
-    def test_make_automaton2(self):
+    def test_make_automaton3(self):
         A = self.A
         self.assertEqual(A.kind, ahocorasick.EMPTY)
 
@@ -409,7 +410,7 @@ class TestAutomatonSearch(TestAutomatonBase):
         "no action is performed until automaton is constructed"
         A = self.A
         self.assertEqual(A.kind, ahocorasick.EMPTY)
-        
+
         self.assertEqual(A.find_all(self.string, conv("any arg")), None)
 
         A.add_word(conv("word"), None)
@@ -442,7 +443,7 @@ class TestAutomatonSearch(TestAutomatonBase):
 
         L = []
         A.find_all(conv(self.string[start:end]), callback)
-        C = [(pos+start, word) for pos, word in L]
+        C = [(pos + start, word) for pos, word in L]
 
         L = []
         A.find_all(conv(self.string), callback, start, end)
@@ -531,7 +532,7 @@ class TestAutomatonIterInvalidate(TestAutomatonBase):
         A = self.add_words_and_make_automaton()
 
         it = A.iter(conv(self.string))
-        w  = next(it)
+        w = next(it)
         A.add_word(conv("should fail"), 1)
         with self.assertRaises(ValueError):
             w = next(it)
@@ -541,7 +542,7 @@ class TestAutomatonIterInvalidate(TestAutomatonBase):
         A = self.add_words_and_make_automaton()
 
         it = A.iter(conv(self.string))
-        w  = next(it)
+        w = next(it)
         A.clear()
         with self.assertRaises(ValueError):
             w = next(it)
@@ -702,7 +703,7 @@ class TestTrieStoreInts(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.A.add_word(conv("xyz"), None)
 
-    
+
     def test_iter(self):
         A = self.A
         for word in self.words:
@@ -717,7 +718,7 @@ class TestTrieStoreInts(unittest.TestCase):
 
 
     def test_find_all_and_iter(self):
-        words  = "he her hers she".split()
+        words = "he her hers she".split()
         string = "_sherhershe_"
 
         A = self.A
@@ -730,7 +731,7 @@ class TestTrieStoreInts(unittest.TestCase):
         C = []
         def callback(index, value):
             C.append((index, value))
-        
+
         A.find_all(conv(string), callback);
 
         # iter()
@@ -769,8 +770,6 @@ class TestSizeOf(unittest.TestCase):
 
 
     def test_sizeof(self):
-        import sys
-
         size1 = sys.getsizeof(self.A)
 
         # grow memory
@@ -792,14 +791,14 @@ class TestBugAutomatonSearch(TestAutomatonBase):
 
     def setUp(self):
         self.A = ahocorasick.Automaton()
-        self.words = ['GT-C3303','SAMSUNG-GT-C3303K/']
+        self.words = ['GT-C3303', 'SAMSUNG-GT-C3303K/']
 
 
     def test_bug(self):
         self.add_words_and_make_automaton()
         text = 'SAMSUNG-GT-C3303i/1.0 NetFront/3.5 Profile/MIDP-2.0 Configuration/CLDC-1.1'
 
-        res  = list(self.A.iter(conv(text)))
+        res = list(self.A.iter(conv(text)))
 
         self.assertEqual([(15, 'GT-C3303')], res)
 

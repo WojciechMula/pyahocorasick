@@ -5,367 +5,451 @@
 .. image:: https://travis-ci.org/WojciechMula/pyahocorasick.svg?branch=master
     :target: https://travis-ci.org/WojciechMula/pyahocorasick
 
-.. contents::
+
+**pyahocorasick** is a fast and memory efficient library for exact or
+approximate multi-pattern string search meaning that you can find multiple key
+strings occurences at once in some input text.  It is implemented in C and
+tested on Python 2.7 and 3.4+. It works on Linux, Mac and Windows. The license_
+is BSD-3-clause.
+
+Download
+========
+
+You can fetch **pyahocorasick** from GitHub__ or Pypi__.
+
+__ https://github.com/WojciechMula/pyahocorasick
+__ https://pypi.python.org/pypi/pyahocorasick/
+
+
+Quick start
+===========
+Install::
+
+    pip install pyahocorasick
+
+Create an Automaton::
+
+    >>> import ahocorasick
+    >>> A = ahocorasick.Automaton()
+
+Add some strings and their associated value to this trie. Here we associate a
+tuple of (insertion index, original string) as a value to each key string we add
+to the trie::
+
+    >>> for idx, key in enumerate('he her hers she'.split()):
+    ...   A.add_word(key, (idx, key))
+
+Check if some string exists in the trie::
+
+    >>> 'he' in A
+    True
+    >>> 'HER' in A
+    False
+
+Play with the ``get()`` dict-like method::
+
+    >>> A.get('he')
+    (0, 'he')
+    >>> A.get('she')
+    (3, 'she')
+    >>> A.get('cat', '<not exists>')
+    '<not exists>'
+    >>> A.get('dog')
+    Traceback (most recent call last):
+      File '<stdin>', line 1, in <module>
+    KeyError
+    >>>
+
+Convert the trie to an Aho-Corasick automaton::
+
+    >>> A.make_automaton()
+
+Then search all occurrences of the keys (the needles) in an input string (our
+haystack). Print the results and check that they are correct::
+
+    >>> haystack = '_hershe_'
+    >>> for end_index, (insert_order, original_value) in A.iter(haystack):
+    ...     print((end_index, (insert_order, original_value)))
+    ...     start_index = end_index - len(original_value)
+    ...     assert haystack[start_index:end_index] == original_value
+    (2, (0, 'he'))
+    (3, (1, 'her'))
+    (4, (2, 'hers'))
+    (6, (3, 'she'))
+    (6, (0, 'he'))
+
+
+See also:
+    - `API overview`_ for more options and the API documentation.
+    - `More Examples`_ for more examples.
+    - `Build and install`_ for more details on installation.
+    - `Tests`_ to run unit tests.
+    - `Support`_ for help and bugs.
+    - and `Authors`_ and `License`_ .
+
 
 Introduction
 ============
 
-**pyahocorasick** is a Python module implements two kinds of data
-structures: `trie`__ and `Aho-Corasick string matching automaton`__.
+With an **Aho-Corasick automaton** you can efficiently search all occurences of
+multiple strings (the needles) in an input string (the haystack) making a single
+pass over the input string. With pyahocorasick you can eventually build large
+automatons and pickle them and reuse them over and over as an index structure
+for fast multi pattern string matching.
 
-**Trie** is a dictionary indexed by strings, which allow to retrieve
-associated items in a time proportional to string length. **Aho-Corasick
-automaton** allows to find all occurrences of strings from given set in
-a single run over text.
+One of the advantage of an Aho-Corasick automaton is that the typical worst-case
+and best-case **runtimes** are about the same and depends primarily on the size
+of the input string and secondarily on the number of matches returned.  While
+this may not be the fastest string search algorithm in all cases, it can search
+for multiple strings at once and its runtime guarantees make it rather unique.
+Because pyahocorasick is based on a Trie, it stores redundant keys prefixes only
+once using memory efficiently.
 
-(BTW in order to use Aho-Corasick automaton, a trie have to be created;
-this is the reason why these two distinct entities exist in a single
-module.)
+A drawback is that it needs to be constructed and "finalized" ahead of time
+before you can search strings. In several applicatiosn where you search several
+pre-defined "needles" in variable "haystacks" this is actually an advantage.
+
+**Aho-Corasick automatons** are commonly used for fast multi-pattern matching
+in  intrusion detection systems (such as snort), anti-viruses and many other
+applications that need fast matching against a pre-defined set of string keys.
+
+Internally an Aho-Corasick automaton is typically based on a Trie with extra
+data for failure links and an implementation of the Aho-Corasick search
+procedure.
+
+Behind the scenes the **pyahocorasick** Python library implements these two data
+structures:  a `Trie`__ and an `Aho-Corasick string matching automaton`__. Both
+are exposed through the `Automaton` class.
+
+In addition to Trie-like and Aho-Corasick methods and data structures,
+**pyahocorasick** also implements dict-like methods: The pyahocorasick
+**Automaton** is a **Trie** a dict-like structure indexed by string keys each
+associated with a value object. You can use this to retrieve an associated value
+in a time proportional to a string key length.
 
 __ http://en.wikipedia.org/wiki/trie
 __ http://en.wikipedia.org/wiki/Aho-Corasick%20algorithm
 
 
-There are two versions:
+pyahocorasick is available in two flavors:
 
-* **C extension**, compatible with Python 2 and 3;
-* pure python module, compatible with Python 2 and 3.
+* a CPython **C-based extension**, compatible with Python 2 and 3.
 
-Python module API is similar, but isn't exactly the same as C extension.
-
-
-License
-=======
-
-Library is licensed under very liberal two-clauses BSD license.
-Some portions has been released into public domain.
-
-Full text of license is available in LICENSE file.
+* a simpler pure Python module, compatible with Python 2 and 3. This is only
+  available in the source repository (not on Pypi) under the py/ directory and
+  it has a slightly different API.
 
 
-Authors
-=======
+Some background about pyahocorasick internals
+=============================================
 
-The main author: Wojciech Muła, wojciech_mula@poczta.onet.pl
+* I wrote this article about `different trie representations`__ 
+  --- These are experiments I made while creating on this module.
 
-This library wouldn't be possible without help of many people,
-who contributed in various ways. They created `pull requests`__,
-reported bugs (on GitHub__ or via direct messages), proposed
-fixes, or spent their valuable time on testing. Thank you.
-
-__ https://github.com/WojciechMula/pyahocorasick/pull
-__ https://github.com/WojciechMula/pyahocorasick/issues
-
-
-See also
-========
-
-* Module `ahocorasick`__ by Danny Yoo --- seems unmaintained (last
-  update in 2005) and is licensed under GPL.
-
-* Article about `different trie representations`__ --- this is
-  an effect of experiments I made while working on this module.
-
-__ https://hkn.eecs.berkeley.edu/~dyoo/python/ahocorasick/
 __ http://0x80.pl/articles/trie-representation.html
 
 
-Installation
+Other Aho-Corarisk implementations for Python you can consider
+==============================================================
+
+While **pyahocorasick** tries to be the finest and fastest Aho Corasick library
+for Python you may consider these other libraries:
+
+* `noaho`__ by Jeff Donner --- Written in C. Does not return overlapping matches.
+  Does not compile on Windows (July 2016). No support for the pickle protocol.
+
+* `acora`__ by Stefan Behnel  --- Written in Cython. Large automaton may take a
+  long time to build (July 2016) No support for a dict-like protocol to
+  associate a value to a string key.
+
+* `ahocorasick`__ by Danny Yoo --- seems unmaintained (last update in 2005) and
+  is GPL-licensed. Written in C.
+
+__ https://github.com/JDonner/NoAho
+__ https://github.com/scoder/acora
+__ https://hkn.eecs.berkeley.edu/~dyoo/python/ahocorasick/
+
+
+API overview
 ============
 
-Just run::
-
-		python setup.py install
-
-If compilation succeed, module is ready to use.
-
-
-Windows building for Python 2.7
--------------------------------
-
-Prerequisites:
-
-* The latest `Python 2.7`__
-* `Microsoft Visual C++ Compiler for Python 2.7`__ (basically Visual Studio 2008)
-
-__ https://www.python.org/download/releases/2.7/
-__ https://www.microsoft.com/en-us/download/details.aspx?id=44266
-
-Procedure (a copy of **Christian Long's** answer at `Stack Overflow`__):
-
-1. From **Start Menu** run "Visual C++ 2008 Command Prompt".
-2. Set two environment variables::
-
-	SET DISTUTILS_USE_SDK=1
-	SET MSSdk=1
-
-3. Changed current directory to ``pyahocorasick`` directory::
-
-	cd <your path>
-
-4. Then standard Python's build procedure could be used::
-
-	python setup.py install
-
-__ http://stackoverflow.com/questions/26140192/microsoft-visual-c-compiler-for-python-2-7
-
-
-API
-===
+This is the API for the C **ahocorasick** module. The pure Python module has a
+slightly different interface.
 
 Module
 ------
 
-Module ``ahocorasick`` contains several constants and
-class ``Automaton``.
+The module ``ahocorasick`` contains a few constants and the main ``Automaton`` class.
+
 
 .. _Unicode and bytes:
-
-Unicode and bytes
------------------
-
-Type of strings accepted and returned by ``Automaton`` methods
-can be either **unicode** or **bytes**, depending on compile time
-settings (preprocessor definition ``AHOCORASICK_UNICODE``). Value
-of module member ``unicode`` informs about chosen type.
-
-.. warning::
-	If unicode is selected, then trie stores 2 or even 4 bytes
-	per letter, depending on Python settings. If bytes are
-	selected, then just one byte per letter is needed.
 
 
 Constants
 ~~~~~~~~~
 
-* ``unicode`` --- see `Unicode and bytes`_
-* ``STORE_ANY``, ``STORE_INTS``, ``STORE_LENGTH`` --- see Constructor_
-* ``EMPTY``, ``TRIE``, ``AHOCORASICK`` --- see Members_
-* ``MATCH_EXACT_LENGTH``, ``MATCH_AT_MOST_PREFIX``, ``MATCH_AT_LEAST_PREFIX``
-  --- see description of method keys_
+* ``ahocorasick.unicode`` --- see `Unicode and bytes`_
+
+* ``ahocorasick.STORE_ANY``, ``ahocorasick.STORE_INTS``,
+  ``ahocorasick.STORE_LENGTH`` --- see Constructor_
+
+* ``ahocorasick.EMPTY``, ``ahocorasick.TRIE``, ``ahocorasick.AHOCORASICK``
+  --- see Attributes_
+
+* ``ahocorasick.MATCH_EXACT_LENGTH``, ``ahocorasick.MATCH_AT_MOST_PREFIX``,
+  ``ahocorasick.MATCH_AT_LEAST_PREFIX`` --- see description of the keys_ method
 
 
 Automaton class
 ~~~~~~~~~~~~~~~
 
-``Automaton`` class is pickable__ (implements ``__reduce__()``).
+Note: ``Automaton`` instances are pickable__ (It implements the ``__reduce__() magic method``).
 
 __ http://docs.python.org/py3k/library/pickle.html
-
-
-Members
-#######
-
-``kind`` [readonly]
-	One of values:
-
-	``EMPTY``
-		There are no words saved in automaton.
-
-	``TRIE``
-		There are some words, but methods related to Aho-Corasick algorithm
-		(``find_all``, ``iter``) won't work.
-
-	``AHOCORASICK``
-		Aho-Corasick automaton has been constructed, full functionality is
-		available for user.
-
-	Kind is maintained internally by ``Automaton`` object.
-	Some methods are not available when automaton kind is
-	``EMPTY`` or isn't an ``AHOCORASICK``. When called then
-	exception is raised, however testing this property could
-	be better (faster, more elegant).
-
-``store`` [readonly]
-	Type of values stored in trie. By default ``STORE_ANY``
-	is used, thus any python object could be used. When ``STORE_INTS``
-	or ``STORE_LENGTH`` is used then values are 32-bit integers
-	and do not occupy additional memory. See ``add_word`` description
-	for details.
 
 
 Constructor
 ###########
 
-Constructor accepts just one argument, a type of values,
-one of constants:
+`Automaton(value_type)`
+    Create a new empty Automaton. value_type is optional and one of these constants:
 
-``STORE_ANY``
-	Any Python object (default).
+``ahocorasick.STORE_ANY``
+    Any Python object can be stored as a value associated to a string key (default).
 
-``STORE_LENGTH``
-	Length of string.
+``ahocorasick.STORE_LENGTH``
+    The length of the a string key is automatically added to the trie as the
+    associated value for a string key.
 
-``STORE_INTS``
-	32-bit integers.
+``ahocorasick.STORE_INTS``
+    A 32-bit integer is used for the associated values.
 
 
-Dictionary methods
-##################
+Trie methods
+############
 
-``get(word[, default])``
-	Returns value associated with ``word``. Raises ``KeyError`` or
-	returns ``default`` value if ``word`` isn't present in dictionary.
+The Automaton class has the following trie methods:
+
+``add_word(key, [value]) => bool``
+    Add a ``key`` key to the dict-like trie and associate this key with a
+    ``value``.  ``value`` is optional or mandatory depending how the Automaton
+    instance was created.
+    Return True if the ``word`` key is inserted and did not exists in the trie
+    or False otherwise.
+
+    If the Automaton was created without argument (the default) as ``Automaton()``
+    or with ``Automaton(ahocorasik.STORE_ANY)`` then the ``value`` is required and can
+    be any Python object.
+
+    If the Automaton was created with ``Automaton(ahocorasik.STORE_LENGTH)`` then 
+    associating a ``value`` is not allowed --- ``len(word)`` is saved
+    automatically as a value instead.
+
+    If the Automaton was created with ``Automaton(ahocorasik.STORE_INTS)`` then the
+    ``value``is optional. If provided it must be an integer, otherwise it
+    defaults to ``len(automaton)`` which is therefore the order index in which
+    keys are added to the trie.
+
+    **Calling ``add_word`` invalidates all iterators only if the new key did not
+    exist in the trie so far (i.e. the method returned True).**
+
+``clear() => None``
+    Remove all keys from the trie.
+
+    **This method invalidates all iterators.**
+
+``exists(key) => bool`` or ``key in ...``
+    Return True if the key is present in the trie.
+
+``match(key) => bool``
+    Return True if there is a prefix (or key) equal to ``key`` present in the
+    trie. For example if the key 'example' has been added to the trie, then
+    calling ``match('e')``, ``match('ex')``, ..., ``match('exampl')``,
+    or ``match('example')`` all return True. But ``exists()`` is True only when
+    calling ``exists('example')``
+
+``longest_prefix(key) => integer``
+    Return the length of the longest prefix of the key string that exists in
+    the trie.
+
+
+Dictionary-like methods
+#######################
+
+A pyahocorasick trie behaves more or less like a Python dictionary and
+implements a subset of dict-like methods.
+
+``get(key[, default])``
+    Return the value associated with the ``key`` string.
+    Return the the optional ``default`` value if provided.
+    Raise a ``KeyError`` if the key is not found in the trie and no default is
+    provided.
 
 .. _keys:
 
 ``keys([prefix, [wildcard, [how]]]) => yield strings``
-	Returns iterator that iterate through words.
+    Return an iterator of keys.
 
-	If ``prefix`` (a string) is given, then only words sharing this
-	prefix are yielded.
+    If the optional ``prefix`` string is provided, then only keys starting with
+    this prefix are yielded.
 
-	If ``wildcard`` (single character) is given, then prefix is
-	treated as a simple pattern with selected wildcard. Optional
-	parameter ``how`` controls which strings are matched:
+    If the optional ``wildcard`` is provided as a single character string, then
+    the ``prefix`` is treated as a simple pattern using this ``wildcard`` as a wildcard. 
+    
+    The optional ``how`` argument is used to control how strings are matched using
+    one of these possible values:
 
-	``MATCH_EXACT_LENGTH`` [default]
-		Only strings with the same length as a pattern's length
-		are yielded. In other words, literally match a pattern.
+    ``ahocorasick.MATCH_EXACT_LENGTH`` [default]
+        Yield matches that have the same exact length as the prefix length.
 
-	``MATCH_AT_LEAST_PREFIX``
-		Strings that have length greater or equal to a pattern's length
-		are yielded.
+    ``ahocorasick.MATCH_AT_LEAST_PREFIX``
+        Yield matches that have a length greater or equal to the prefix length.
 
-	``MATCH_AT_MOST_PREFIX``
-		Strings that have length less or equal to a pattern's length
-		are yielded.
+    ``ahocorasick.MATCH_AT_MOST_PREFIX``
+        Yield matches that have a length smaller or equal to the prefix length.
 
-	See `Example 2`_ and the section below.
+    See `Example 2`_ and the section below.
 
 
 ``values([prefix, [wildcard, [how]]]) => yield object``
-	Return iterator that iterate through values associated with words.
-	Words are matched as in ``keys`` method.
+    Return an iterator of values associated with each keys.
+    Keys are are matched optionally to the prefix using the same logic and arguments as in 
+    the ``keys`` method.
 
 ``items([prefix, [wildcard, [how]]]) => yield tuple (string, object)``
-	Return iterator that iterate through words and associated values.
-	Words are matched as in ``keys`` method.
+    Return an iterator of tuples of (key, value)
+    Keys are are matched optionally to the prefix using the same logic and arguments as in 
+    the ``keys`` method.
 
-``iter()`` protocol
-	Equivalent to ``obj.keys()``
+``iter()``
+    Iterate over keys. Equivalent to calling ``keys()``.
 
-``len()`` protocol
-	Returns number of distinct words.
+    Note that the behaviour and arguments for this method are different when the
+    Automaton has been transformed (with ``make_automaton()``)  in an Aho-
+    Corasick automaton.
+
+``len()``
+    Returns number of distinct keys added to the trie.
 
 
 Wildcards
 ^^^^^^^^^
 
-Methods ``keys``, ``values`` and ``items`` accept variant with **wildcard**.
+Methods ``keys``, ``values`` and ``items`` can be called with an optional **wildcard**.
 A wildcard character is equivalent to a question mark used in glob patterns (?)
-or a dot from regular expressions (.). In case of these function a programmer
-can pick any character.
+or a dot from regular expressions (.). You can use any character you like as a wildcard.
 
-It is not possible to escape a wildcard and thus match it exactly ---
-simply select another char, not present in the pattern. For example::
+Note that it is not possible to escape a wildcard to match it exactly ---
+You need instead to select another wildcard character, not present in the
+provided prefix. For example::
 
     automaton.keys("hi?", "?")  # would match "him", "his"
     automaton.keys("XX?", "X")  # would match "me?", "he?" or "it?"
 
 
-Trie
-####
-
-``add_word(word, [value]) => bool``
-	Add new ``word``, a key, to dictionary and associate with ``value``.
-	Returns True if ``word`` didn't exists earlier in dictionary.
-
-	If ``store == STORE_LENGTH`` then ``value`` is not allowed ---
-	``len(word)`` is saved.
-
-	If ``store == STORE_INTS`` then ``value`` is optional. If present,
-	then have to be an integer, otherwise defaults to ``len(automaton)``.
-
-	If ``store == STORE_ANY`` then ``value`` is required and could
-	be any object.
-
-	**This method invalidates all iterators only if new word was
-	added (i.e. method returned True).**
-
-``clear() => None``
-	Removes all words from dictionary.
-
-	**This method invalidates all iterators.**
-
-``exists(word) => bool`` or ``word in ...``
-	Returns if word is present in dictionary.
-
-``match(word) => bool``
-	Returns if there is a prefix (or word) equal to ``word``.
-	For example if word "example" is present in dictionary, then
-	all ``match("e")``, ``match("ex")``, ..., ``match("exampl")``,
-	``match("example")`` are True. But ``exists()`` is True just
-	for the last word.
-
-``longest_prefix(word) => integer``
-	Returns length of the longest prefix of word that exists in
-	a dictionary.
-
-
-Aho-Corasick
-############
+Aho-Corasick methods
+####################
 
 ``make_automaton()``
-	Creates Aho-Corasick automaton based on trie. This doesn't require
-	additional memory. After successful creation ``kind`` become
-	``AHOCORASICK``.
+    Finalize and create the Aho-Corasick automaton based on the keys already
+    added to the trie. This does not require additional memory. After successful
+    creation ``Automaton.kind`` becomes ``AHOCORASICK``.
 
-	**This method invalidates all iterators.**
-
-``find_all(string, callback, [start, [end]])``
-	Perform Aho-Corsick on string; ``start``/``end`` can be used to
-	reduce string range. Callback is called with two arguments:
-
-	* index of end of matched string
-	* value associated with that string
-
-	(Method called with ``start``/``end`` does similar job
-	as ``find_all(string[start:end], callback)``, except index
-	values).
+    **This method invalidates all iterators.**
 
 ``iter(string, [start, [end]])``
-	Returns iterator (object of class AutomatonSearchIter_) that
-	does the same thing as ``find_all``, yielding tuples instead
-	of calling a user function.
+    Return an iterator of tuples (end_index, value) for keys matching ``string``.
+    * ``end_index`` is the end index of matched-to key string in the trie
+    * ``value`` is the value associated with that key string in the trie
 
-	``find_all`` method could be expressed as::
+    This performs the Aho-Corasick search procedure using the provided ``string``
+    as an input. 
 
-		def find_all(self, string, callback):
-			for index, value in self.iter(string):
-				callback(index, value)
+    The ``start`` and ``end`` optional arguments can be used to limit the 
+    search to a ``string`` slice as in ``string[start:end]``.
+
+``find_all(string, callback, [start, [end]])``
+    Iterate over tuples (end_index, value) for keys matching ``string``.
+    Invoke the ``callback`` callable for each matching tuple.  
+    ``callback`` must be accepting two arguments:
+    * ``end_index`` is the end index of matched-to key string in the trie
+    * ``value`` is the value associated with that key string in the trie
+    
+    The ``start`` and ``end`` optional arguments can be used to limit the 
+    search to a ``string`` slice as in ``string[start:end]``.
+
+    Note that the ``find_all`` method is equivalent to::
+
+        def find_all(self, string, callback):
+            for end_index, value in self.iter(string):
+                callback(end_index, value)
 
 
-Other
-#####
+Attributes
+##########
+
+``kind`` [readonly]
+    Return the state of the ``Automaton`` instance. This is read only and is 
+    maintained internally.
+    Note that some methods are not available when automaton kind is
+    ``ahocorasick.EMPTY`` or ``ahocorasick.TRIE``. They will raise an exception
+    if called when not available.
+    Testing this property before calling these methods may be a better
+    (faster or more elegant) than a try/except block but you can use both
+    approaches.
+
+    Possible ``kind`` values are:
+
+    ``ahocorasick.EMPTY``
+        The trie is empty.
+
+    ``ahocorasick.TRIE``
+        Some words have been added but the Automaton has not been constructed yet: 
+        methods related to Aho-Corasick such as ``find_all`` or ``iter`` will
+        not work.
+
+    ``ahocorasick.AHOCORASICK``
+        The Aho-Corasick automaton has been constructed; all methods are available.
+
+``store`` [readonly]
+    Return the type of values stored in the Automaton as specified when creating
+    the object. By default ``ahocorasick.STORE_ANY``is used, thus any Python
+    object is accepted as value. When ``ahocorasick.STORE_INTS`` or 
+    ``ahocorasick.STORE_LENGTH`` is used then values are 32-bit integers
+    and do not use additional memory. See the ``add_word`` documentation
+    for details.
+
+
+Other methods
+#############
 
 ``dump() => (list of nodes, list of edges, list of fail links)``
-	Returns 3 lists describing a graph:
+    Returns 3 lists describing the Automaton as a graph:
 
-	* nodes: each item is a pair (node id, end of word marker)
-	* edges: each item is a triple (node id, label char, child node id)
-	* fail: each item is a pair (source node id, node if connected by fail node)
+    * nodes: each item is a pair (node id, end of word marker)
+    * edges: each item is a triple (node id, label char, child node id)
+    * fail: each item is a pair (source node id, node if connected by fail node)
 
-	ID is a unique number and a label is a single byte.
+    For each of these the node id is a unique number and a label is a single byte.
 
-	Module package contains also program ``dump2dot.py`` that shows
-	how to convert ``dump`` results to input file for graphviz__ tools.
+    The source repository and source package also contains the  ``dump2dot.py``
+    script that converts ``dump()`` results to a graphviz__ dot format.
 
-	__ http://graphviz.org
+    __ http://graphviz.org
+
 
 ``get_stats() => dict``
-	Returns dictionary containing some statistics about underlaying
-	trie:
+    Return a dictionary containing some Automaton statistics:
 
-	* ``nodes_count``	--- total number of nodes
-	* ``words_count``	--- same as ``len(automaton)``
-	* ``longest_word``	--- length of the longest word
-	* ``links_count``	--- number of edges
-	* ``sizeof_node``	--- size of single node in bytes
-	* ``total_size``	--- total size of trie in bytes (about
-	  ``nodes_count * size_of node + links_count * size of pointer``).
-	  The real size occupied by structure could be larger, because
-	  of `internal memory fragmentation`__ occurred in memory manager.
+    * ``nodes_count``   --- total number of nodes
+    * ``words_count``   --- same as ``len(automaton)``
+    * ``longest_word``  --- length of the longest word
+    * ``links_count``   --- number of edges
+    * ``sizeof_node``   --- size of single node in bytes
+    * ``total_size``    --- total size of trie in bytes (about
+      ``nodes_count * size_of node + links_count * size of pointer``).
+      The real size occupied by the data structure could be larger because
+      of `internal memory fragmentation`__ that can occur in a memory manager.
 
 
 __ http://en.wikipedia.org/Memory%20fragmentation
@@ -376,112 +460,206 @@ __ http://en.wikipedia.org/Memory%20fragmentation
 AutomatonSearchIter class
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Class isn't available directly, object of this class is returned
-by ``iter`` method of ``Automaton``. Iterator has additional method.
+This class is not available directly but instances of ``AutomatonSearchIter`
+are returned by the the ``iter`` method of an ``Automaton``. This iterator has
+the following methods:
 
 ``set(string, [reset]) => None``
-	Sets new string to process. When ``reset`` is ``False`` (default),
-	then processing is continued, i.e. internal state of automaton and
-	index aren't touched. This allow to process larger strings in chunks,
-	for example::
+    Set a new string to search. When the ``reset`` argument is ``False``
+    (default), then the Aho-Corasick procedure is continued and the internal
+    state of the Automaton and index are not reset. This allow to search for
+    large strings in multiple chunks.
+    For example::
 
-		it = automaton.iter(b"")
-		while True:
-			buffer = receive(server_address, 4096)
-			if not buffer:
-				break
+        it = automaton.iter(b"")
+        while True:
+            buffer = receive(server_address, 4096)
+            if not buffer:
+                break
 
-			it.set(buffer)
-			for index, value in it:
-				print(index, '=>', value)
+            it.set(buffer)
+            for index, value in it:
+                print(index, '=>', value)
 
-	When ``reset`` is ``True`` then processing is restarted.
-	For example this code::
+    When ``reset`` is ``True`` then processing is restarted.
+    For example this code::
 
-		for string in set:
-			for index, value in automaton.iter(string)
-				print(index, '=>', value)
+        for string in set:
+            for index, value in automaton.iter(string)
+                print(index, '=>', value)
 
-	Does the same job as::
+    does the same job as::
 
-		it = automaton.iter(b"")
-		for string in set:
-			it.set(it, True)
-			for index, value in it:
-				print(index, '=>', value)
+        it = automaton.iter(b"")
+        for string in set:
+            it.set(it, True)
+            for index, value in it:
+                print(index, '=>', value)
 
 
-Example
-~~~~~~~
+More Examples
+~~~~~~~~~~~~~
 
 ::
 
-	>>> import ahocorasick
-	>>> A = ahocorasick.Automaton()
+    >>> import ahocorasick
+    >>> A = ahocorasick.Automaton()
 
-	# add some words to trie
-	>>> for index, word in enumerate("he her hers she".split()):
-	...   A.add_word(word, (index, word))
+    # add some words to trie
+    >>> for index, word in enumerate("he her hers she".split()):
+    ...   A.add_word(word, (index, word))
 
-	# test is word exists in set
-	>>> "he" in A
-	True
-	>>> "HER" in A
-	False
-	>>> A.get("he")
-	(0, 'he')
-	>>> A.get("she")
-	(3, 'she')
-	>>> A.get("cat", "<not exists>")
-	'<not exists>'
-	>>> A.get("dog")
-	Traceback (most recent call last):
-	  File "<stdin>", line 1, in <module>
-	KeyError
-	>>>
+    # test is word exists in set
+    >>> "he" in A
+    True
+    >>> "HER" in A
+    False
+    >>> A.get("he")
+    (0, 'he')
+    >>> A.get("she")
+    (3, 'she')
+    >>> A.get("cat", "<not exists>")
+    '<not exists>'
+    >>> A.get("dog")
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    KeyError
+    >>>
 
-	# convert trie to Aho-Corasick automaton
-	A.make_automaton()
+    # convert the trie in an Aho-Corasick automaton
+    A.make_automaton()
 
-	# then find all occurrences in string
-	for item in A.iter("_hershe_"):
-	...  print(item)
-	...
-	(2, (0, 'he'))
-	(3, (1, 'her'))
-	(4, (2, 'hers'))
-	(6, (3, 'she'))
-	(6, (0, 'he'))
-
+    # then find all occurrences of keys in a string
+    for item in A.iter("_hershe_"):
+    ...  print(item)
+    ...
+    (2, (0, 'he'))
+    (3, (1, 'her'))
+    (4, (2, 'hers'))
+    (6, (3, 'she'))
+    (6, (0, 'he'))
 
 
 .. _example 2:
 
-Example 2
-~~~~~~~~~
 
-Demonstration of keys_ behaviour.
+Example of the keys_ method behaviour
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-	>>> import ahocorasick
-	>>> A = ahocorasick.Automaton()
+    >>> import ahocorasick
+    >>> A = ahocorasick.Automaton()
 
-	# add some words to trie
-	>>> for index, word in enumerate("cat catastropha rat rate bat".split()):
-	...   A.add_word(word, (index, word))
+    # add some words to trie
+    >>> for index, word in enumerate("cat catastropha rat rate bat".split()):
+    ...   A.add_word(word, (index, word))
 
-	# prefix
-	>>> list(A.keys("cat"))
-	["cat", "catastropha"]
+    # prefix
+    >>> list(A.keys("cat"))
+    ["cat", "catastropha"]
 
-	# pattern
-	>>> list(A.keys("?at", "?", ahocorasick.MATCH_EXACT_LENGTH))
-	["bat", "cat", "rat"]
+    # pattern
+    >>> list(A.keys("?at", "?", ahocorasick.MATCH_EXACT_LENGTH))
+    ["bat", "cat", "rat"]
 
-	>>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_MOST_PREFIX))
-	["bat", "cat", "rat", "rate"]
+    >>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_MOST_PREFIX))
+    ["bat", "cat", "rat", "rate"]
 
-	>>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_LEAST_PREFIX))
-	["rate"]
+    >>> list(A.keys("?at?", "?", ahocorasick.MATCH_AT_LEAST_PREFIX))
+    ["rate"]
 
+
+Build and install
+=================
+
+To install for common operating systems use pip. Pre-built wheels should be
+available on Pypi::
+
+    pip install pyahocorasick
+
+To build from sources you need to have a C compiler installed and configured
+which should be standard on Linux and easy to get on MacOSX.
+
+On Windows and Python 2.7 you need the `Microsoft Visual C++ Compiler for Python 2.7`__ 
+(or Visual Studio 2008). There have been reports that `pyahocorasick` does not
+build with MinGW. It may build with cygwin. If you get this working with these
+platforms, please report!
+
+To build from sources, clone the git repository or download and extract the
+source archive.
+
+Install `setuptools` and then run (in a `virtualenv` of course!)::
+
+    pip install .
+
+If compilation succeeds, the module is ready to use. 
+
+__ https://www.microsoft.com/en-us/download/details.aspx?id=44266
+
+
+Unicode and bytes
+-----------------
+
+The type of strings accepted and returned by ``Automaton`` methods are either
+**unicode** or **bytes**, depending on a compile time settings (preprocessor
+definition of ``AHOCORASICK_UNICODE`` as set in `setup.py`).
+
+The ``Automaton.unicode`` attributes can tell you how the library was built.
+On Python 3, unicode is the default. On Python 2, bytes is the default.
+
+.. warning::
+
+    When the library is built with unicode support, an Automaton will store 2 or
+    4 bytes per letter, depending on your Python installation.
+    When built for bytes, only one byte per letter is needed.
+
+
+Tests
+=====
+
+The source repository contains several tests. To run them use::
+
+    make test
+
+
+Support
+=======
+
+Support is available through the `GitHub issue tracker`__ to report bugs or ask
+questions.
+
+__ https://github.com/WojciechMula/pyahocorasick/issues
+
+
+Contributing
+============
+
+You can submit contributions through `GitHub pull requests`__.
+
+__ https://github.com/WojciechMula/pyahocorasick/pull
+
+ 
+
+Authors
+=======
+
+The main author: Wojciech Muła, wojciech_mula@poczta.onet.pl
+
+This library would not be possible without help of many people, who contributed
+in various ways. They created `pull requests`__, reported bugs (as `GitHub
+issues`__ or via direct messages), proposed fixes, or spent their valuable time
+on testing. Thank you.
+
+__ https://github.com/WojciechMula/pyahocorasick/pull
+__ https://github.com/WojciechMula/pyahocorasick/issues
+
+
+License
+=======
+
+Library is licensed under very liberal BSD-3-clause license.
+Some portions of the code are dedicated to the public domain such as the pure
+Python automaton.
+
+Full text of license is available in LICENSE file.

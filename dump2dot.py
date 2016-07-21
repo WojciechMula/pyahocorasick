@@ -1,11 +1,14 @@
+
 import ahocorasick
+
 from ahocorasick import EMPTY, TRIE, AHOCORASICK;
+
 
 def dump2dot(automaton, file):
 
 	def writeln(text=""):
 		file.write(text + "\n")
-	
+
 	if automaton.kind == EMPTY:
 		writeln("digraph empty {}")
 		return
@@ -15,7 +18,7 @@ def dump2dot(automaton, file):
 	else:
 		name = "ahocorasick"
 
-	
+
 	writeln("digraph %s {" % name)
 
 	nodes, edges, fail = automaton.dump()
@@ -40,7 +43,7 @@ def dump2dot(automaton, file):
 
 if __name__ == '__main__':
 	A = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
-	
+
 	A.add_word("he")
 	A.add_word("her")
 	A.add_word("hers")

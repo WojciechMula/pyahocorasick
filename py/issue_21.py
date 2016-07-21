@@ -1,3 +1,4 @@
+
 import pyahocorasick
 
 test_cases = [

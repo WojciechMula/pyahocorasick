@@ -1,6 +1,8 @@
-import ahocorasick
-import sys
+
 import os
+import sys
+
+import ahocorasick
 
 ac = ahocorasick.Automaton()
 ac.add_word('SSSSS', 1)
@@ -25,7 +27,7 @@ def get_memory_usage():
 
 def test():
     with open('README.rst', 'r') as f:
-        data = f.read()[:1024*2]
+        data = f.read()[:1024 * 2]
 
     for loop in range(1000):
         for start in range(0, len(data) - 20):
@@ -33,7 +35,7 @@ def test():
 
 
 if __name__ == '__main__':
-    
+
     before = get_memory_usage()
     test()
     after = get_memory_usage()

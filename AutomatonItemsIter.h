@@ -7,7 +7,8 @@
 	returned by 'keys'/'values'/'items' methods of Automaton class.
 
 	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
-	License   : 3-clauses BSD (see LICENSE)
+    WWW       : http://0x80.pl
+    License   : BSD-3-Clause (see LICENSE)
 */
 #ifndef ahocorasick_AutomatonItemsIter_h_included
 #define ahocorasick_AutomatonItemsIter_h_included

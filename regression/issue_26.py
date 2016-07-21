@@ -1,5 +1,13 @@
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
 
 import pickle
+
 import ahocorasick as aho
 
 a = aho.Automaton(aho.STORE_INTS)

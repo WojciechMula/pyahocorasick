@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : BSD-3-Clause (see LICENSE)
+"""
+
 try:
     from setuptools import setup, Extension
 except ImportError:

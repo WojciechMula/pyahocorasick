@@ -6,8 +6,9 @@
 	automaton. Object of this class is returnd by 'iter' method
 	of Automaton class.
 
-	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
-	License   : 3-clauses BSD (see LICENSE)
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : BSD-3-Clause (see LICENSE)
 */
 #ifndef ahocorasick_AutomatonSearchIter_h_included
 #define ahocorasick_AutomatonSearchIter_h_included

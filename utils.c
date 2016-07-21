@@ -45,7 +45,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
         Py_INCREF(obj);
         return obj;
     } else {
-		PyErr_SetString(PyExc_TypeError, "string1 required");
+		PyErr_SetString(PyExc_TypeError, "string required");
 		return NULL;
 	}
 #endif
@@ -104,7 +104,6 @@ static bool
 pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 	if (PyTuple_Check(obj)) {
 		return __read_sequence__from_tuple(obj, word, wordlen);
-		return true;
 	} else {
 		PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");
 		return false;

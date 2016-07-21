@@ -26,7 +26,7 @@ check_store(const int store) {
 		default:
 			PyErr_SetString(
 				PyExc_ValueError,
-				"store must have value STORE_LENGTH, STORE_INTS or STORE_ANY"
+				"store value must be one of STORE_LENGTH, STORE_INTS or STORE_ANY"
 			);
 			return false;
 	} // switch
@@ -44,7 +44,7 @@ check_kind(const int kind) {
 		default:
 			PyErr_SetString(
 				PyExc_ValueError,
-				"kind must have value EMPTY, TRIE or AHOCORASICK"
+				"kind value must be one of EMPTY, TRIE or AHOCORASICK"
 			);
 			return false;
 	}
@@ -88,7 +88,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 #endif
 
 		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &word_count, &longest_word, &values)) {
-			PyErr_SetString(PyExc_ValueError, "invalid data to restore");
+			PyErr_SetString(PyExc_ValueError, "Invalid data: unable to load from pickle.");
 			goto error;
 		}
 
@@ -147,7 +147,7 @@ automaton_del(PyObject* self) {
 
 
 #define automaton_len_doc \
-	"returns count of words"
+	"Return the number of distinct keys added to the trie."
 
 static ssize_t
 automaton_len(PyObject* self) {
@@ -158,7 +158,23 @@ automaton_len(PyObject* self) {
 
 
 #define automaton_add_word_doc \
-	"add new word to dictionary"
+	"Add a key string to the dict-like trie and associate this key with a" \
+	"value.  value is optional or mandatory depending how the Automaton" \
+	"instance was created." \
+	"Return True if the word key is inserted and did not exists in the trie" \
+	"or False otherwise." \
+	"If the Automaton was created without argument (the default) as" \
+	"Automaton() or with Automaton(ahocorasik.STORE_ANY) then the" \
+	"value is required and can be any Python object." \
+	"If the Automaton was created with Automaton(ahocorasik.STORE_LENGTH)" \
+	"then associating a value is not allowed --- len(word) is saved" \
+	"automatically as a value instead." \
+	"If the Automaton was created with Automaton(ahocorasik.STORE_INTS) then" \
+	"the valueis optional. If provided it must be an integer, otherwise it" \
+	"defaults to len(automaton) which is therefore the order index in which" \
+	"keys are added to the trie." \
+	"**Calling add_word invalidates all iterators only if the new key did not" \
+	"exist in the trie so far (i.e. the method returned True).**"
 
 static PyObject*
 automaton_add_word(PyObject* self, PyObject* args) {
@@ -179,7 +195,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 		case STORE_ANY:
 			py_value = PyTuple_GetItem(args, 1);
 			if (not py_value) {
-				PyErr_SetString(PyExc_ValueError, "second argument required");
+				PyErr_SetString(PyExc_ValueError, "A value object is required as second argument.");
 				return NULL;
 			}
 			break;
@@ -193,7 +209,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 						return NULL;
 				}
 				else {
-					PyErr_SetString(PyExc_TypeError, "number required");
+					PyErr_SetString(PyExc_TypeError, "An integer value is required as second argument.");
 					return NULL;
 				}
 			}
@@ -209,7 +225,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			break;
 
 		default:
-			PyErr_SetString(PyExc_SystemError, "invalid store value");
+			PyErr_SetString(PyExc_SystemError, "Invalid value for this key: see documentation for supported values.");
 			return NULL;
 	}
 
@@ -285,8 +301,8 @@ clear_aux(TrieNode* node, KeysStore store) {
 
 
 #define automaton_clear_doc\
-	"removes all objects from dictionary"
-
+	"Remove all keys from the trie. " \
+	"**This method invalidates all iterators.**"
 
 static PyObject*
 automaton_clear(PyObject* self, PyObject* args) {
@@ -324,7 +340,8 @@ automaton_contains(PyObject* self, PyObject* args) {
 
 
 #define automaton_exists_doc \
-	"exists(word) => bool - returns if word is in dictionary"
+	"Return True if the key is present in the trie. " \
+	"Also available with the 'in' keyword."
 
 static PyObject*
 automaton_exists(PyObject* self, PyObject* args) {
@@ -348,7 +365,11 @@ automaton_exists(PyObject* self, PyObject* args) {
 
 
 #define automaton_match_doc \
-	"match(word) => bool - returns if there is a prefix equal to word"
+	"Return True if there is a prefix (or key) equal to key present in the " \
+	"trie. For example if the key 'example' has been added to the trie, then " \
+	"calling match('e'), match('ex'), ..., match('exampl'), " \
+	"or match('example') all return True. But exists() is True only when " \
+	"calling exists('example')"
 
 static PyObject*
 automaton_match(PyObject* self, PyObject* args) {
@@ -374,7 +395,8 @@ automaton_match(PyObject* self, PyObject* args) {
 
 
 #define automaton_longest_prefix_doc \
-	"longest_prefix(word) => integer - length of longest prefix"
+	"Return the length of the longest prefix of the key string that exists " \
+	"in the trie."
 
 static PyObject*
 automaton_longest_prefix(PyObject* self, PyObject* args) {
@@ -397,9 +419,10 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
 
 
 #define automaton_get_doc \
-	"get(word, [def]) => obj - returns object associated with given word; " \
-	"if word isn't present, then def is returned, when def isn't defined, " \
-	"raise KeyError exception"
+	"Return the value associated with the key string." \
+	"Raise a KeyError exception if the key is not found in the trie and no " \
+	"default is provided." \
+	"Return the optional default value if provided and the key is not present in the trie" \
 
 static PyObject*
 automaton_get(PyObject* self, PyObject* args) {
@@ -452,7 +475,9 @@ typedef struct AutomatonQueueItem {
 } AutomatonQueueItem;
 
 #define automaton_make_automaton_doc \
-	"convert trie to Aho-Corasick automaton"
+	"Finalize and create the Aho-Corasick automaton based on the keys already " \
+	"added to the trie. This does not require additional memory. After successful " \
+	"creation Automaton.kind becomes AHOCORASICK."
 
 static PyObject*
 automaton_make_automaton(PyObject* self, PyObject* args) {
@@ -472,12 +497,12 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 
 	list_init(&queue);
 
-	// 1. setup nodes at 1-st level
+	// 1. setup nodes at first level: they fail back to the root
 	ASSERT(automaton->root);
 
 	for (i=0; i < automaton->root->n; i++) {
 		TrieNode* child = trienode_get_ith_unsafe(automaton->root, i);
-        ASSERT(child);
+		ASSERT(child);
 		// fail edges go to the root
 		// every other letters loop on root - implicit (see automaton_next)
 		child->fail = automaton->root;
@@ -545,7 +570,15 @@ no_mem:
 
 
 #define automaton_find_all_doc \
-	"find_all(string, callback, [start, [end]])"
+	"Iterate over tuples (end_index, value) for keys found in string. " \
+	"Invoke the callback callable for each matching tuple. " \
+	"callback must be accepting two arguments: " \
+	"* end_index is the end index of matched-to key string in the trie " \
+	"* value is the value associated with that key string in the trie " \
+	"The start and end optional arguments can be used to limit the " \
+	"search to a string slice as in string[start:end]." \
+	"Note that the find_all method is equivalent to calling iter() and " \
+	"invoking a callable for each iteration."
 
 static PyObject*
 automaton_find_all(PyObject* self, PyObject* args) {
@@ -577,7 +610,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		return NULL;
 	else
 	if (not PyCallable_Check(callback)) {
-		PyErr_SetString(PyExc_TypeError, "second argument isn't callable");
+		PyErr_SetString(PyExc_TypeError, "The callback argument must be a callable such as a function.");
 		return NULL;
 	}
 
@@ -661,7 +694,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 				use_wildcard = true;
 			}
 			else {
-				PyErr_SetString(PyExc_ValueError, "wildcard have to be single character");
+				PyErr_SetString(PyExc_ValueError, "Wildcard must be a single character.");
 				goto error;
 			}
 		}
@@ -690,8 +723,9 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 				default:
 					PyErr_SetString(PyExc_ValueError,
-						"third argument have to be one of MATCH_EXACT_LENGTH, "
-						"MATCH_AT_LEAST_PREFIX, MATCH_AT_LEAST_PREFIX"
+						"The optional how third argument must beone of "
+						"MATCH_EXACT_LENGTH, MATCH_AT_LEAST_PREFIX or "
+						"MATCH_AT_LEAST_PREFIX"
 					);
 					goto error;
 			}
@@ -734,7 +768,19 @@ error:
 
 
 #define automaton_keys_doc \
-	"iterator for keys"
+	"Return an iterator of keys." \
+	"If the optional prefix string is provided, then only keys starting with " \
+	"this prefix are yielded. " \
+	"If the optional wildcard is provided as a single character string, then " \
+	"the prefix is treated as a simple pattern using this wildcard as a wildcard. " \
+	"The optional how argument is used to control how strings are matched using " \
+	"one of these possible values: " \
+	"\n - ahocorasick.MATCH_EXACT_LENGTH [default] " \
+	"Yield matches that have the same exact length as the prefix length. " \
+	"\n - ahocorasick.MATCH_AT_LEAST_PREFIX " \
+	"Yield matches that have a length greater or equal to the prefix length. " \
+	"\n - ahocorasick.MATCH_AT_MOST_PREFIX " \
+	"Yield matches that have a length smaller or equal to the prefix length."
 
 static PyObject*
 automaton_keys(PyObject* self, PyObject* args) {
@@ -749,7 +795,9 @@ automaton_iterate(PyObject* self) {
 
 
 #define automaton_values_doc \
-	"iterator for values"
+	"Return an iterator of values associated with each keys. " \
+	"Keys are are matched optionally to the prefix using the same logic and " \
+	"arguments as in the keys method."
 
 static PyObject*
 automaton_values(PyObject* self, PyObject* args) {
@@ -758,7 +806,9 @@ automaton_values(PyObject* self, PyObject* args) {
 
 
 #define automaton_items_doc \
-	"iterator for items"
+	"Return an iterator of tuples of (key, value). " \
+	"Keys are are matched optionally to the prefix using the same logic and " \
+	"arguments as in the keys method."
 
 static PyObject*
 automaton_items(PyObject* self, PyObject* args) {
@@ -767,7 +817,13 @@ automaton_items(PyObject* self, PyObject* args) {
 
 
 #define automaton_iter_doc \
-	"iter(string|buffer, [start, [end]])"
+	"Return an iterator of tuples (end_index, value) for keys found in string. " \
+	"- end_index is the end index of matched-to key string in the trie. " \
+	"- value is the value associated with that key string in the trie. " \
+	"This performs the Aho-Corasick search procedure using the provided string " \
+	"as an input. " \
+	"The start and end optional arguments can be used to limit the " \
+	"search to a string slice as in string[start:end]."
 
 static PyObject*
 automaton_iter(PyObject* self, PyObject* args) {
@@ -778,7 +834,9 @@ automaton_iter(PyObject* self, PyObject* args) {
 	ssize_t end;
 
 	if (automaton->kind != AHOCORASICK) {
-		PyErr_SetString(PyExc_AttributeError, "not an automaton yet; add some words and call make_automaton");
+		PyErr_SetString(PyExc_AttributeError,"Not an Aho-Corasick automaton yet: "
+			"call add_word to add some keys and call make_automaton to "
+			"convert the trie to an automaton.");
 		return NULL;
 	}
 
@@ -864,7 +922,7 @@ get_stats(Automaton* automaton) {
 
 
 #define automaton_get_stats_doc \
-	"returns statistics about automaton"
+	"Return a dictionary containing some Automaton statistics."
 
 static PyObject*
 automaton_get_stats(PyObject* self, PyObject* args) {
@@ -940,7 +998,7 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 
 
 #define automaton_dump_doc \
-	"dump information about links and fail links"
+	"Returns a three-tuple of lists describing the Automaton as a graph of (nodes, edges, failure links)."
 
 
 static PyObject*
@@ -979,7 +1037,9 @@ error:
 
 
 #define automaton___sizeof___doc \
-	"returns size of internal structures (excluding size of associated objects, when type is STORE_ANY)"
+	"Return the approximate size in bytes occupied by the Automaton instance " \
+	"in memory excluding the size of associated objects when the Automaton " \
+	"is created with Automaton() or Automaton(ahocorasick.STORE_ANY)"
 
 
 static PyObject*
@@ -1040,7 +1100,7 @@ PyMemberDef automaton_members[] = {
 		T_INT,
 		offsetof(Automaton, kind),
 		READONLY,
-		"current kind of automaton"
+		"Kind for this Automaton instance"
 	},
 
 	{
@@ -1048,7 +1108,7 @@ PyMemberDef automaton_members[] = {
 		T_INT,
 		offsetof(Automaton, store),
 		READONLY,
-		"type of values (ahocorasick.STORE_ANY/STORE_INTS/STORE_LEN)"
+		"Type of values accepted by this Automaton (one of ahocorasick.STORE_ANY/STORE_INTS/STORE_LEN)"
 	},
 
 	{NULL}

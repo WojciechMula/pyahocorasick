@@ -117,7 +117,7 @@ automaton_items_iter_next(PyObject* self) {
 	bool output;
 
 	if (UNLIKELY(iter->version != iter->automaton->version)) {
-		PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
+		PyErr_SetString(PyExc_ValueError, "The underlying automaton has changed: this iterator is no longer valid.");
 		return NULL;
 	}
 
@@ -208,7 +208,7 @@ automaton_items_iter_next(PyObject* self) {
 							return Py_BuildValue("i", iter->state->output.integer);
 
 						default:
-							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");
+							PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
 							return NULL;
 					}
 
@@ -248,7 +248,7 @@ automaton_items_iter_next(PyObject* self) {
 							);
 						
 						default:
-							PyErr_SetString(PyExc_SystemError, "wrong attribute 'store'");
+							PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
 							return NULL;
 					} // switch
 			}

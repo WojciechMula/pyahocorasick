@@ -263,7 +263,7 @@ The Automaton class has the following trie methods:
     **This method invalidates all iterators.**
 
 ``exists(key) => bool`` or ``key in ...``
-    Return True if the key is present in the trie.
+    Return True if the key is present in the trie. Same as using the 'in' keyword.
 
 ``match(key) => bool``
     Return True if there is a prefix (or key) equal to ``key`` present in the
@@ -272,9 +272,8 @@ The Automaton class has the following trie methods:
     or ``match('example')`` all return True. But ``exists()`` is True only when
     calling ``exists('example')``
 
-``longest_prefix(key) => integer``
-    Return the length of the longest prefix of the key string that exists in
-    the trie.
+``longest_prefix(string) => integer``
+    Return the length of the longest prefix of string that exists in the trie.
 
 
 Dictionary-like methods
@@ -285,14 +284,13 @@ implements a subset of dict-like methods.
 
 ``get(key[, default])``
     Return the value associated with the ``key`` string.
-    Raise a ``KeyError`` if the key is not found in the trie and no default is
-    provided.
-    Return the optional ``default`` value if provided and the key is not present in the trie.
+    Raise a ``KeyError`` exception if the key is not in the trie and no default is provided.
+    Return the optional ``default`` value if provided and the key is not in the trie.
 
 .. _keys:
 
 ``keys([prefix, [wildcard, [how]]]) => yield strings``
-    Return an iterator of keys.
+    Return an iterator on keys.
 
     If the optional ``prefix`` string is provided, then only keys starting with
     this prefix are yielded.
@@ -310,18 +308,18 @@ implements a subset of dict-like methods.
         Yield matches that have a length greater or equal to the prefix length.
 
     ``ahocorasick.MATCH_AT_MOST_PREFIX``
-        Yield matches that have a length smaller or equal to the prefix length.
+        Yield matches that have a length lesser or equal to the prefix length.
 
     See `Example 2`_ and the section below.
 
 
 ``values([prefix, [wildcard, [how]]]) => yield object``
-    Return an iterator of values associated with each keys.
+    Return an iterator on values associated with each keys.
     Keys are are matched optionally to the prefix using the same logic and
     arguments as in the ``keys`` method.
 
 ``items([prefix, [wildcard, [how]]]) => yield tuple (string, object)``
-    Return an iterator of tuples of (key, value).
+    Return an iterator on tuples of (key, value).
     Keys are are matched optionally to the prefix using the same logic and
     arguments as in the ``keys`` method.
 
@@ -350,32 +348,30 @@ Aho-Corasick methods
 ``make_automaton()``
     Finalize and create the Aho-Corasick automaton based on the keys already
     added to the trie. This does not require additional memory. After successful
-    creation ``Automaton.kind`` becomes ``AHOCORASICK``.
+    the ``Automaton.kind`` attribute is set to ``ahocorasick.AHOCORASICK``.
 
     **This method invalidates all iterators.**
 
 ``iter(string, [start, [end]])``
-    Return an iterator of tuples (end_index, value) for keys found in ``string``.
-
-    - ``end_index`` is the end index of matched-to key string in the trie
-    - ``value`` is the value associated with that key string in the trie
-
-    This performs the Aho-Corasick search procedure using the provided ``string``
-    as an input. 
-
-    The ``start`` and ``end`` optional arguments can be used to limit the 
-    search to a ``string`` slice as in ``string[start:end]``.
+    Perform the Aho-Corasick search procedure using the provided input ``string``.
+    Return an iterator of tuples (end_index, value) for keys found in string where:
+     - ``end_index`` is the end index in the input string where a trie key string was found.
+     - ``value`` is the value associated with the found key string.
+    
+    The start and end optional arguments can be used to limit the search to an input
+    string slice as in string[start:end].
 
 ``find_all(string, callback, [start, [end]])``
-    Iterate over tuples (end_index, value) for keys found in ``string``.
-    Invoke the ``callback`` callable for each matching tuple.
-    ``callback`` must be accepting two arguments:
-    * ``end_index`` is the end index of matched-to key string in the trie
-    * ``value`` is the value associated with that key string in the trie
+    Perform the Aho-Corasick search procedure using the provided input ``string`` and
+    iterate over the matching tuples (end_index, value) for keys found in ``string``.
+    Invoke the ``callback`` callable with each matching tuple.
+    The ``callback`` callable must accept two positional arguments:
+     - ``end_index`` is the end index in the input string where a trie key string was found.
+     - ``value`` is the value associated with the found key string.
     
-    The ``start`` and ``end`` optional arguments can be used to limit the 
-    search to a ``string`` slice as in ``string[start:end]``.
-
+    The ``start`` and ``end`` optional arguments can be used to limit the  search to
+    a ``string`` slice as in ``string[start:end]``.
+    
     Note that the ``find_all`` method is equivalent to::
 
         def find_all(self, string, callback):

@@ -158,7 +158,7 @@ automaton_len(PyObject* self) {
 
 
 #define automaton_add_word_doc \
-	"add_word(key, [value]) => bool\n" \
+	"add_word(key, [value])\n" \
 	"Add a key string to the dict-like trie and associate this key with a value.\n" \
 	"value is optional or mandatory depending how the Automaton instance was created.\n" \
 	"Return True if the word key is inserted and did not exists in the trie or False\n" \
@@ -339,8 +339,12 @@ automaton_contains(PyObject* self, PyObject* args) {
 
 
 #define automaton_exists_doc \
-	"exists(key) => bool or key in ...\n" \
-	"Return True if the key is present in the trie. Same as using the 'in' keyword."
+	"exists(key)\n" \
+	"Return True if the key is present in the trie. Same as using the 'in' keyword.\n\n" \
+	"Args:\n" \
+	"    key : str\n\n" \
+	"Return:\n" \
+	"    bool : True if the key is present in the trie"
 
 static PyObject*
 automaton_exists(PyObject* self, PyObject* args) {
@@ -364,7 +368,7 @@ automaton_exists(PyObject* self, PyObject* args) {
 
 
 #define automaton_match_doc \
-	"match(key) => bool\n" \
+	"match(key)\n" \
 	"Return True if there is a prefix (or key) equal to key present in the trie.\n\n" \
 	"For example if the key 'example' has been added to the trie, then calls to\n" \
 	"match('e'), match('ex'), ..., match('exampl') or match('example') all return\n" \
@@ -394,7 +398,7 @@ automaton_match(PyObject* self, PyObject* args) {
 
 
 #define automaton_longest_prefix_doc \
-	"longest_prefix(string) => integer\n" \
+	"longest_prefix(string)\n" \
 	"Return the length of the longest prefix of string that exists in the trie."
 
 static PyObject*
@@ -767,7 +771,7 @@ error:
 
 
 #define automaton_keys_doc \
-	"keys([prefix, [wildcard, [how]]]) => yield strings\n" \
+	"keys([prefix, [wildcard, [how]]])\n" \
 	"Return an iterator on keys.\n" \
 	"If the optional prefix string is provided, only yield keys starting with this prefix.\n" \
 	"If the optional wildcard is provided as a single character string, then the\n" \
@@ -794,7 +798,7 @@ automaton_iterate(PyObject* self) {
 
 
 #define automaton_values_doc \
-	"values([prefix, [wildcard, [how]]]) => yield object\n" \
+	"values([prefix, [wildcard, [how]]])\n" \
 	"Return an iterator on values associated with each keys.\n" \
 	"Keys are are matched optionally to the prefix using the same logic and\n" \
 	"arguments as in the keys() method."
@@ -806,7 +810,7 @@ automaton_values(PyObject* self, PyObject* args) {
 
 
 #define automaton_items_doc \
-	"items([prefix, [wildcard, [how]]]) => yield tuple (string, object)\n" \
+	"items([prefix, [wildcard, [how]]])\n" \
 	"Return an iterator on tuples of (key, value).\n" \
 	"Keys are are matched optionally to the prefix using the same logic and\n" \
 	"arguments as in the keys() method."

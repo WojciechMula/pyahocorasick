@@ -21,6 +21,10 @@ You can fetch **pyahocorasick** from GitHub__ or Pypi__.
 __ https://github.com/WojciechMula/pyahocorasick
 __ https://pypi.python.org/pypi/pyahocorasick/
 
+Doc
+===
+
+http://pyahocorasick.readthedocs.io/en/
 
 Quick start
 ===========

@@ -572,7 +572,7 @@ no_mem:
 	"find_all(string, callback, [start, [end]])\n" \
 	"Perform the Aho-Corasick search procedure using the provided input string and\n" \
 	"iterate over the matching tuples (end_index, value) for keys found in string.\n" \
-	"Invoke the callback callable for each matching tuple.\n\nthe " \
+	"Invoke the callback callable for each matching tuple.\n\n" \
 	"The callback callable must accept two positional arguments:\n" \
 	" - end_index is the end index in the input string where a trie key string was found.\n" \
 	" - value is the value associated with the found key string.\n\n" \

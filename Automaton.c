@@ -14,6 +14,15 @@
 
 static PyTypeObject automaton_type;
 
+#define automaton_doc \
+    "Automaton(value_type=ahocorasick.STORE_ANY)\n\n" \
+    "Create a new empty Automaton. value_type is optional and one of these constants:\n" \
+    " - ahocorasick.STORE_ANY : Any Python object can be stored as a value associated\n" \
+    "   to a string key (default).\n" \
+    " - ahocorasick.STORE_LENGTH : The length of the a string key is automatically\n" \
+    "   added to the trie as the associated value for a string key.\n" \
+    " - ahocorasick.STORE_INTS : A 32-bit integer is used for the associated values."
+
 
 static bool
 check_store(const int store) {
@@ -158,7 +167,7 @@ automaton_len(PyObject* self) {
 
 
 #define automaton_add_word_doc \
-	"add_word(key, [value]) => bool\n" \
+	"add_word(key, [value])\n" \
 	"Add a key string to the dict-like trie and associate this key with a value.\n" \
 	"value is optional or mandatory depending how the Automaton instance was created.\n" \
 	"Return True if the word key is inserted and did not exists in the trie or False\n" \
@@ -339,7 +348,7 @@ automaton_contains(PyObject* self, PyObject* args) {
 
 
 #define automaton_exists_doc \
-	"exists(key) => bool or key in ...\n" \
+	"exists(key)\n\n" \
 	"Return True if the key is present in the trie. Same as using the 'in' keyword."
 
 static PyObject*
@@ -364,7 +373,7 @@ automaton_exists(PyObject* self, PyObject* args) {
 
 
 #define automaton_match_doc \
-	"match(key) => bool\n" \
+	"match(key)\n\n" \
 	"Return True if there is a prefix (or key) equal to key present in the trie.\n\n" \
 	"For example if the key 'example' has been added to the trie, then calls to\n" \
 	"match('e'), match('ex'), ..., match('exampl') or match('example') all return\n" \
@@ -394,7 +403,7 @@ automaton_match(PyObject* self, PyObject* args) {
 
 
 #define automaton_longest_prefix_doc \
-	"longest_prefix(string) => integer\n" \
+	"longest_prefix(string)\n\n" \
 	"Return the length of the longest prefix of string that exists in the trie."
 
 static PyObject*
@@ -418,7 +427,7 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
 
 
 #define automaton_get_doc \
-	"get(key[, default])\n" \
+	"get(key[, default])\n\n" \
 	"Return the value associated with the key string.\n" \
 	"Raise a KeyError exception if the key is not in the trie and no default is provided.\n" \
 	"Return the optional default value if provided and the key is not in the trie."
@@ -569,10 +578,10 @@ no_mem:
 
 
 #define automaton_find_all_doc \
-	"find_all(string, callback, [start, [end]])\n" \
+	"find_all(string, callback, [start, [end]])\n\n" \
 	"Perform the Aho-Corasick search procedure using the provided input string and\n" \
 	"iterate over the matching tuples (end_index, value) for keys found in string.\n" \
-	"Invoke the callback callable for each matching tuple.\n\nthe " \
+	"Invoke the callback callable for each matching tuple.\n\n" \
 	"The callback callable must accept two positional arguments:\n" \
 	" - end_index is the end index in the input string where a trie key string was found.\n" \
 	" - value is the value associated with the found key string.\n\n" \
@@ -767,7 +776,7 @@ error:
 
 
 #define automaton_keys_doc \
-	"keys([prefix, [wildcard, [how]]]) => yield strings\n" \
+	"keys([prefix, [wildcard, [how]]])\n\n" \
 	"Return an iterator on keys.\n" \
 	"If the optional prefix string is provided, only yield keys starting with this prefix.\n" \
 	"If the optional wildcard is provided as a single character string, then the\n" \
@@ -794,7 +803,7 @@ automaton_iterate(PyObject* self) {
 
 
 #define automaton_values_doc \
-	"values([prefix, [wildcard, [how]]]) => yield object\n" \
+	"values([prefix, [wildcard, [how]]])\n\n" \
 	"Return an iterator on values associated with each keys.\n" \
 	"Keys are are matched optionally to the prefix using the same logic and\n" \
 	"arguments as in the keys() method."
@@ -806,7 +815,7 @@ automaton_values(PyObject* self, PyObject* args) {
 
 
 #define automaton_items_doc \
-	"items([prefix, [wildcard, [how]]]) => yield tuple (string, object)\n" \
+	"items([prefix, [wildcard, [how]]])\n\n" \
 	"Return an iterator on tuples of (key, value).\n" \
 	"Keys are are matched optionally to the prefix using the same logic and\n" \
 	"arguments as in the keys() method."
@@ -818,7 +827,7 @@ automaton_items(PyObject* self, PyObject* args) {
 
 
 #define automaton_iter_doc \
-	"iter(string, [start, [end]])\n" \
+	"iter(string, [start, [end]])\n\n" \
 	"Perform the Aho-Corasick search procedure using the provided input string.\n" \
 	"Return an iterator of tuples (end_index, value) for keys found in string where:\n" \
 	" - end_index is the end index in the input string where a trie key string was found.\n" \
@@ -1060,7 +1069,6 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
 }
 
 
-
 #include "Automaton_pickle.c"
 
 
@@ -1100,7 +1108,7 @@ PyMemberDef automaton_members[] = {
 		T_INT,
 		offsetof(Automaton, kind),
 		READONLY,
-		"Kind for this Automaton instance. One of ahocorasick.EMPTY, TRIE or AHOCORASICK."
+		"Read-only attribute. Kind for this Automaton instance. One of ahocorasick.EMPTY, TRIE or AHOCORASICK."
 	},
 
 	{
@@ -1108,7 +1116,7 @@ PyMemberDef automaton_members[] = {
 		T_INT,
 		offsetof(Automaton, store),
 		READONLY,
-		"Type of values accepted by this Automaton. One of ahocorasick.STORE_ANY, STORE_INTS or STORE_LEN."
+		"Read-only attribute set when creating an Automaton(). Type of values accepted by this Automaton. One of ahocorasick.STORE_ANY, STORE_INTS or STORE_LEN."
 	},
 
 	{NULL}
@@ -1135,7 +1143,7 @@ static PyTypeObject automaton_type = {
 	0,                                          /* tp_setattro */
 	0,                                          /* tp_as_buffer */
 	Py_TPFLAGS_DEFAULT,                         /* tp_flags */
-	0,                                          /* tp_doc */
+	automaton_doc,                              /* tp_doc */
 	0,                                          /* tp_traverse */
 	0,                                          /* tp_clear */
 	0,                                          /* tp_richcompare */

@@ -10,8 +10,8 @@
 approximate multi-pattern string search meaning that you can find multiple key
 strings occurences at once in some input text.  It is implemented in C and
 tested on Python 2.7 and 3.4+. It works on Linux, Mac and Windows. The license_
-is BSD-3-clause. Some utilities, tests and Python are deicated to the Public
-Domain.
+is BSD-3-clause. Some utilities, such tests and some Python are dedicated to
+the Public Domain.
 
 Download
 ========
@@ -21,6 +21,10 @@ You can fetch **pyahocorasick** from GitHub__ or Pypi__.
 __ https://github.com/WojciechMula/pyahocorasick
 __ https://pypi.python.org/pypi/pyahocorasick/
 
+Doc
+===
+
+http://pyahocorasick.readthedocs.io/en/
 
 Quick start
 ===========

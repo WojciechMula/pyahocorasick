@@ -148,7 +148,7 @@ Some background about pyahocorasick internals
 =============================================
 
 * I wrote this article about `different trie representations`__ 
-  --- These are experiments I made while creating on this module.
+  --- These are experiments I made while creating this module.
 
 __ http://0x80.pl/articles/trie-representation.html
 

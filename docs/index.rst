@@ -1,20 +1,17 @@
-=============
-pyahocorasick
-=============
-
-Contents:
-
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-*********
-Reference
-*********
+.. include:: ../README.rst
+
+
+
+API Reference
+=============
 
 .. automodule:: ahocorasick
-   :members:
-   :undoc-members:
-   :special-members:
+    :members:
+    :undoc-members:
+    :special-members:
 
 
 Indices and tables

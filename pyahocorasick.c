@@ -28,6 +28,13 @@
 #include "AutomatonSearchIter.c"
 
 
+
+#define ahocorasick_doc \
+    "**pyahocorasick** is a fast and memory efficient library for exact or\n" \
+    "approximate multi-pattern string search meaning that you can find multiple key\n" \
+    "strings occurences at once in some input text."
+
+
 static
 PyMethodDef
 ahocorasick_module_methods[] = {
@@ -62,11 +69,11 @@ init_function(void) {
 	automaton_as_sequence.sq_contains = automaton_contains;
 
 	automaton_type.tp_as_sequence = &automaton_as_sequence;
-	
+
 #ifdef PY3K
 	module = PyModule_Create(&ahocorasick_module);
 #else
-    module = Py_InitModule("ahocorasick", ahocorasick_module_methods);
+    module = Py_InitModule3("ahocorasick", ahocorasick_module_methods, ahocorasick_doc);
 #endif
 	if (module == NULL)
 		init_return(NULL);

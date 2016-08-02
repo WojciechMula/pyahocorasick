@@ -13,6 +13,10 @@
 /* returns bytes or unicode internal buffer */
 static PyObject*
 pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+
+	ssize_t i;
+	char* bytes;
+
 #ifdef PY3K
 #   ifdef AHOCORASICK_UNICODE
         if (PyUnicode_Check(obj)) {
@@ -27,9 +31,14 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
         }
 #   else
         if (PyBytes_Check(obj)) {
-            *word = (TRIE_LETTER_TYPE*)PyBytes_AS_STRING(obj);
             *wordlen = PyBytes_GET_SIZE(obj);
-            Py_INCREF(obj);
+			*word    = (TRIE_LETTER_TYPE*)malloc(*wordlen * TRIE_LETTER_SIZE);
+
+			bytes = PyBytes_AS_STRING(obj);
+			for (i=0; i < *wordlen; i++) {
+				(*word)[i] = bytes[i];
+			}
+			// Note: there is no INCREF
             return obj;
         }
         else {
@@ -39,11 +48,16 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 #   endif
 #else // PY_MAJOR_VERSION == 3
 	if (PyString_Check(obj)) {
-        *word = PyString_AS_STRING(obj);
         *wordlen = PyString_GET_SIZE(obj);
+		*word    = (TRIE_LETTER_TYPE*)malloc(*wordlen * TRIE_LETTER_SIZE);
 
+		bytes = PyString_AS_STRING(obj);
+		for (i=0; i < *wordlen; i++) {
+			(*word)[i] = bytes[i];
+		}
+		// Note: there is no INCREF
         Py_INCREF(obj);
-        return obj;
+		return obj;
     } else {
 		PyErr_SetString(PyExc_TypeError, "string required");
 		return NULL;
@@ -70,7 +84,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 	Py_ssize_t size = PyTuple_Size(obj);
 
 	*wordlen = size;
-	*word = (TRIE_LETTER_TYPE*)malloc(size * TRIE_LETTER_SIZE); // XXX: automaton should keep the buffer to avoid continual allocated and free
+	*word = (TRIE_LETTER_TYPE*)malloc(size * TRIE_LETTER_SIZE);
 	if (*word == NULL) {
 		PyErr_NoMemory();
 		return false;
@@ -193,13 +207,6 @@ pymod_parse_start_end(
 }
 
 
-struct Input {
-	Py_ssize_t 			wordlen;
-	TRIE_LETTER_TYPE* 	word;
-	PyObject* 			py_word;
-};
-
-
 bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 #define automaton ((Automaton*)self)
 	if (automaton->key_type == KEY_STRING) {
@@ -235,5 +242,20 @@ void destroy_input(struct Input* input) {
 		Py_DECREF(input->py_word);
 	} else {
 		free(input->word);
+	}
+}
+
+
+void assign_input(struct Input* dst, struct Input* src) {
+
+	dst->wordlen	= src->wordlen;
+	dst->word		= src->word;
+	dst->py_word	= src->py_word; // Note: there is no INCREF
+}
+
+
+void xfree(void* ptr) {
+	if (ptr != NULL) {
+		free(ptr);
 	}
 }

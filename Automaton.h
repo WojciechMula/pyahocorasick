@@ -14,23 +14,30 @@
 #include "trie.h"
 
 typedef enum {
-	EMPTY,
-	TRIE,
-	AHOCORASICK
+	EMPTY       = 0,
+	TRIE        = 1,
+	AHOCORASICK = 2
 } AutomatonKind;
 
 
 typedef enum {
-	STORE_INTS,
-	STORE_LENGTH,
-	STORE_ANY
+	STORE_INTS   = 10,
+	STORE_LENGTH = 20,
+	STORE_ANY    = 30
 } KeysStore;
 
 
 typedef enum {
-	KEY_STRING,
-    KEY_SEQUENCE
+	KEY_STRING   = 100,
+    KEY_SEQUENCE = 200
 } KeyType;
+
+
+struct Input {
+	Py_ssize_t 			wordlen;
+	TRIE_LETTER_TYPE* 	word;
+	PyObject* 			py_word;
+};
 
 
 typedef struct AutomatonStatistics {

@@ -12,6 +12,12 @@
 
 static PyTypeObject automaton_search_iter_type;
 
+#define automaton_search_iter_doc \
+	"This class is not available directly but instances of AutomatonSearchIter\n" \
+	"are returned by the iter() method of an Automaton. This iterator can be\n" \
+	"manipulated through its set() method."
+
+
 static PyObject*
 automaton_search_iter_new(
 	Automaton* automaton,
@@ -144,6 +150,13 @@ return_output:
 }
 
 
+#define automaton_search_iter_set_doc \
+	"set(string, reset=False)\n\n" \
+	"Set a new string to search. When the reset argument is False (default) \n" \
+	"then the Aho-Corasick procedure is continued and the internal state of the \n" \
+	"Automaton and end index of the string being searched are not reset. This allow \n" \
+	"to search for large strings in multiple smaller chunks." 
+
 static PyObject*
 automaton_search_iter_set(PyObject* self, PyObject* args) {
 	PyObject* object;
@@ -229,7 +242,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 
 #undef iter
 
-#define method(name, kind) {#name, automaton_search_iter_##name, kind, ""}
+#define method(name, kind) {#name, automaton_search_iter_##name, kind, automaton_search_iter_##name##_doc}
 
 static
 PyMethodDef automaton_search_iter_methods[] = {
@@ -261,7 +274,7 @@ static PyTypeObject automaton_search_iter_type = {
 	0,                                          /* tp_setattro */
 	0,                                          /* tp_as_buffer */
 	Py_TPFLAGS_DEFAULT,                         /* tp_flags */
-	0,                                          /* tp_doc */
+	automaton_search_iter_doc,                  /* tp_doc */
 	0,                                          /* tp_traverse */
 	0,                                          /* tp_clear */
 	0,                                          /* tp_richcompare */

@@ -30,9 +30,9 @@
 
 
 #define ahocorasick_doc \
-    "**pyahocorasick** is a fast and memory efficient library for exact or\n" \
-    "approximate multi-pattern string search meaning that you can find multiple key\n" \
-    "strings occurences at once in some input text."
+    "pyahocorasick is a fast and memory efficient library for exact or approximate\n" \
+	"multi-pattern string search meaning that you can find multiple key strings\n" \
+	"occurrences at once in some input text."
 
 
 static

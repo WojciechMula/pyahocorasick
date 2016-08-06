@@ -108,7 +108,7 @@ typedef struct PickleData {
 	uint8_t*	data;	///< array
 
 	PyObject* 	values;	///< a list (if store == STORE_ANY)
-	bool		error;	///< error occured during pickling
+	bool		error;	///< error occurred during pickling
 } PickleData;
 
 
@@ -167,7 +167,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 }
 
 #define automaton___reduce___doc \
-	"Return pickable data for an Automaton instance."
+	"Return pickle-able data for this Automaton instance."
 
 static PyObject*
 automaton___reduce__(PyObject* self, PyObject* args) {

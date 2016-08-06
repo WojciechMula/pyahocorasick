@@ -15,13 +15,12 @@
 static PyTypeObject automaton_type;
 
 #define automaton_doc \
-    "Automaton(value_type=ahocorasick.STORE_ANY)\n\n" \
-    "Create a new empty Automaton. value_type is optional and one of these constants:\n" \
-    " - ahocorasick.STORE_ANY : Any Python object can be stored as a value associated\n" \
-    "   to a string key (default).\n" \
-    " - ahocorasick.STORE_LENGTH : The length of the a string key is automatically\n" \
-    "   added to the trie as the associated value for a string key.\n" \
-    " - ahocorasick.STORE_INTS : A 32-bit integer is used for the associated values."
+	"Automaton(value_type=ahocorasick.STORE_ANY)\n\n" \
+	"Create a new empty Automaton. value_type is optional and one of these constants:\n" \
+	" - ahocorasick.STORE_ANY : The associated value can be any Python object (default).\n" \
+	" - ahocorasick.STORE_LENGTH : The length of an added string key is automatically\n" \
+	"   used as the associated value stored in the trie for that key.\n" \
+	" - ahocorasick.STORE_INTS : The associated value must be a 32-bit integer."
 
 
 static bool
@@ -167,21 +166,22 @@ automaton_len(PyObject* self) {
 
 
 #define automaton_add_word_doc \
-	"add_word(key, [value])\n" \
+	"add_word(key, [value])\n\n" \
 	"Add a key string to the dict-like trie and associate this key with a value.\n" \
 	"value is optional or mandatory depending how the Automaton instance was created.\n" \
 	"Return True if the word key is inserted and did not exists in the trie or False\n" \
 	"otherwise.\n\n" \
-	"If the Automaton was created without argument (the default) as Automaton() or\n" \
-	"with Automaton(ahocorasik.STORE_ANY) then the value is required and can be any\n" \
-	"Python object.\n\n" \
-	"If the Automaton was created with Automaton(ahocorasik.STORE_LENGTH) then\n" \
-	"associating a value is not allowed --- len(word) is saved automatically as a\n" \
-	"value instead.\n\n" \
-	"If the Automaton was created with Automaton(ahocorasik.STORE_INTS) then the\n" \
-	"value is optional. If provided it must be an integer, otherwise it defaults to\n" \
-	"len(automaton) which is therefore the order index in which keys are added to the\n" \
-	"trie.\n\n" \
+	"The value is either mandatory or optional:\n" \
+	" - If the Automaton was created without argument (the default) as Automaton() or\n" \
+	"   with Automaton(ahocorasik.STORE_ANY) then the value is required and can be any\n" \
+	"   Python object.\n\n" \
+	" - If the Automaton was created with Automaton(ahocorasik.STORE_LENGTH) then\n" \
+	"   associating a value is not allowed --- len(word) is saved automatically as a\n" \
+	"   value instead.\n\n" \
+	" - If the Automaton was created with Automaton(ahocorasik.STORE_INTS) then the\n" \
+	"   value is optional. If provided it must be an integer, otherwise it defaults to\n" \
+	"   len(automaton) which is therefore the order index in which keys are added to the\n" \
+	"   trie.\n\n" \
 	"Calling add_word() invalidates all iterators only if the new key did not exist\n" \
 	"in the trie so far (i.e. the method returned True)."
 
@@ -481,6 +481,7 @@ typedef struct AutomatonQueueItem {
 	LISTITEM_data;
 	TrieNode*	node;
 } AutomatonQueueItem;
+
 
 #define automaton_make_automaton_doc \
 	"Finalize and create the Aho-Corasick automaton based on the keys already added\n" \
@@ -782,8 +783,8 @@ error:
 	"If the optional wildcard is provided as a single character string, then the\n" \
 	"prefix is treated as a simple pattern using this character as a wildcard.\n\n" \
 	"The optional how argument is used to control how strings are matched using one\n" \
-	"of these possible values:\n" \
-	" - ahocorasick.MATCH_EXACT_LENGTH [default]\n" \
+	"of these possible values:\n\n" \
+	" - ahocorasick.MATCH_EXACT_LENGTH (default)\n" \
 	"   Yield matches that have the same exact length as the prefix length.\n" \
 	" - ahocorasick.MATCH_AT_LEAST_PREFIX\n" \
 	"   Yield matches that have a length greater or equal to the prefix length.\n" \
@@ -805,7 +806,7 @@ automaton_iterate(PyObject* self) {
 #define automaton_values_doc \
 	"values([prefix, [wildcard, [how]]])\n\n" \
 	"Return an iterator on values associated with each keys.\n" \
-	"Keys are are matched optionally to the prefix using the same logic and\n" \
+	"Keys are matched optionally to the prefix using the same logic and\n" \
 	"arguments as in the keys() method."
 
 static PyObject*
@@ -817,7 +818,7 @@ automaton_values(PyObject* self, PyObject* args) {
 #define automaton_items_doc \
 	"items([prefix, [wildcard, [how]]])\n\n" \
 	"Return an iterator on tuples of (key, value).\n" \
-	"Keys are are matched optionally to the prefix using the same logic and\n" \
+	"Keys are matched optionally to the prefix using the same logic and\n" \
 	"arguments as in the keys() method."
 
 static PyObject*
@@ -829,9 +830,9 @@ automaton_items(PyObject* self, PyObject* args) {
 #define automaton_iter_doc \
 	"iter(string, [start, [end]])\n\n" \
 	"Perform the Aho-Corasick search procedure using the provided input string.\n" \
-	"Return an iterator of tuples (end_index, value) for keys found in string where:\n" \
-	" - end_index is the end index in the input string where a trie key string was found.\n" \
-	" - value is the value associated with the found key string.\n" \
+	"Return an iterator of tuples (end_index, value) for keys found in string where:\n\n" \
+	"- end_index is the end index in the input string where a trie key string was found.\n" \
+	"- value is the value associated with the found key string.\n\n" \
 	"The start and end optional arguments can be used to limit the search to an\n" \
 	"input string slice as in string[start:end]."
 
@@ -932,7 +933,15 @@ get_stats(Automaton* automaton) {
 
 
 #define automaton_get_stats_doc \
-	"Return a dictionary containing some Automaton statistics."
+	"get_stats()\n\n" \
+	"Return a dictionary containing Automaton statistics.\n" \
+	" - nodes_count   --- total number of nodes\n" \
+	" - words_count   --- same as len(automaton)\n" \
+	" - longest_word  --- length of the longest word\n" \
+	" - links_count   --- number of edges\n" \
+	" - sizeof_node   --- size of single node in bytes\n" \
+	" - total_size    --- total size of trie in bytes (about\n" \
+	"   nodes_count * size_of node + links_count * size of pointer)."
 
 static PyObject*
 automaton_get_stats(PyObject* self, PyObject* args) {
@@ -1008,8 +1017,14 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 
 
 #define automaton_dump_doc \
-	"Returns a three-tuple of lists describing the Automaton as a graph of (nodes, edges, failure links)."
-
+	"dump()\n\n" \
+	"Return a three-tuple of lists describing the Automaton as a graph of " \
+	"(nodes, edges, failure links).\n" \
+	" - nodes: each item is a pair (node id, end of word marker)\n" \
+	" - edges: each item is a triple (node id, label char, child node id)\n" \
+	" - failure links: each item is a pair (source node id, node if connected by fail node)\n" \
+	"\n" \
+	"For each of these, the node id is a unique number and a label is a single byte."
 
 static PyObject*
 automaton_dump(PyObject* self, PyObject* args) {
@@ -1108,7 +1123,7 @@ PyMemberDef automaton_members[] = {
 		T_INT,
 		offsetof(Automaton, kind),
 		READONLY,
-		"Read-only attribute. Kind for this Automaton instance. One of ahocorasick.EMPTY, TRIE or AHOCORASICK."
+		"Read-only attribute maintained automatically.\nKind for this Automaton instance.\nOne of ahocorasick.EMPTY, TRIE or AHOCORASICK."
 	},
 
 	{
@@ -1116,7 +1131,7 @@ PyMemberDef automaton_members[] = {
 		T_INT,
 		offsetof(Automaton, store),
 		READONLY,
-		"Read-only attribute set when creating an Automaton(). Type of values accepted by this Automaton. One of ahocorasick.STORE_ANY, STORE_INTS or STORE_LEN."
+		"Read-only attribute set when creating an Automaton().\nType of values accepted by this Automaton.\nOne of ahocorasick.STORE_ANY, STORE_INTS or STORE_LEN."
 	},
 
 	{NULL}

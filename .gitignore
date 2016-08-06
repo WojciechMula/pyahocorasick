@@ -8,3 +8,5 @@ dist/
 *.sh
 *.o
 MANIFEST
+/pyahocorasick.egg-info/
+/tmp/

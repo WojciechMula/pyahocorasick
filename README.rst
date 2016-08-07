@@ -4,20 +4,30 @@
 
 .. image:: https://travis-ci.org/WojciechMula/pyahocorasick.svg?branch=master
     :target: https://travis-ci.org/WojciechMula/pyahocorasick
+    :alt: Linux Master branch tests status
 
+.. image:: https://ci.appveyor.com/api/projects/status/github/WojciechMula/pyahocorasick?branch=master&svg=true
+   :target: https://ci.appveyor.com/project/nexB/scancode-toolkit
+   :alt: Windows Master branch tests status
 
 **pyahocorasick** is a fast and memory efficient library for exact or approximate
-multi-pattern string search meaning that you can find multiple key strings occurrences
-at once in some input text.  You can use it as a plain dict-like Trie or for Aho-
-Corasick search.  It is implemented in C and tested on Python 2.7 and 3.4+. It works
-on Linux, Mac and Windows. The license_ is BSD-3-clause. Some utilities, such as
-tests and the pure Python automaton are dedicated to the Public Domain.
+multi-pattern string search meaning that you can find multiple key strings
+occurrences at once in some input text.  The library provides an `ahocorasick` Python
+module that you can use as a plain dict-like Trie or convert a Trie to an automaton
+for efficient Aho-Corasick search.
 
-Download
-========
+It is implemented in C and tested on Python 2.7 and 3.4+. It works on Linux, Mac and
+Windows.
 
-You can fetch **pyahocorasick** from `GitHub <https://github.com/WojciechMula/pyahocorasick/>`_
-or from `Pypi <https://pypi.python.org/pypi/pyahocorasick/>`_.
+The license_ is BSD-3-clause. Some utilities, such as tests and the pure Python
+automaton are dedicated to the Public Domain.
+
+Download and source code
+========================
+
+You can fetch **pyahocorasick** from:
+    - GitHub https://github.com/WojciechMula/pyahocorasick/
+    - Pypi https://pypi.python.org/pypi/pyahocorasick/
 
 Documentation
 =============
@@ -27,31 +37,32 @@ The full documentation including the API reference is published on
 
 Quick start
 ===========
-Install::
+
+This module is written in C. You need a C compiler installed to compile native
+CPython extensions. To install::
 
     pip install pyahocorasick
 
-Create an Automaton::
+Then create an Automaton::
 
     >>> import ahocorasick
     >>> A = ahocorasick.Automaton()
 
-Use the Automaton as a trie. Add some strings and their associated value to this
-trie. Here we associate a tuple of (insertion index, original string) as a value to
-each key string we add to the trie::
+You can use the Automaton class as a trie. Add some string keys and their associated
+value to this trie. Here we associate a tuple of (insertion index, original string)
+as a value to each key string we add to the trie::
 
     >>> for idx, key in enumerate('he her hers she'.split()):
     ...   A.add_word(key, (idx, key))
 
-
-Check if some string exists in the trie::
+Then check if some string exists in the trie::
 
     >>> 'he' in A
     True
     >>> 'HER' in A
     False
 
-Play with the ``get()`` dict-like method::
+And play with the ``get()`` dict-like method::
 
     >>> A.get('he')
     (0, 'he')
@@ -64,16 +75,17 @@ Play with the ``get()`` dict-like method::
       File "<stdin>", line 1, in <module>
     KeyError
 
-Convert the trie to an Aho-Corasick automaton::
+Now convert the trie to an Aho-Corasick automaton to enable Aho-Corasick search::
 
     >>> A.make_automaton()
 
-Then search all occurrences of the keys (the needles) in an input string (our
-haystack). Print the results and check that they are correct. The `Automaton.iter()`
-method return the results as 2 values-tuples of the end index where a trie key was
-found in the input string and the associated value to this key. Here we had stored
-the original string and its trie insertion order::
+Then search all occurrences of the keys (the needles) in an input string (our haystack).
 
+Here we print the results and just check that they are correct. The
+`Automaton.iter()` method return the results as two-tuples of the `end index` where a
+trie key was found in the input string and the associated `value` for this key. Here
+we had stored as values a tuple with the original string and its trie insertion
+order::
 
     >>> for end_index, (insert_order, original_value) in A.iter(haystack):
     ...     start_index = end_index - len(original_value) + 1
@@ -86,22 +98,25 @@ the original string and its trie insertion order::
     (4, 6, (3, 'she'))
     (5, 6, (0, 'he'))
 
+You can also create an eventually large automaton ahead of time and `pickle` it to
+re-load later. Here we just pickle to a string. You would typically pickle to a
+file instead::
+
+    >>> import cPickle
+    >>> pickled = cPickle.dumps(A)
+    >>> B = cPickle.dumps(pickled)
+    >>> B.get('he')
+    (0, 'he')
+
 
 See also:
+    - FAQ and Who is using pyahocorasick? https://github.com/WojciechMula/pyahocorasick/wiki/FAQ#who-is-using-pyahocorasick
     - `API overview`_ for more options and the API documentation.
     - `Examples`_ for more examples.
     - `Build and install`_ for more details on installation.
     - `Tests`_ to run unit tests.
     - `Support`_ for help and bugs.
     - and `Authors`_ and `License`_ .
-
-
-Support
-=======
-
-Support is available through the `GitHub issue tracker
-<https://github.com/WojciechMula/pyahocorasick/issues>`_ to report bugs or ask
-questions.
 
 
 Introduction
@@ -220,7 +235,7 @@ and re-load it later to reuse it over and over as a persistent multi-string sear
 Internally, Automaton implements the ``__reduce__() magic method``.
 
 
-`Automaton(value_type)`
+``Automaton(value_type)``
     Create a new empty Automaton optionally passing a `value_type` to indicate what
     is the type of associated values (default to any Python object type)
 
@@ -477,6 +492,14 @@ The source repository contains several tests. To run them use::
     make test
 
 
+Support
+=======
+
+Support is available through the `GitHub issue tracker
+<https://github.com/WojciechMula/pyahocorasick/issues>`_ to report bugs or ask
+questions.
+
+
 Contributing
 ============
 
@@ -509,4 +532,3 @@ Full text of license is available in LICENSE file.
 
 
 .. contents::
-

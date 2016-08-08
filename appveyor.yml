@@ -1,1 +1,22 @@
-# empty
+version: 1.0.{build}
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python27-x64"
+
+install:
+  - cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip wheel"
+
+build: off
+
+test_script:
+  - cmd: "%PYTHON%\\python.exe -m pip install ."
+  - cmd: "%PYTHON%\\python.exe setup.py tests"
+  - dir
+  - mkdir wheels
+  - cmd: "%PYTHON%\\python.exe -m pip wheel . --wheel-dir=wheels"
+  - dir wheels
+
+artifacts:
+  - path: wheels\*

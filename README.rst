@@ -7,7 +7,7 @@
     :alt: Linux Master branch tests status
 
 .. image:: https://ci.appveyor.com/api/projects/status/github/WojciechMula/pyahocorasick?branch=master&svg=true
-   :target: https://ci.appveyor.com/project/nexB/scancode-toolkit
+   :target: https://ci.appveyor.com/project/WojciechMula/pyahocorasick
    :alt: Windows Master branch tests status
 
 **pyahocorasick** is a fast and memory efficient library for exact or approximate

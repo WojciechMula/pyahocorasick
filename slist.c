@@ -17,15 +17,18 @@
 
 ListItem*
 list_item_new(const size_t size) {
-	ListItem* item = (ListItem*)memalloc(size);
-	item->__next = 0;
+	ListItem* item = (ListItem*)memory_alloc(size);
+    if (item) {
+	    item->__next = 0;
+    }
+
 	return item;
 }
 
 
 void
 list_item_delete(ListItem* item) {
-	memfree(item);
+	memory_free(item);
 }
 
 
@@ -50,7 +53,7 @@ list_delete(List* list) {
 	while (item) {
 		tmp = item;
 		item = item->__next;
-		memfree(tmp);
+		memory_free(tmp);
 	}
 
 	list->head = list->last = NULL;

@@ -336,7 +336,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 				clear_aux(child, store);
 		}
 
-		memfree(node);
+		memory_free(node);
 	}
 #undef automaton
 }
@@ -562,7 +562,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 			break;
 		else {
 			node = item->node;
-			memfree(item);
+			memory_free(item);
 		}
 
 		for (i=0; i < node->n; i++) {

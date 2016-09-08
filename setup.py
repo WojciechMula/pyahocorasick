@@ -43,9 +43,6 @@ module = Extension(
     sources=[
         'pyahocorasick.c'
     ],
-    libraries=[
-        "efence"
-    ],
     define_macros=macros,
     depends=[
         'common.h',

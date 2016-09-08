@@ -10,6 +10,25 @@
 */
 
 
+void* memory_alloc(ssize_t size) {
+    void* res = malloc(size);
+
+    //printf("allocated %p (size=%d)\n", res, size);
+    return res;
+}
+
+void memory_free(void* ptr) {
+    //printf("freeing %p\n", ptr);
+    free(ptr);
+}
+
+
+#if !defined(PY3K) || !defined(AHOCORASICK_UNICODE)
+//  define when pymod_get_string makes a copy of string
+#   define INPUT_KEEPS_COPY
+#endif
+
+
 /* returns bytes or unicode internal buffer */
 static PyObject*
 pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
@@ -32,7 +51,11 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 #   else
         if (PyBytes_Check(obj)) {
             *wordlen = PyBytes_GET_SIZE(obj);
-			*word    = (TRIE_LETTER_TYPE*)malloc(*wordlen * TRIE_LETTER_SIZE);
+			*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
+            if (*word == NULL) {
+                PyErr_NoMemory();
+                return NULL;
+            }
 
 			bytes = PyBytes_AS_STRING(obj);
 			for (i=0; i < *wordlen; i++) {
@@ -49,13 +72,17 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 #else // PY_MAJOR_VERSION == 3
 	if (PyString_Check(obj)) {
         *wordlen = PyString_GET_SIZE(obj);
-		*word    = (TRIE_LETTER_TYPE*)malloc(*wordlen * TRIE_LETTER_SIZE);
+		*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
+        if (*word == NULL) {
+		    PyErr_NoMemory();
+            return NULL;
+        }
 
 		bytes = PyString_AS_STRING(obj);
 		for (i=0; i < *wordlen; i++) {
 			(*word)[i] = bytes[i];
 		}
-		// Note: there is no INCREF
+
         Py_INCREF(obj);
 		return obj;
     } else {
@@ -84,7 +111,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 	Py_ssize_t size = PyTuple_Size(obj);
 
 	*wordlen = size;
-	*word = (TRIE_LETTER_TYPE*)malloc(size * TRIE_LETTER_SIZE);
+	*word = (TRIE_LETTER_TYPE*)memory_alloc(size * TRIE_LETTER_SIZE);
 	if (*word == NULL) {
 		PyErr_NoMemory();
 		return false;
@@ -94,8 +121,8 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 		Py_ssize_t value = PyNumber_AsSsize_t(PyTuple_GetItem(obj, i), PyExc_ValueError);
 		if (value == -1 && PyErr_Occurred()) {
 			PyErr_Format(PyExc_ValueError, "item #%zd is not a number", i);
-			free(*word);
-			return NULL;
+			memory_free(*word);
+			return false;
 		}
 
 		const Py_ssize_t min = 0;		// XXX: both min and max values will be configured
@@ -103,8 +130,8 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 
 		if (value < min || value > max) {
 			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd ouside range [%zd..%zd]", i, value, min, max);
-			free(*word);
-			return NULL;
+			memory_free(*word);
+			return false;
 		}
 
 		(*word)[i] = (TRIE_LETTER_TYPE)value;
@@ -214,11 +241,10 @@ bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 		if (not input->py_word)
 			return false;
 	} else {
+		input->py_word = NULL;
 		if (not pymod_get_sequence(tuple, &input->word, &input->wordlen)) {
 			return false;
 		}
-
-		input->py_word = NULL;
 	}
 #undef automaton
 
@@ -240,9 +266,11 @@ bool prepare_input_from_tuple(PyObject* self, PyObject* args, int index, struct 
 void destroy_input(struct Input* input) {
 	if (input->py_word) {
 		Py_DECREF(input->py_word);
-	} else {
-		free(input->word);
 	}
+
+#ifdef INPUT_KEEPS_COPY
+	memory_free(input->word);
+#endif
 }
 
 
@@ -256,6 +284,6 @@ void assign_input(struct Input* dst, struct Input* src) {
 
 void xfree(void* ptr) {
 	if (ptr != NULL) {
-		free(ptr);
+		memory_free(ptr);
 	}
 }

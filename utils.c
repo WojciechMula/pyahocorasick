@@ -13,12 +13,12 @@
 void* memory_alloc(ssize_t size) {
     void* res = malloc(size);
 
-    printf("allocated %p (size=%d)\n", res, size);
+    //printf("allocated %p (size=%d)\n", res, size);
     return res;
 }
 
 void memory_free(void* ptr) {
-    printf("freeing %p\n", ptr);
+    //printf("freeing %p\n", ptr);
     free(ptr);
 }
 

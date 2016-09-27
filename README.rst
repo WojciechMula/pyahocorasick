@@ -33,7 +33,7 @@ Documentation
 =============
 
 The full documentation including the API reference is published on
-`readthedocs <http://pyahocorasick.readthedocs.io/en/>`_.
+`readthedocs <http://pyahocorasick.readthedocs.io/en/latest/>`_.
 
 Quick start
 ===========

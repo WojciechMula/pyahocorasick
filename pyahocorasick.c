@@ -95,6 +95,9 @@ init_function(void) {
 	add_enum_const(STORE_INTS);
 	add_enum_const(STORE_ANY);
 
+	add_enum_const(KEY_STRING);
+	add_enum_const(KEY_SEQUENCE);
+
 	add_enum_const(MATCH_EXACT_LENGTH);
 	add_enum_const(MATCH_AT_MOST_PREFIX);
 	add_enum_const(MATCH_AT_LEAST_PREFIX);

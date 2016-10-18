@@ -41,17 +41,17 @@
 #ifdef AHOCORASICK_UNICODE
 #	ifdef Py_UNICODE_WIDE
 		// Python use UCS-4
-#		define TRIE_LETTER_TYPE	Py_UNICODE
+#		define TRIE_LETTER_TYPE	uint32_t
 #		define TRIE_LETTER_SIZE 4
 #	else
 		// Python use UCS-2
-#		define TRIE_LETTER_TYPE	Py_UNICODE
+#		define TRIE_LETTER_TYPE	uint16_t
 #		define TRIE_LETTER_SIZE 2
 #	endif
 #else
 	// only bytes are supported
-#	define TRIE_LETTER_TYPE	uint8_t
-#	define TRIE_LETTER_SIZE 1
+#	define TRIE_LETTER_TYPE	uint16_t
+#	define TRIE_LETTER_SIZE 2
 #endif
 
 

@@ -14,17 +14,30 @@
 #include "trie.h"
 
 typedef enum {
-	EMPTY,
-	TRIE,
-	AHOCORASICK
+	EMPTY       = 0,
+	TRIE        = 1,
+	AHOCORASICK = 2
 } AutomatonKind;
 
 
 typedef enum {
-	STORE_INTS,
-	STORE_LENGTH,
-	STORE_ANY
+	STORE_INTS   = 10,
+	STORE_LENGTH = 20,
+	STORE_ANY    = 30
 } KeysStore;
+
+
+typedef enum {
+	KEY_STRING   = 100,
+    KEY_SEQUENCE = 200
+} KeyType;
+
+
+struct Input {
+	Py_ssize_t 			wordlen;
+	TRIE_LETTER_TYPE* 	word;
+	PyObject* 			py_word;
+};
 
 
 typedef struct AutomatonStatistics {
@@ -44,6 +57,7 @@ typedef struct Automaton {
 
 	AutomatonKind	kind;	///< current kind of automaton
 	KeysStore		store;	///< type of values: copy of string, bare integer, python  object
+    KeyType         key_type;    ///< type of keys: strings or integer sequences
 	int				count;	///< number of distinct words
 	int				longest_word;	///< length of the longest word
 	TrieNode*		root;	///< root of a trie

@@ -38,7 +38,10 @@ typedef struct AutomatonItemsIter {
 	List		stack;			///< stack
 	ItemsType	type;			///< type of iterator (KEYS/VALUES/ITEMS)
 	TRIE_LETTER_TYPE* buffer;	///< buffer to construct key representation
-	
+#ifndef AHOCORASICK_UNICODE
+	char		*char_buffer;
+#endif
+
 	size_t pattern_length;
 	TRIE_LETTER_TYPE* pattern;	///< pattern
 	bool use_wildcard;

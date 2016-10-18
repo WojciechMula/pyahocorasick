@@ -12,7 +12,7 @@
 
 static TrieNode*
 trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
-	TrieNode* node = (TrieNode*)memalloc(sizeof(TrieNode));
+	TrieNode* node = (TrieNode*)memory_alloc(sizeof(TrieNode));
 	if (node) {
 		node->output.integer = 0;
 		node->output.object = NULL;

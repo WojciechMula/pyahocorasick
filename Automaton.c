@@ -59,9 +59,27 @@ check_kind(const int kind) {
 }
 
 
+static bool
+check_key_type(const int store) {
+	switch (store) {
+		case KEY_STRING:
+		case KEY_SEQUENCE:
+			return true;
+
+		default:
+			PyErr_SetString(
+				PyExc_ValueError,
+				"key_type must have value KEY_STRING or KEY_SEQUENCE"
+			);
+			return false;
+	} // switch
+}
+
+
 static PyObject*
 automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	Automaton* automaton = NULL;
+	int key_type;
 	int store;
 
 	automaton = (Automaton*)PyObject_New(Automaton, &automaton_type);
@@ -123,17 +141,28 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		Py_XDECREF(values);
 	}
 	else {
+		store    = STORE_ANY;
+		key_type = KEY_STRING;
+
 		// construct new object
-		if (PyArg_ParseTuple(args, "i", &store)) {
-			if (not check_store(store))
+		if (PyArg_ParseTuple(args, "ii", &store, &key_type)) {
+			if (not check_store(store)) {
 				goto error;
+			}
+
+			if (not check_key_type(key_type)) {
+				goto error;
+			}
 		}
-		else {
-			PyErr_Clear();
-			store = STORE_ANY;
+		else if (PyArg_ParseTuple(args, "i", &store)) {
+			if (not check_store(store)) {
+				goto error;
+			}
 		}
 
-		automaton->store = store;
+		PyErr_Clear();
+		automaton->store    = store;
+		automaton->key_type = key_type;
 	}
 
 //ok:
@@ -189,16 +218,16 @@ static PyObject*
 automaton_add_word(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	// argument
-	PyObject* py_word = NULL;
 	PyObject* py_value = NULL;
+	struct Input input;
 
-	TRIE_LETTER_TYPE* word = NULL;
-	ssize_t wordlen = 0;
 	Py_uintptr_t integer = 0;
+	TrieNode* node;
+	bool new_word;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
-	if (not py_word)
+	if (!prepare_input_from_tuple(self, args, 0, &input)) {
 		return NULL;
+	}
 
 	switch (automaton->store) {
 		case STORE_ANY:
@@ -230,7 +259,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			break;
 
 		case STORE_LENGTH:
-			integer = wordlen;
+			integer = input.wordlen;
 			break;
 
 		default:
@@ -238,43 +267,47 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			return NULL;
 	}
 
-	if (wordlen > 0) {
-		bool new_word = false;
-		TrieNode* node;
-		node = trie_add_word(automaton, word, wordlen, &new_word);
+	node = NULL;
+	new_word = false;
 
-		Py_DECREF(py_word);
-		if (node) {
-			switch (automaton->store) {
-				case STORE_ANY:
-					if (not new_word and node->eow)
-						// replace
-						Py_DECREF(node->output.object);
+	if (input.wordlen > 0) {
+		node = trie_add_word(automaton, input.word, input.wordlen, &new_word);
+		destroy_input(&input);
 
-					Py_INCREF(py_value);
-					node->output.object = py_value;
-					break;
-
-				default:
-					node->output.integer = integer;
-			} // switch
-
-			if (new_word) {
-				automaton->version += 1; // change version only when new word appeared
-				if (wordlen > automaton->longest_word)
-					automaton->longest_word = (int)wordlen;
-
-				Py_RETURN_TRUE;
-			}
-			else {
-				Py_RETURN_FALSE;
-			}
-		}
-		else
+		if (node == NULL) {
 			return NULL;
+		}
+	} else {
+		destroy_input(&input);
 	}
 
-	Py_DECREF(py_word);
+	if (node) {
+		switch (automaton->store) {
+			case STORE_ANY:
+				if (not new_word and node->eow)
+					// replace
+					Py_DECREF(node->output.object);
+
+				Py_INCREF(py_value);
+				node->output.object = py_value;
+				break;
+
+			default:
+				node->output.integer = integer;
+		} // switch
+
+		if (new_word) {
+			automaton->version += 1; // change version only when new word appeared
+			if (input.wordlen > automaton->longest_word)
+				automaton->longest_word = (int)input.wordlen;
+
+			Py_RETURN_TRUE;
+		}
+		else {
+			Py_RETURN_FALSE;
+		}
+	}
+
 	Py_RETURN_FALSE;
 }
 
@@ -303,7 +336,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 				clear_aux(child, store);
 		}
 
-		memfree(node);
+		memory_free(node);
 	}
 #undef automaton
 }
@@ -330,17 +363,16 @@ automaton_clear(PyObject* self, PyObject* args) {
 static int
 automaton_contains(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	ssize_t wordlen = 0;
-	TRIE_LETTER_TYPE* word = NULL;
-	PyObject* py_word;
 	TrieNode* node;
+	struct Input input;
 
-	py_word = pymod_get_string(args, &word, &wordlen);
-	if (py_word == NULL)
+	if (!prepare_input(self, args, &input)) {
 		return -1;
+	}
 
-	node = trie_find(automaton->root, word, wordlen);
-	Py_DECREF(py_word);
+	node = trie_find(automaton->root, input.word, input.wordlen);
+
+	destroy_input(&input);
 
 	return (node and node->eow);
 #undef automaton
@@ -382,18 +414,17 @@ automaton_exists(PyObject* self, PyObject* args) {
 static PyObject*
 automaton_match(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	ssize_t wordlen;
-	TRIE_LETTER_TYPE* word;
-	PyObject* py_word;
 	TrieNode* node;
+	struct Input input;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
-	if (py_word == NULL)
+	if (!prepare_input_from_tuple(self, args, 0, &input)) {
 		return NULL;
+	}
 
-	node = trie_find(automaton->root, word, wordlen);;
+	node = trie_find(automaton->root, input.word, input.wordlen);;
 
-	Py_DECREF(py_word);
+	destroy_input(&input);
+
 	if (node)
 		Py_RETURN_TRUE;
 	else
@@ -409,17 +440,16 @@ automaton_match(PyObject* self, PyObject* args) {
 static PyObject*
 automaton_longest_prefix(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	ssize_t wordlen;
-	TRIE_LETTER_TYPE* word;
-	PyObject* py_word;
 	int len;
+	struct Input input;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
-	if (py_word == NULL)
+	if (!prepare_input_from_tuple(self, args, 0, &input)) {
 		return NULL;
+	}
 
-	len = trie_longest(automaton->root, word, wordlen);
-	Py_DECREF(py_word);
+	len = trie_longest(automaton->root, input.word, input.wordlen);
+
+	destroy_input(&input);
 
 	return Py_BuildValue("i", len);
 #undef automaton
@@ -435,17 +465,17 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
 static PyObject*
 automaton_get(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	ssize_t wordlen;
-	TRIE_LETTER_TYPE* word;
-	PyObject* py_word;
+	struct Input input;
 	PyObject* py_def;
 	TrieNode* node;
 
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
-	if (py_word == NULL)
+	if (!prepare_input_from_tuple(self, args, 0, &input)) {
 		return NULL;
+	}
 
-	node = trie_find(automaton->root, word, wordlen);
+	node = trie_find(automaton->root, input.word, input.wordlen);
+
+	destroy_input(&input);
 
 	if (node and node->eow) {
 		switch (automaton->store) {
@@ -532,7 +562,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 			break;
 		else {
 			node = item->node;
-			memfree(item);
+			memory_free(item);
 		}
 
 		for (i=0; i < node->n; i++) {
@@ -594,11 +624,9 @@ static PyObject*
 automaton_find_all(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
-	ssize_t wordlen;
+	struct Input input;
 	ssize_t start;
 	ssize_t end;
-	TRIE_LETTER_TYPE* word;
-	PyObject* py_word;
 	PyObject* callback;
 	PyObject* callback_ret;
 
@@ -610,27 +638,32 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		Py_RETURN_NONE;
 
 	// arg 1
-	py_word = pymod_get_string_from_tuple(args, 0, &word, &wordlen);
-	if (py_word == NULL)
+	if (!prepare_input_from_tuple(self, args, 0, &input)) {
 		return NULL;
+	}
 
 	// arg 2
 	callback = PyTuple_GetItem(args, 1);
-	if (callback == NULL)
+	if (callback == NULL) {
+		destroy_input(&input);
 		return NULL;
+	}
 	else
 	if (not PyCallable_Check(callback)) {
 		PyErr_SetString(PyExc_TypeError, "The callback argument must be a callable such as a function.");
+		destroy_input(&input);
 		return NULL;
 	}
 
 	// parse start/end
-	if (pymod_parse_start_end(args, 2, 3, 0, wordlen, &start, &end))
+	if (pymod_parse_start_end(args, 2, 3, 0, input.wordlen, &start, &end)) {
+		destroy_input(&input);
 		return NULL;
+	}
 
 	state = automaton->root;
 	for (i=start; i < end; i++) {
-		state = tmp = ahocorasick_next(state, automaton->root, word[i]);
+		state = tmp = ahocorasick_next(state, automaton->root, input.word[i]);
 
 		// return output
 		while (tmp and tmp->eow) {
@@ -639,9 +672,10 @@ automaton_find_all(PyObject* self, PyObject* args) {
 			else
 				callback_ret = PyObject_CallFunction(callback, "ii", i, tmp->output.integer);
 
-			if (callback_ret == NULL)
+			if (callback_ret == NULL) {
+				destroy_input(&input);
 				return NULL;
-			else
+			} else
 				Py_DECREF(callback_ret);
 
 			tmp = tmp->fail;
@@ -649,6 +683,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 	}
 #undef automaton
 
+	destroy_input(&input);
 	Py_RETURN_NONE;
 }
 

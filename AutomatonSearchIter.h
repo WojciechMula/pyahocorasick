@@ -21,8 +21,7 @@ typedef struct AutomatonSearchIter {
 
 	Automaton*	automaton;
 	int			version;	///< automaton version
-	PyObject*	object;		///< unicode or buffer
-	TRIE_LETTER_TYPE* data;	///< Py_UNICODE or char*
+	struct Input input;		///< input string
 	TrieNode*	state;		///< current state of automaton
 	TrieNode*	output;		///< current node, i.e. yielded value
 	

@@ -1,0 +1,9 @@
+CPU: Intel(R) Core(TM) i5 CPU M 540  @ 2.53GHz
+
+$ make benchmark 
+python2 benchmarks/benchmark.py stamp/build_py2
+Generating data (1000000 words)         : 24.886 s
+Add words                               : 4.627 s
+Building automaton                      : 33.362 s
+Look up                                 : 5.946 s
+Search                                  : 1.762 s

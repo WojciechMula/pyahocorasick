@@ -39,5 +39,8 @@ stamp/regression_py3: stamp/unittests_py3
 	touch $@
 
 
+benchmark: benchmarks/benchmark.py stamp/build_py2
+	python2 $^
+
 clean:
 	rm -f stamp/*

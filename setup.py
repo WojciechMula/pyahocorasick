@@ -21,13 +21,14 @@ def get_long_description():
     Strip the content index from the long description.
     """
     import codecs 
-    with codecs.open('README.rst', 'rt', encoding='UTF-8') as f:
+    with codecs.open('README.rst', encoding='UTF-8') as f:
         readme = [line for line in f if not line.startswith('.. contents::')]
         return ''.join(readme)
 
 
 if python_version.major not in [2, 3]:
     raise ValueError('Python %s is not supported' % python_version)
+
 
 if python_version.major == 3:
     macros = [

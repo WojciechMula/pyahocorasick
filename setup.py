@@ -20,7 +20,8 @@ def get_long_description():
     """
     Strip the content index from the long description.
     """
-    with open('README.rst', 'rt', encoding='UTF-8') as f:
+    import codecs 
+    with codecs.open('README.rst', 'rt', encoding='UTF-8') as f:
         readme = [line for line in f if not line.startswith('.. contents::')]
         return ''.join(readme)
 

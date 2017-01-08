@@ -1,0 +1,8 @@
+CPU: Intel(R) Core(TM) i7 CPU 5600U  @ 2.60GHz
+Python 3.5.2 64 bit
+
+Generating data (1000000 words)         : 35.752 s
+Add words                               : 2.833 s
+Building automaton                      : 15.418 s
+Look up                                 : 2.667 s
+Search                                  : 0.740 s

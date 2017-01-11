@@ -11,15 +11,15 @@
 
 
 void* memory_alloc(ssize_t size) {
-    void* res = malloc(size);
+    void* res = memalloc(size);
 
-    //printf("allocated %p (size=%d)\n", res, size);
+    //printf("allocated %p %d\n", res, size);
     return res;
 }
 
 void memory_free(void* ptr) {
     //printf("freeing %p\n", ptr);
-    free(ptr);
+    memfree(ptr);
 }
 
 

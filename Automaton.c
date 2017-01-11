@@ -336,6 +336,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 				clear_aux(child, store);
 		}
 
+		xfree(node->next);
 		memory_free(node);
 	}
 #undef automaton
@@ -1213,3 +1214,4 @@ static PyTypeObject automaton_type = {
 	automaton_new,								/* tp_new */
 };
 
+// vim: noet

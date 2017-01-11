@@ -125,9 +125,10 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 			return false;
 		}
 
+
         // TODO: both min and max values should be configured
 		if (value < 0 || value > 65535) {
-			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd ouside range [%zd..%zd]", i, value, min, max);
+			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd ouside range [%zd..%zd]", i, value, 0, 65535);
 			memory_free(*word);
 			return false;
 		}

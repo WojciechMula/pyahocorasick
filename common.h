@@ -19,10 +19,6 @@
 #define DEBUG
 
 #if defined(_MSC_VER)       // Visual Studio compiler
-#   define WINDOWS
-#endif
-
-#if defined(WINDOWS)
 #   include "windows.h"
 #else
 #	include "posix.h"

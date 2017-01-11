@@ -61,6 +61,7 @@ module = Extension(
         'utils.c',
         'trienode.c',
         'trienode.h',
+        'msinttypes/stdint.h',
     ],
 )
 

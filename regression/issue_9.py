@@ -16,6 +16,11 @@ ac = ahocorasick.Automaton()
 ac.add_word('SSSSS', 1)
 ac.make_automaton()
 
+try:
+    range = xrange # for Py2
+except NameError:
+    pass
+
 def get_memory_usage():
     # Linux only
     pid = os.getpid()

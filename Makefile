@@ -16,8 +16,7 @@ stamp/unittests_py2: stamp/build_py2
 stamp/regression_py2: stamp/unittests_py2 
 	python2 regression/issue_5.py
 	python2 regression/issue_8.py
-	# commented (issue #47 points this out)
-	#python2 regression/issue_9.py
+	python2 regression/issue_9.py
 	python2 regression/issue_10.py
 	python2 regression/issue_26.py
 	touch $@

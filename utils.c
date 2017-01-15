@@ -23,6 +23,13 @@ void memory_free(void* ptr) {
 }
 
 
+void xfree(void* ptr) {
+	if (ptr != NULL) {
+		memory_free(ptr);
+	}
+}
+
+
 #if !defined(PY3K) || !defined(AHOCORASICK_UNICODE)
 //  define when pymod_get_string makes a copy of string
 #   define INPUT_KEEPS_COPY
@@ -84,10 +91,11 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
             return NULL;
         }
 
+
 		bytes = PyString_AS_STRING(obj);
 		for (i=0; i < *wordlen; i++) {
 			(*word)[i] = bytes[i];
-		}
+		};
 
         Py_INCREF(obj);
 		return obj;
@@ -284,11 +292,4 @@ void assign_input(struct Input* dst, struct Input* src) {
 	dst->wordlen	= src->wordlen;
 	dst->word		= src->word;
 	dst->py_word	= src->py_word; // Note: there is no INCREF
-}
-
-
-void xfree(void* ptr) {
-	if (ptr != NULL) {
-		memory_free(ptr);
-	}
 }

@@ -49,6 +49,9 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
             return NULL;
         }
 #   else
+#       ifndef INPUT_KEEPS_COPY
+#           error "defines inconsistency"
+#       endif
         if (PyBytes_Check(obj)) {
             *wordlen = PyBytes_GET_SIZE(obj);
 			*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
@@ -70,6 +73,9 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
         }
 #   endif
 #else // PY_MAJOR_VERSION == 3
+#       ifndef INPUT_KEEPS_COPY
+#           error "defines inconsistency"
+#       endif
 	if (PyString_Check(obj)) {
         *wordlen = PyString_GET_SIZE(obj);
 		*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);

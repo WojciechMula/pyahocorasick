@@ -94,7 +94,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 8)) {
+	if (UNLIKELY(PyTuple_Size(args) == 9)) {
 
 		// unpickle: count, data, kind, store, version, values
 		size_t			count;
@@ -105,21 +105,23 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		int				longest_word;
 		AutomatonKind	kind;
 		KeysStore		store;
+		KeyType			key_type;
 		PyObject*		values = NULL;
 
 #ifdef PY3K
-        const char* fmt = "ky#iiiiiO";
+        const char* fmt = "ky#iiiiiiO";
 #else
-        const char* fmt = "ks#iiiiiO";
+        const char* fmt = "ks#iiiiiiO";
 #endif
 
-		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &version, &word_count, &longest_word, &values)) {
+		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "Invalid data: unable to load from pickle.");
 			goto error;
 		}
 
-		if (not check_store(store) or not check_kind(kind))
+		if (!check_store(store) || !check_kind(kind) || !check_key_type(key_type)) {
 			goto error;
+		}
 
 		if (kind != EMPTY) {
 			if (values == Py_None) {
@@ -130,6 +132,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 			if (automaton_unpickle(automaton, count, data, size, values)) {
 				automaton->kind		= kind;
 				automaton->store	= store;
+				automaton->key_type	= key_type;
 				automaton->version	= version;
 				automaton->count    = word_count;
 				automaton->longest_word	= longest_word;

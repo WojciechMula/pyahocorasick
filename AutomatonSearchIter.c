@@ -31,7 +31,9 @@ automaton_search_iter_new(
 	if (iter == NULL)
 		return NULL;
 
-	prepare_input((PyObject*)automaton, object, &iter->input);
+	if (!prepare_input((PyObject*)automaton, object, &iter->input)) {
+		return NULL;
+	}
 
 	iter->automaton = automaton;
 	iter->version	= automaton->version;
@@ -39,7 +41,7 @@ automaton_search_iter_new(
 	iter->state	= automaton->root;
 	iter->output= NULL;
 	iter->shift	= 0;
-	iter->index	= start - 1;	// -1 because first instruction in next() increments index
+	iter->index	= start - 1;	// -1 because the first instruction in next() increments index
 	iter->end	= end;
 
 	Py_INCREF(iter->automaton);
@@ -261,3 +263,5 @@ static PyTypeObject automaton_search_iter_type = {
 	0,                                          /* tp_alloc */
 	0,                                          /* tp_new */
 };
+
+// vim: noet ts=4

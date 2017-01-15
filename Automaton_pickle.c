@@ -230,22 +230,25 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		* binary data
 		* automaton->kind
 		* automaton->store
+		* automaton->key_type
 		* automaton->version
+		* automaton->count
 		* automaton->longest_word
 		* list of values
 	*/
 
 	tuple = Py_BuildValue(
 #ifdef PY3K
-        "O(ky#iiiiiO)",
+        "O(ky#iiiiiiO)",
 #else
-        "O(ks#iiiiiO)",
+        "O(ks#iiiiiiO)",
 #endif
 		Py_TYPE(self),
 		state.id,
 		data.data, data.top,
 		automaton->kind,
 		automaton->store,
+		automaton->key_type,
 		automaton->version,
 		automaton->count,
 		automaton->longest_word,
@@ -403,4 +406,6 @@ exception:
 
 	return 0;
 }
+
+// vim: noet ts=4
 

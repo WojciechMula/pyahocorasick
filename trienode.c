@@ -21,7 +21,6 @@ trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
 		node->n		= 0;
 		node->letter	= letter;
 		node->eow	    = eow;
-		node->pickle	= 0;
 		node->next	= NULL;
 	}
 

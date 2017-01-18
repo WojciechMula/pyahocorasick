@@ -162,15 +162,15 @@ automaton_build_output(PyObject* self, PyObject** result) {
 		node = iter->output;
 		iter->output = iter->output->fail;
 
-		idx = iter->shift;
 #ifdef VARIABLE_LEN_CHARCODES
+		idx = iter->shift;
 		if (iter->automaton->key_type == KEY_STRING) {
 			idx += iter->position;
 		} else {
 			idx += iter->index;
 		}
 #else
-		result += iter->index;
+		idx = iter->index + iter->shift;
 #endif
 		switch (iter->automaton->store) {
 			case STORE_LENGTH:

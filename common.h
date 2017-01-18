@@ -43,6 +43,7 @@
 		// Python use UCS-2
 #		define TRIE_LETTER_TYPE	uint16_t
 #		define TRIE_LETTER_SIZE 2
+#       define VARIABLE_LEN_CHARCODES 1
 #	endif
 #else
 	// only bytes are supported

@@ -18,6 +18,54 @@ static PyTypeObject automaton_search_iter_type;
 	"manipulated through its set() method."
 
 
+#ifdef VARIABLE_LEN_CHARCODES
+static int
+automaton_search_iter_substring_index(struct Input* input, int position) {
+
+	TRIE_LETTER_TYPE letter;
+
+	int index = 0;
+	int i;
+
+	for (i=0; i < position; i++) {
+
+		letter = input->word[index];
+		if (UNLIKELY(Py_UNICODE_IS_SURROGATE(letter))) {
+			if (UNLIKELY(!Py_UNICODE_IS_HIGH_SURROGATE(letter))) {
+				PyErr_Format(PyExc_ValueError,
+					"Malformed UCS-2 string: expected a high surrogate at %d, got %04x",
+					index, letter);
+				return -1;
+			}
+
+			index += 1;
+
+			if (index >= input->wordlen) {
+				PyErr_Format(PyExc_ValueError,
+					"Malformed UCS-2 string: unexpected end of string");
+				return -1;
+			}
+
+			letter = input->word[index];
+			if (UNLIKELY(!Py_UNICODE_IS_LOW_SURROGATE(letter))) {
+				PyErr_Format(PyExc_ValueError,
+					"Malformed UCS-2 string: expected a low surrogate at %d, got %04x",
+					index, letter);
+				return -1;
+			}
+
+			index += 1;
+
+		} else {
+			index += 1;
+		}
+	}
+
+	return index;
+}
+#endif // VARIABLE_LEN_CHARCODES
+
+
 static PyObject*
 automaton_search_iter_new(
 	Automaton* automaton,
@@ -26,6 +74,9 @@ automaton_search_iter_new(
 	int end
 ) {
 	AutomatonSearchIter* iter;
+#ifdef VARIABLE_LEN_CHARCODES
+	int tmp;
+#endif
 
 	iter = (AutomatonSearchIter*)PyObject_New(AutomatonSearchIter, &automaton_search_iter_type);
 	if (iter == NULL)
@@ -41,8 +92,33 @@ automaton_search_iter_new(
 	iter->state	= automaton->root;
 	iter->output= NULL;
 	iter->shift	= 0;
-	iter->index	= start - 1;	// -1 because the first instruction in next() increments index
+#ifdef VARIABLE_LEN_CHARCODES
+	if (automaton->key_type == KEY_STRING) {
+		tmp = automaton_search_iter_substring_index(&iter->input, start);
+		if (tmp >= 0) {
+			iter->index	   = tmp - 1;
+			iter->position = start - 1;
+		} else {
+			return NULL;
+		}
+
+		tmp = automaton_search_iter_substring_index(&iter->input, end);
+		if (tmp >= 0) {
+			iter->end = end;
+		} else {
+			return NULL;
+		}
+
+		iter->expected	= pyaho_UCS2_Any;
+	} else {
+		iter->index	= start - 1;
+		iter->end	= end;
+	}
+#else
+	// -1 because the first instruction in next() increments index
+	iter->index	= start - 1;
 	iter->end	= end;
+#endif
 
 	Py_INCREF(iter->automaton);
 
@@ -76,6 +152,7 @@ enum {
 static int
 automaton_build_output(PyObject* self, PyObject** result) {
 	TrieNode* node;
+	int idx = 0;
 
 	while (iter->output && !iter->output->eow) {
 		iter->output = iter->output->fail;
@@ -84,14 +161,25 @@ automaton_build_output(PyObject* self, PyObject** result) {
 	if (iter->output) {
 		node = iter->output;
 		iter->output = iter->output->fail;
+
+		idx = iter->shift;
+#ifdef VARIABLE_LEN_CHARCODES
+		if (iter->automaton->key_type == KEY_STRING) {
+			idx += iter->position;
+		} else {
+			idx += iter->index;
+		}
+#else
+		result += iter->index;
+#endif
 		switch (iter->automaton->store) {
 			case STORE_LENGTH:
 			case STORE_INTS:
-				*result = Py_BuildValue("ii", iter->index + iter->shift, node->output.integer);
+				*result = Py_BuildValue("ii", idx, node->output.integer);
 				return OutputValue;
 
 			case STORE_ANY:
-				*result = Py_BuildValue("iO", iter->index + iter->shift, node->output.object);
+				*result = Py_BuildValue("iO", idx, node->output.object);
 				return OutputValue;
 
 			default:
@@ -103,6 +191,49 @@ automaton_build_output(PyObject* self, PyObject** result) {
 	return OutputNone;
 }
 
+
+
+#ifdef VARIABLE_LEN_CHARCODES
+static bool
+automaton_search_iter_advance_index(PyObject* self) {
+
+	TRIE_LETTER_TYPE letter;
+
+	iter->index += 1;
+	if (iter->automaton->key_type == KEY_SEQUENCE) {
+		return true;
+	}
+
+	letter = iter->input.word[iter->index];
+	if (iter->expected == pyaho_UCS2_Any) {
+		if (UNLIKELY(Py_UNICODE_IS_SURROGATE(letter))) {
+			if (LIKELY(Py_UNICODE_IS_HIGH_SURROGATE(letter))) {
+				iter->expected = pyaho_UCS2_LowSurrogate;
+			} else {
+				PyErr_Format(PyExc_ValueError,
+					"Malformed UCS-2 string: expected a high surrogate at %d, got %04x",
+					iter->index, letter);
+				return false;
+			}
+		} else {
+			iter->position += 1;
+		}
+	} else {
+		assert(iter->expected == pyaho_UCS2_LowSurrogate);
+		if (LIKELY(Py_UNICODE_IS_LOW_SURROGATE(letter))) {
+			iter->expected  = pyaho_UCS2_Any;
+			iter->position += 1;
+		} else {
+			PyErr_SetString(PyExc_ValueError,
+				"Malformed UCS-2 string: expected a low surrogate at %d, got %04x",
+				iter->index, letter);
+			return false;
+		}
+	}
+
+	return true;
+}
+#endif
 
 static PyObject*
 automaton_search_iter_next(PyObject* self) {
@@ -125,7 +256,13 @@ return_output:
 			return NULL;
 	}
 
+#ifdef VARIABLE_LEN_CHARCODES
+	if (!automaton_search_iter_advance_index(self)) {
+		return NULL;
+	}
+#else
 	iter->index += 1;
+#endif
 	while (iter->index < iter->end) {
 		// process single char
 		iter->state = ahocorasick_next(
@@ -139,7 +276,13 @@ return_output:
 		iter->output = iter->state;
 		goto return_output;
 
+#ifdef VARIABLE_LEN_CHARCODES
+		if (!automaton_search_iter_advance_index(self)) {
+			return NULL;
+		}
+#else
 		iter->index += 1;
+#endif
 
 	} // while 
 	
@@ -158,7 +301,7 @@ static PyObject*
 automaton_search_iter_set(PyObject* self, PyObject* args) {
 	PyObject* object;
 	PyObject* flag;
-	ssize_t len;
+	int position;
 	bool reset;
 	struct Input new_input;
 
@@ -194,16 +337,27 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 	destroy_input(&iter->input);
 	assign_input(&iter->input, &new_input);
 
-	if (!reset)
-		iter->shift += (iter->index >= 0) ? iter->index : 0;
+	if (!reset) {
+		position = iter->index;
+#ifdef VARIABLE_LEN_CHARCODES
+		if (iter->automaton->key_type == KEY_STRING) {
+			position = iter->position;
+		}
+#endif
+		iter->shift += (position >= 0) ? position : 0;
+	}
 
 	iter->index		= -1;
-	iter->end		= (int)len;
+	iter->end		= new_input.wordlen;
 
 	if (reset) {
 		iter->state  = iter->automaton->root;
 		iter->shift  = 0;
 		iter->output = NULL;
+#ifdef VARIABLE_LEN_CHARCODES
+		iter->position = -1;
+		iter->expected = pyaho_UCS2_Any;
+#endif
 	}
 
 	Py_RETURN_NONE;

@@ -16,6 +16,13 @@
 #include "common.h"
 #include "Automaton.h"
 
+#ifdef VARIABLE_LEN_CHARCODES
+typedef enum {
+    pyaho_UCS2_Any,
+    pyaho_UCS2_LowSurrogate
+} UCS2ExpectedChar;
+#endif
+
 typedef struct AutomatonSearchIter {
 	PyObject_HEAD
 
@@ -28,6 +35,10 @@ typedef struct AutomatonSearchIter {
 	int			index;		///< current index in data
 	int			shift;		///< shift + index => output index
 	int			end;		///< end index
+#ifdef VARIABLE_LEN_CHARCODES
+    int         position;       ///< position in string
+    UCS2ExpectedChar expected;
+#endif
 } AutomatonSearchIter;
 
 

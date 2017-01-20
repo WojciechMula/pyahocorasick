@@ -811,7 +811,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_1(self):
 		A = self.A
-		
+
 		ret = A.add_word((1, 2, 3), "foo")
 		self.assertTrue(ret)
 		self.assertTrue(A.kind == ahocorasick.TRIE)
@@ -822,7 +822,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_2(self):
 		A = self.A
-		
+
 		A.add_word((1, 2, 3), "foo")
 		ret = A.add_word((1, 2, 3), "bar")
 		self.assertFalse(ret)
@@ -830,7 +830,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_3(self):
 		A = self.A
-		
+
 		A.add_word((1, 2, 3), "foo")
 		A.add_word((1, 2, 3, 4, 5), "bar")
 		A.add_word((1, 3, 4, 5), "baz")
@@ -843,14 +843,14 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_4(self):
 		A = self.A
-		
+
 		ret = A.add_word((), "foo")
 		self.assertFalse(ret)
 
 
 	def test_add__case_5__wrong_argument_type(self):
 		A = self.A
-	
+
 		with self.assertRaises(TypeError) as e:
 			A.add_word("hello!", "foo")
 
@@ -859,7 +859,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_6__wrong_item_type(self):
 		A = self.A
-	
+
 		with self.assertRaises(ValueError) as e:
 			A.add_word((1, 2, "hello!"), "foo")
 
@@ -868,7 +868,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_7__wrong_value(self):
 		A = self.A
-	
+
 		with self.assertRaises(ValueError) as e:
 			A.add_word((1, -1, 12), "foo")
 
@@ -877,7 +877,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_add__case_8__wrong_value(self):
 		A = self.A
-	
+
 		with self.assertRaises(ValueError) as e:
 			A.add_word((2**42, 0, 12), "foo")
 
@@ -886,7 +886,7 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_match(self):
 		A = self.A
-		
+
 		ret = A.add_word((1, 2, 3), "foo")
 		self.assertTrue(A.match((1,)))
 		self.assertTrue(A.match((1, 2)))
@@ -895,10 +895,45 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
 	def test_longest_prefix(self):
 		A = self.A
-		
+
 		ret = A.add_word((1, 2, 3, 4, 5, 6), "foo")
 		self.assertEqual(A.longest_prefix((1, 2, 3, 111, 1111, 11111)), 3);
 		self.assertEqual(A.longest_prefix((111, 1111, 11111)), 0);
+
+
+class TestIssue53(unittest.TestCase):
+    """
+    Problems with handling of UCS-2 encoding
+    """
+
+    def test_case1(self):
+        # test contributed by @woakesd (David Woakes)
+
+        a = ahocorasick.Automaton()
+        a.add_word('test', 'test')
+
+        a.make_automaton()
+
+        test_string = 'test 🙈 test?!'
+
+        # wrongly calculated matching position
+        for item in a.iter(test_string):
+            start = item[0] - len(item[1]) + 1
+            match = test_string[start:item[0] + 1]
+            self.assertEqual(match, "test")
+
+
+    def test_case2(self):
+        a = ahocorasick.Automaton()
+        a.add_word('test', 'test')
+
+        a.make_automaton()
+
+        test_string = '🙈' * 1000
+
+        # wrongly calculated the input's length
+        for item in a.iter(test_string):
+            pass
 
 
 if __name__ == '__main__':

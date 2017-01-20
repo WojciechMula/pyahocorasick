@@ -809,96 +809,103 @@ class TestIntSequenceBase(unittest.TestCase):
 
 class TestIntSequence__TrieMethods(TestIntSequenceBase):
 
-	def test_add__case_1(self):
-		A = self.A
+    def test_add__case_1(self):
+        A = self.A
 
-		ret = A.add_word((1, 2, 3), "foo")
-		self.assertTrue(ret)
-		self.assertTrue(A.kind == ahocorasick.TRIE)
+        ret = A.add_word((1, 2, 3), "foo")
+        self.assertTrue(ret)
+        self.assertTrue(A.kind == ahocorasick.TRIE)
 
-		self.assertEqual(len(A), 1)
-		self.assertTrue((1, 2, 3) in A)
-
-
-	def test_add__case_2(self):
-		A = self.A
-
-		A.add_word((1, 2, 3), "foo")
-		ret = A.add_word((1, 2, 3), "bar")
-		self.assertFalse(ret)
+        self.assertEqual(len(A), 1)
+        self.assertTrue((1, 2, 3) in A)
 
 
-	def test_add__case_3(self):
-		A = self.A
+    def test_add__case_2(self):
+        A = self.A
 
-		A.add_word((1, 2, 3), "foo")
-		A.add_word((1, 2, 3, 4, 5), "bar")
-		A.add_word((1, 3, 4, 5), "baz")
-
-		self.assertEqual(len(A), 3);
-		self.assertEqual(A.get((1, 2, 3)), 			"foo");
-		self.assertEqual(A.get((1, 2, 3, 4, 5)), 	"bar");
-		self.assertEqual(A.get((1, 3, 4, 5)), 		"baz");
+        A.add_word((1, 2, 3), "foo")
+        ret = A.add_word((1, 2, 3), "bar")
+        self.assertFalse(ret)
 
 
-	def test_add__case_4(self):
-		A = self.A
+    def test_add__case_3(self):
+        A = self.A
 
-		ret = A.add_word((), "foo")
-		self.assertFalse(ret)
+        A.add_word((1, 2, 3), "foo")
+        A.add_word((1, 2, 3, 4, 5), "bar")
+        A.add_word((1, 3, 4, 5), "baz")
 
-
-	def test_add__case_5__wrong_argument_type(self):
-		A = self.A
-
-		with self.assertRaises(TypeError) as e:
-			A.add_word("hello!", "foo")
-
-		self.assertEqual(str(e.exception), "argument is not a supported sequence type")
+        self.assertEqual(len(A), 3);
+        self.assertEqual(A.get((1, 2, 3)),          "foo");
+        self.assertEqual(A.get((1, 2, 3, 4, 5)),    "bar");
+        self.assertEqual(A.get((1, 3, 4, 5)),       "baz");
 
 
-	def test_add__case_6__wrong_item_type(self):
-		A = self.A
+    def test_add__case_4(self):
+        A = self.A
 
-		with self.assertRaises(ValueError) as e:
-			A.add_word((1, 2, "hello!"), "foo")
-
-		self.assertEqual(str(e.exception), "item #2 is not a number")
+        ret = A.add_word((), "foo")
+        self.assertFalse(ret)
 
 
-	def test_add__case_7__wrong_value(self):
-		A = self.A
+    def test_add__case_5__wrong_argument_type(self):
+        A = self.A
 
-		with self.assertRaises(ValueError) as e:
-			A.add_word((1, -1, 12), "foo")
+        with self.assertRaises(TypeError) as e:
+            A.add_word("hello!", "foo")
 
-		self.assertEqual(str(e.exception), "item #1: value -1 outside range [0..65535]")
-
-
-	def test_add__case_8__wrong_value(self):
-		A = self.A
-
-		with self.assertRaises(ValueError) as e:
-			A.add_word((2**42, 0, 12), "foo")
-
-		#self.assertEqual(str(e.exception), "item #0: value 4398046511104 outside range [0..65535]");
+        self.assertEqual(str(e.exception), "argument is not a supported sequence type")
 
 
-	def test_match(self):
-		A = self.A
+    def test_add__case_6__wrong_item_type(self):
+        A = self.A
 
-		ret = A.add_word((1, 2, 3), "foo")
-		self.assertTrue(A.match((1,)))
-		self.assertTrue(A.match((1, 2)))
-		self.assertTrue(A.match((1, 2, 3)))
+        with self.assertRaises(ValueError) as e:
+            A.add_word((1, 2, "hello!"), "foo")
+
+        self.assertEqual(str(e.exception), "item #2 is not a number")
 
 
-	def test_longest_prefix(self):
-		A = self.A
+    def test_add__case_7__wrong_value(self):
+        A = self.A
 
-		ret = A.add_word((1, 2, 3, 4, 5, 6), "foo")
-		self.assertEqual(A.longest_prefix((1, 2, 3, 111, 1111, 11111)), 3);
-		self.assertEqual(A.longest_prefix((111, 1111, 11111)), 0);
+        with self.assertRaises(ValueError) as e:
+            A.add_word((1, -1, 12), "foo")
+
+        self.assertEqual(str(e.exception), "item #1: value -1 outside range [0..65535]")
+
+
+    def test_add__case_8__wrong_value(self):
+        A = self.A
+
+        with self.assertRaises(ValueError) as e:
+            A.add_word((2**42, 0, 12), "foo")
+
+        # Depending on python's version the message might be different,
+        # but the type remains the same.
+
+        errmsg = str(e.exception)
+        msg1 = "item #0: value 4398046511104 outside range [0..65535]"
+        msg2 = "item #0 is not a number"
+
+        self.assertIn(errmsg, [msg1, msg2])
+
+
+    def test_match(self):
+        A = self.A
+
+        ret = A.add_word((1, 2, 3), "foo")
+        self.assertTrue(A.match((1,)))
+        self.assertTrue(A.match((1, 2)))
+        self.assertTrue(A.match((1, 2, 3)))
+
+
+    def test_longest_prefix(self):
+        A = self.A
+
+        ret = A.add_word((1, 2, 3, 4, 5, 6), "foo")
+        self.assertEqual(A.longest_prefix((1, 2, 3, 111, 1111, 11111)), 3);
+        self.assertEqual(A.longest_prefix((111, 1111, 11111)), 0);
 
 
 class TestIssue53(unittest.TestCase):

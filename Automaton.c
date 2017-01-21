@@ -896,7 +896,11 @@ automaton_iter(PyObject* self, PyObject* args) {
     #ifdef AHOCORASICK_UNICODE
 		if (PyUnicode_Check(object)) {
 			start	= 0;
-			end		= PyUnicode_GET_LENGTH(object);
+			#if PY_MINOR_VERSION >= 3
+				end = PyUnicode_GET_LENGTH(object);
+			#else
+				end = PyUnicode_GET_SIZE(object);
+			#endif
 		}
 		else {
 			PyErr_SetString(PyExc_TypeError, "string required");

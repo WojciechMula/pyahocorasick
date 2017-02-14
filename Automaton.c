@@ -670,17 +670,19 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		state = tmp = ahocorasick_next(state, automaton->root, input.word[i]);
 
 		// return output
-		while (tmp and tmp->eow) {
-			if (automaton->store == STORE_ANY)
-				callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output.object);
-			else
-				callback_ret = PyObject_CallFunction(callback, "ii", i, tmp->output.integer);
+		while (tmp) {
+			if (tmp->eow) {
+				if (automaton->store == STORE_ANY)
+					callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output.object);
+				else
+					callback_ret = PyObject_CallFunction(callback, "ii", i, tmp->output.integer);
 
-			if (callback_ret == NULL) {
-				destroy_input(&input);
-				return NULL;
-			} else
-				Py_DECREF(callback_ret);
+				if (callback_ret == NULL) {
+					destroy_input(&input);
+					return NULL;
+				} else
+					Py_DECREF(callback_ret);
+			}
 
 			tmp = tmp->fail;
 		}

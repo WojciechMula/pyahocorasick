@@ -8,6 +8,3 @@ auto.add_word('def', 'def')
 
 with open('automaton-wee.pickle', 'wb') as dest:
   dump(auto, dest)
-
-with open('automaton-wee.pickle', 'rb') as src:
-  auto = load(src)

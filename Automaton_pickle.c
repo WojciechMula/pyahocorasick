@@ -305,6 +305,8 @@ automaton_unpickle(
 	size_t i, j;
 	size_t object_idx;
 
+    printf("size %d, count %d, sizeof(TrieNode) %d, sizeof(TrieNode*) %d\n", size, count, sizeof(TrieNode), sizeof(TrieNode*));
+
     if (UNLIKELY(size < count*(sizeof(TrieNode) - sizeof(TrieNode*)))) {
         PyErr_SetString(PyExc_ValueError, "binary data truncated (1)");
         return false;

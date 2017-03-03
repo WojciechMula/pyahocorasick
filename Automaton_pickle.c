@@ -305,9 +305,7 @@ automaton_unpickle(
 	size_t i, j;
 	size_t object_idx;
 
-    printf("size %zd, count*(sizeof(TrieNode) - sizeof(TrieNode*)) %zd\n", size, count*(sizeof(TrieNode) - sizeof(TrieNode*)));
-
-    if (size < count*(sizeof(TrieNode) - sizeof(TrieNode*))) {
+    if (UNLIKELY(size < count*(sizeof(TrieNode) - sizeof(TrieNode*)))) {
         PyErr_SetString(PyExc_ValueError, "binary data truncated (1)");
         return false;
     }
@@ -320,10 +318,7 @@ automaton_unpickle(
 	// 1. make nodes
 	id = 1;
 	ptr = data;
-	printf("unpickle: %d nodes\n", count);
 	for (i=0; i < count; i++) {
-		puts("");
-		printf("unpickle: node #%d at offset %d\n", id, ptr - data);
 		dump = (TrieNode*)(ptr);
 		node = (TrieNode*)memory_alloc(sizeof(TrieNode));
 		if (LIKELY(node != NULL)) {
@@ -337,11 +332,6 @@ automaton_unpickle(
 		else
 			goto no_mem;
 
-		printf("unpickle: node #%d.fail   = %d\n", id, node->fail);
-		printf("unpickle: node #%d.letter = %d\n", id, node->letter);
-		printf("unpickle: node #%d.eow    = %d\n", id, node->eow);
-		printf("unpickle: node #%d.n      = %d\n", id, node->n);
-
 		if (node->n > 0) {
 			node->next = (TrieNode**)memory_alloc(node->n * sizeof(TrieNode*));
 			if (LIKELY(node->next != NULL)) {
@@ -353,7 +343,6 @@ automaton_unpickle(
 				next = (TrieNode**)(ptr + sizeof(TrieNode) - sizeof(TrieNode*));
 				for (j=0; j < node->n; j++) {
 					node->next[j] = next[j];
-					printf("unpickle: node #%d.next[%d] = %d\n", id, j, node->next[j]);
 				}	
 			}
 			else {

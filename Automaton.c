@@ -118,6 +118,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 			PyErr_SetString(PyExc_ValueError, "Invalid data: unable to load from pickle.");
 			goto error;
 		}
+		printf("Parsed count %zu, size %zu\n", count, size);
 
 		if (!check_store(store) || !check_kind(kind) || !check_key_type(key_type)) {
 			goto error;

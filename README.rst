@@ -180,6 +180,12 @@ Other Aho-Corasick implementations for Python you can consider
 While **pyahocorasick** tries to be the finest and fastest Aho Corasick library
 for Python you may consider these other libraries:
 
+
+* `py_aho_corasick <https://github.com/JanFan/py-aho-corasick>`_ by Jan
+
+ * Written in pure Python.
+ * Poor performance.
+
 * `noaho <https://github.com/JDonner/NoAho>`_ by Jeff Donner
 
  * Written in C. Does not return overlapping matches.

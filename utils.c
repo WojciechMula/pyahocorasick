@@ -109,18 +109,6 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 }
 
 
-static PyObject*
-pymod_get_string_from_tuple(PyObject* tuple, int index, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-	PyObject* obj;
-
-	obj = PyTuple_GetItem(tuple, index);
-	if (obj)
-		return pymod_get_string(obj, word, wordlen);
-	else
-		return NULL;
-}
-
-
 static bool
 __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 	Py_ssize_t i;
@@ -164,18 +152,6 @@ pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 		PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");
 		return false;
 	}
-}
-
-
-static bool
-pymod_get_sequence_from_tuple(PyObject* tuple, int index, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-	PyObject* obj;
-
-	obj = PyTuple_GetItem(tuple, index);
-	if (obj)
-		return pymod_get_sequence(obj, word, wordlen);
-	else
-		return false;
 }
 
 

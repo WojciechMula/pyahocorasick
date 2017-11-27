@@ -51,3 +51,4 @@ benchmark: benchmarks/benchmark.py stamp/build_py2
 
 clean:
 	rm -f stamp/*
+	rm -f dist build

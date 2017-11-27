@@ -40,13 +40,15 @@ void xfree(void* ptr) {
 static PyObject*
 pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 
+#ifdef INPUT_KEEPS_COPY
 	ssize_t i;
 	char* bytes;
+#endif
 
 #ifdef PY3K
 #   ifdef AHOCORASICK_UNICODE
         if (PyUnicode_Check(obj)) {
-            *word = PyUnicode_AS_UNICODE(obj);
+            *word = (TRIE_LETTER_TYPE*)(PyUnicode_AS_UNICODE(obj));
             *wordlen = PyUnicode_GET_SIZE(obj);
             Py_INCREF(obj);
             return obj;

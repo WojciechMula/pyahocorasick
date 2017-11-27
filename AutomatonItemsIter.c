@@ -204,7 +204,7 @@ automaton_items_iter_next(PyObject* self) {
 			switch (iter->type) {
 				case ITER_KEYS:
 #ifdef AHOCORASICK_UNICODE
-					return PyUnicode_FromUnicode(iter->buffer + 1, item->depth);
+					return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), item->depth);
 #else
 					return PyBytes_FromStringAndSize(iter->char_buffer + 1, item->depth);
 #endif

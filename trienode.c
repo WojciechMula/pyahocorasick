@@ -31,7 +31,7 @@ trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
 static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter) {
 
-	int i;
+	unsigned i;
 
 	ASSERT(node);
 	for (i=0; i < node->n; i++)

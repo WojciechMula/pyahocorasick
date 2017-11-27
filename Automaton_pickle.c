@@ -120,7 +120,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	TrieNode* dump;
 	TrieNode* tmp;
 	TrieNode** arr;
-	int i;
+	unsigned i;
 	
 	dump = (TrieNode*)(self->data + self->top);
 
@@ -300,7 +300,7 @@ automaton_unpickle(
 	TrieNode* dump;
 	TrieNode** next;
 	PyObject* value;
-	int id;
+	unsigned id;
 	uint8_t* ptr;
 	size_t i, j;
 	size_t object_idx;

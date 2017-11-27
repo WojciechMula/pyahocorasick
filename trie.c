@@ -16,7 +16,7 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
 
 	TrieNode* node;
 	TrieNode* child;
-	int i;
+	unsigned i;
 
 	if (automaton->kind == EMPTY) {
 		ASSERT(automaton->root == NULL);
@@ -120,7 +120,7 @@ trie_traverse_aux(
 	trie_traverse_callback callback,
 	void *extra
 ) {
-	int i;
+	unsigned i;
 
 	if (callback(node, depth, extra) == 0)
 		return 0;

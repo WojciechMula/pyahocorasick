@@ -225,7 +225,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	PyObject* py_value = NULL;
 	struct Input input;
 
-	Py_uintptr_t integer = 0;
+	Py_ssize_t integer = 0;
 	TrieNode* node;
 	bool new_word;
 
@@ -246,7 +246,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			py_value = PyTuple_GetItem(args, 1);
 			if (py_value) {
 				if (PyNumber_Check(py_value)) {
-					integer = (int)PyNumber_AsSsize_t(py_value, PyExc_ValueError);
+					integer = PyNumber_AsSsize_t(py_value, PyExc_ValueError);
 					if (integer == -1 and PyErr_Occurred())
 						return NULL;
 				}
@@ -319,7 +319,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 static void
 clear_aux(TrieNode* node, KeysStore store) {
 
-	int i;
+	unsigned i;
 
 	if (node) {
 		switch (store) {
@@ -529,7 +529,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
 
 	AutomatonQueueItem* item;
 	List queue;
-	int i;
+	unsigned i;
 
 	TrieNode* node;
 	TrieNode* child;
@@ -948,7 +948,7 @@ automaton_iter(PyObject* self, PyObject* args) {
 static void
 get_stats_aux(TrieNode* node, AutomatonStatistics* stats, int depth) {
 
-	int i;
+	unsigned i;
 
 	stats->nodes_count	+= 1;
 	stats->words_count	+= (int)(node->eow);
@@ -1026,7 +1026,7 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 #define Dump ((DumpAux*)extra)
 	PyObject* tuple;
 	TrieNode* child;
-	int i;
+	unsigned i;
 
 #define append_tuple(list) \
 	if (tuple == NULL) { \

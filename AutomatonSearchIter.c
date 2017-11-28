@@ -224,7 +224,7 @@ automaton_search_iter_advance_index(PyObject* self) {
 			iter->expected  = pyaho_UCS2_Any;
 			iter->position += 1;
 		} else {
-			PyErr_SetString(PyExc_ValueError,
+			PyErr_Format(PyExc_ValueError,
 				"Malformed UCS-2 string: expected a low surrogate at %d, got %04x",
 				iter->index, letter);
 			return false;

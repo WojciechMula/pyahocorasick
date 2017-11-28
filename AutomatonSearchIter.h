@@ -32,9 +32,9 @@ typedef struct AutomatonSearchIter {
 	TrieNode*	state;		///< current state of automaton
 	TrieNode*	output;		///< current node, i.e. yielded value
 	
-	int			index;		///< current index in data
-	int			shift;		///< shift + index => output index
-	int			end;		///< end index
+	Py_ssize_t	index;		///< current index in data
+	Py_ssize_t	shift;		///< shift + index => output index
+	Py_ssize_t	end;		///< end index
 #ifdef VARIABLE_LEN_CHARCODES
     int         position;       ///< position in string
     UCS2ExpectedChar expected;

@@ -152,7 +152,7 @@ enum {
 static int
 automaton_build_output(PyObject* self, PyObject** result) {
 	TrieNode* node;
-	int idx = 0;
+	Py_ssize_t idx = 0;
 
 	while (iter->output && !iter->output->eow) {
 		iter->output = iter->output->fail;
@@ -301,7 +301,7 @@ static PyObject*
 automaton_search_iter_set(PyObject* self, PyObject* args) {
 	PyObject* object;
 	PyObject* flag;
-	int position;
+	Py_ssize_t position;
 	bool reset;
 	struct Input new_input;
 

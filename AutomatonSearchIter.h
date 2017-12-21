@@ -3,7 +3,7 @@
 	
 	AutomatonSearchIter const, struct & methods declarations.
 	This class implements iterator walk over Aho-Corasick
-	automaton. Object of this class is returnd by 'iter' method
+	automaton. Object of this class is returned by 'iter' method
 	of Automaton class.
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl

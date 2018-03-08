@@ -188,7 +188,8 @@ for Python you may consider these other libraries:
 * `ahocorapy <https://github.com/abusix/ahocorapy>`_ by abusix
 
  * Written in pure Python.
- * Better performance than py-aho-corasick. Using pypy search performance comparable to pyahocorasick.
+ * Better performance than py-aho-corasick.
+ * Using pypy, ahocorapy's search performance is only slightly worse than pyahocorasick's.
  * Performs additional suffix shortcutting (more setup overhead, less search overhead for suffix lookups).
  * Includes visualization tool for resulting automaton (using pygraphviz).
  * MIT-licensed, 100% test coverage, tested on all major python versions (+ pypy)

@@ -7,12 +7,20 @@
 """
 
 import ahocorasick
+import sys
 
 print(dir(ahocorasick))
 
+
+def is_python_2():
+    return sys.version_info.major == 2
+
+
 a = ahocorasick.Automaton()
-words = b"he e hers his she hi him man he".split()
-for i,w in enumerate(words):
+words = b"he e hers his she hi him man he"
+if not is_python_2():
+    words = words.decode('utf8')
+for i,w in enumerate(words.split()):
 	a.add_word(w, (i, w))
 
 #print(len(a), len(set(words)))
@@ -30,6 +38,8 @@ for w in a.items():
 """
 
 s = b"he rshershidamanza "
+if not is_python_2():
+    s = s.decode('utf8')
 
 a.make_automaton()
 for item in a.iter(s, 2, 8):
@@ -40,4 +50,4 @@ print("==")
 def callback(index, item):
 	print(index, item)
 
-a.search_all(s, callback, 2, 11)
+a.find_all(s, callback, 2, 11)

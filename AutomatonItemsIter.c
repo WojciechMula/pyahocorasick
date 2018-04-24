@@ -107,7 +107,10 @@ static void
 automaton_items_iter_del(PyObject* self) {
 	xfree(iter->buffer);
 	xfree(iter->pattern);
-	
+#ifndef AHOCORASICK_UNICODE
+	xfree(iter->char_buffer);
+#endif
+
 	list_delete(&iter->stack);
 	Py_DECREF(iter->automaton);
 
@@ -132,33 +135,45 @@ automaton_items_iter_next(PyObject* self) {
 		return NULL;
 	}
 
+    TrieNode* node;
+    size_t depth;
+
 	while (true) {
-		StackItem* item = (StackItem*)list_pop_first(&iter->stack);
-		if (item == NULL or item->node == NULL)
+		StackItem* top = (StackItem*)list_pop_first(&iter->stack);
+		if (top == NULL)
 			return NULL; /* Stop iteration */
 
-		if (iter->matchtype != MATCH_AT_LEAST_PREFIX and item->depth > iter->pattern_length)
+        if (top->node == NULL) {
+            memory_free(top);
+            return NULL; /* Stop iteration */
+        }
+
+        node  = top->node;
+        depth = top->depth;
+        memory_free(top);
+
+		if (iter->matchtype != MATCH_AT_LEAST_PREFIX and depth > iter->pattern_length)
 			continue;
 
 		switch (iter->matchtype) {
 			case MATCH_EXACT_LENGTH:
-				output = (item->depth == iter->pattern_length);
+				output = (depth == iter->pattern_length);
 				break;
 
 			case MATCH_AT_MOST_PREFIX:
-				output = (item->depth <= iter->pattern_length);
+				output = (depth <= iter->pattern_length);
 				break;
 				
 			case MATCH_AT_LEAST_PREFIX:
 			default:
-				output = (item->depth >= iter->pattern_length);
+				output = (depth >= iter->pattern_length);
 				break;
 
 		}
 
-		iter->state = item->node;
-		if ((item->depth >= iter->pattern_length) or
-		    (iter->use_wildcard and iter->pattern[item->depth] == iter->wildcard)) {
+		iter->state = node;
+		if ((depth >= iter->pattern_length) or
+		    (iter->use_wildcard and iter->pattern[depth] == iter->wildcard)) {
 
 			// process all
 			const int n = iter->state->n;
@@ -171,13 +186,13 @@ automaton_items_iter_next(PyObject* self) {
 				}
 
 				new_item->node  = iter->state->next[i];
-				new_item->depth = item->depth + 1;
+				new_item->depth = depth + 1;
 				list_push_front(&iter->stack, (ListItem*)new_item);
 			}
 		}
 		else {
 			// process single letter
-			TrieNode* node = trienode_get_next(iter->state, iter->pattern[item->depth]);
+			TrieNode* node = trienode_get_next(iter->state, iter->pattern[depth]);
 
 			if (node) {
 				StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
@@ -187,16 +202,16 @@ automaton_items_iter_next(PyObject* self) {
 				}
 
 				new_item->node  = node;
-				new_item->depth = item->depth + 1;
+				new_item->depth = depth + 1;
 				list_push_front(&iter->stack, (ListItem*)new_item);
 			}
 		}
 
 		if (iter->type != ITER_VALUES)
 			// update keys when needed
-			iter->buffer[item->depth] = iter->state->letter;
+			iter->buffer[depth] = iter->state->letter;
 #ifndef AHOCORASICK_UNICODE
-			iter->char_buffer[item->depth] = (char)iter->state->letter;
+			iter->char_buffer[depth] = (char)iter->state->letter;
 #endif
 		if (output and iter->state->eow) {
 			PyObject* val;
@@ -204,9 +219,9 @@ automaton_items_iter_next(PyObject* self) {
 			switch (iter->type) {
 				case ITER_KEYS:
 #ifdef AHOCORASICK_UNICODE
-					return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), item->depth);
+					return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), depth);
 #else
-					return PyBytes_FromStringAndSize(iter->char_buffer + 1, item->depth);
+					return PyBytes_FromStringAndSize(iter->char_buffer + 1, depth);
 #endif
 
 				case ITER_VALUES:
@@ -233,12 +248,12 @@ automaton_items_iter_next(PyObject* self) {
 							return Py_BuildValue(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-								"(u#O)", /*key*/ iter->buffer + 1, item->depth,
+								"(u#O)", /*key*/ iter->buffer + 1, depth,
     #else
-								"(y#O)", /*key*/ iter->buffer + 1, item->depth,
+								"(y#O)", /*key*/ iter->buffer + 1, depth,
     #endif
 #else
-                                "(s#O)", /*key*/ iter->char_buffer + 1, item->depth,
+                                "(s#O)", /*key*/ iter->char_buffer + 1, depth,
 #endif
 								/*val*/ iter->state->output.object
 							);
@@ -248,12 +263,12 @@ automaton_items_iter_next(PyObject* self) {
 							return Py_BuildValue(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-								"(u#i)", /*key*/ iter->buffer + 1, item->depth,
+								"(u#i)", /*key*/ iter->buffer + 1, depth,
     #else
-								"(y#i)", /*key*/ iter->buffer + 1, item->depth,
+								"(y#i)", /*key*/ iter->buffer + 1, depth,
     #endif
 #else
-                                "(s#i)", /*key*/ iter->char_buffer + 1, item->depth,
+                                "(s#i)", /*key*/ iter->char_buffer + 1, depth,
 #endif
 								/*val*/ iter->state->output.integer
 							);

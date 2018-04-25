@@ -129,14 +129,13 @@ static PyObject*
 automaton_items_iter_next(PyObject* self) {
 
 	bool output;
+    TrieNode* node;
+    size_t depth;
 
 	if (UNLIKELY(iter->version != iter->automaton->version)) {
 		PyErr_SetString(PyExc_ValueError, "The underlying automaton has changed: this iterator is no longer valid.");
 		return NULL;
 	}
-
-    TrieNode* node;
-    size_t depth;
 
 	while (true) {
 		StackItem* top = (StackItem*)list_pop_first(&iter->stack);

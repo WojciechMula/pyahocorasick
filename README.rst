@@ -104,7 +104,7 @@ file instead::
 
     >>> import cPickle
     >>> pickled = cPickle.dumps(A)
-    >>> B = cPickle.dumps(pickled)
+    >>> B = cPickle.loads(pickled)
     >>> B.get('he')
     (0, 'he')
 

@@ -71,7 +71,8 @@ automaton_search_iter_new(
 	Automaton* automaton,
 	PyObject* object,
 	int start,
-	int end
+	int end,
+	bool ignore_white_space
 ) {
 	AutomatonSearchIter* iter;
 #ifdef VARIABLE_LEN_CHARCODES
@@ -92,6 +93,7 @@ automaton_search_iter_new(
 	iter->state	= automaton->root;
 	iter->output= NULL;
 	iter->shift	= 0;
+	iter->ignore_white_space = ignore_white_space;
 #ifdef VARIABLE_LEN_CHARCODES
 	if (automaton->key_type == KEY_STRING) {
 		tmp = automaton_search_iter_substring_index(&iter->input, start);
@@ -262,6 +264,11 @@ return_output:
 	}
 #else
 	iter->index += 1;
+	if(iter->ignore_white_space) {
+		while(iswspace(iter->input.word[iter->index]) && (iter->index < iter->end)) {
+			iter->index += 1;
+		}
+	}
 #endif
 	while (iter->index < iter->end) {
 		// process single char

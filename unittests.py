@@ -525,6 +525,49 @@ class TestAutomatonIterSearch(TestAutomatonBase):
         self.assertEqual(L, C)
 
 
+class TestAutomatonIterSearchWithIgnoreWhiteSpace(TestAutomatonBase):
+    "Test searching using constructed automaton (iterator)"
+
+    def setUp(self):
+        self.A = ahocorasick.Automaton()
+        self.words = "he her hers she".split()
+        self.string = "_sh e rher she_"
+        self.correct_positons = [
+            (4, "she"),
+            (4, "he"),
+            (6, "her"),
+            (8, "he"),
+            (9, "her"),
+            (11, "hers"),
+            (13, "she"),
+            (13, "he")
+        ]
+        self.correct_positons_start_12 = [
+            (13, "he")
+        ]
+
+    def test_iter1(self):
+        self.add_words_and_make_automaton()
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
+
+        L = []
+        for index, word in A.iter(conv(self.string), ignore_white_space=True):
+            L.append((index, word))
+        self.assertEqual(L, self.correct_positons)
+
+
+    def test_iter2(self):
+        self.add_words_and_make_automaton()
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
+
+        L = []
+        for index, word in A.iter(conv(self.string), ignore_white_space=True, start=12):
+            L.append((index, word))
+        self.assertEqual(L, self.correct_positons_start_12)
+
+
 class TestAutomatonIterInvalidate(TestAutomatonBase):
     "Test if searching iterator is invalidated when trie/automaton change"
 

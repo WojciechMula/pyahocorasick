@@ -35,6 +35,7 @@ typedef struct AutomatonSearchIter {
 	Py_ssize_t	index;		///< current index in data
 	Py_ssize_t	shift;		///< shift + index => output index
 	Py_ssize_t	end;		///< end index
+	bool        ignore_white_space; ///< ignore input string white spaces using iswspace() function
 #ifdef VARIABLE_LEN_CHARCODES
     int         position;       ///< position in string
     UCS2ExpectedChar expected;
@@ -47,7 +48,8 @@ automaton_search_iter_new(
 	Automaton* automaton,
 	PyObject* object,
 	int start,
-	int end
+	int end,
+	bool ignore_white_space
 );
 
 #endif

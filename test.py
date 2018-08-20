@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 """
 	Aho-Corasick string search algorithm.
 

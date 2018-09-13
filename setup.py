@@ -87,6 +87,7 @@ setup(
     platforms=['Linux', 'MacOSX', 'Windows'],
     license=' BSD-3-Clause and Public-Domain',
     long_description=get_long_description(),
+    long_description_content_type="text/x-rst",
     keywords=[
         'aho-corasick',
         'trie',

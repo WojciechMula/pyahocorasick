@@ -364,6 +364,61 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 }
 
 
+#define automaton_search_iter_is_root_doc \
+	"is_root()\n\n" \
+	"Check if iterator is currently at root node." 
+
+static PyObject*
+automaton_search_iter_is_root(PyObject* self, PyObject* args) {
+    if (iter->automaton->root == iter->state) {
+        Py_RETURN_TRUE;
+	} else {
+        Py_RETURN_FALSE;
+	}
+}
+
+
+#define automaton_search_iter_pos_id_doc \
+	"pos_id()\n\n" \
+	"Get an id corresponding to the current position." 
+
+static PyObject*
+automaton_search_iter_pos_id(PyObject* self, PyObject* args) {
+    return PyLong_FromVoidPtr(iter->state);
+}
+
+
+#define automaton_search_iter___copy___doc \
+	"__copy__()\n\n" \
+	"Check if iterator is currently at root node." 
+
+static PyObject*
+automaton_search_iter___copy__(PyObject* self, PyObject* args) {
+	AutomatonSearchIter* cpy;
+	cpy = (AutomatonSearchIter*)PyObject_New(AutomatonSearchIter, &automaton_search_iter_type);
+
+	cpy->automaton = iter->automaton;
+	cpy->version = iter->version;
+	cpy->input = iter->input;
+	cpy->state = iter->state;
+	cpy->output = iter->output;
+
+	cpy->input = iter->input;
+	cpy->index = iter->index;
+	cpy->shift = iter->shift;
+	cpy->end = iter->end;
+
+#ifdef VARIABLE_LEN_CHARCODES
+	cpy->position = iter->position;
+	cpy->expected = iter->expected;
+#endif
+
+	Py_INCREF(cpy->automaton);
+
+	return (PyObject*)cpy;
+}
+
+
 #undef iter
 
 #define method(name, kind) {#name, automaton_search_iter_##name, kind, automaton_search_iter_##name##_doc}
@@ -371,6 +426,9 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 static
 PyMethodDef automaton_search_iter_methods[] = {
 	method(set, METH_VARARGS),
+	method(is_root, METH_NOARGS),
+	method(__copy__, METH_NOARGS),
+	method(pos_id, METH_NOARGS),
 
 	{NULL, NULL, 0, NULL}
 };

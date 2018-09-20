@@ -872,7 +872,13 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
         with self.assertRaises(ValueError) as e:
             A.add_word((1, -1, 12), "foo")
 
-        self.assertEqual(str(e.exception), "item #1: value -1 outside range [0..65535]")
+        errmsg = str(e.exception)
+        msgs = [
+            "item #1: value -1 outside range [0..65535]",
+            "item #1: value -1 outside range [0..4294967295]",
+        ]
+
+        self.assertIn(errmsg, msgs)
 
 
     def test_add__case_8__wrong_value(self):
@@ -885,10 +891,13 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
         # but the type remains the same.
 
         errmsg = str(e.exception)
-        msg1 = "item #0: value 4398046511104 outside range [0..65535]"
-        msg2 = "item #0 is not a number"
+        msgs = [
+            "item #0: value 4398046511104 outside range [0..65535]",
+            "item #0: value 4398046511104 outside range [0..4294967295]",
+            "item #0 is not a number",
+        ]
 
-        self.assertIn(errmsg, [msg1, msg2])
+        self.assertIn(errmsg, msgs)
 
 
     def test_match(self):

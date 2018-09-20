@@ -162,8 +162,13 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 
 
         // TODO: both min and max values should be configured
-		if (value < 0 || value > 65535) {
-			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd outside range [%d..%d]", i, value, 0, 65535);
+#if TRIE_LETTER_SIZE == 4
+    #define MAX_VAL 4294967295ul
+#else
+    #define MAX_VAL 65535ul
+#endif
+		if (value < 0 || value > MAX_VAL) {
+			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd outside range [%d..%lu]", i, value, 0, MAX_VAL);
 			memory_free(*word);
 			return false;
 		}

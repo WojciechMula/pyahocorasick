@@ -70,6 +70,7 @@ setup(
     name='pyahocorasick',
     version='1.1.9.dev1',
     ext_modules=[module],
+    py_modules=['pyahocorasick'],
 
     description=(
         'pyahocorasick is a fast and memory efficient library for exact or '

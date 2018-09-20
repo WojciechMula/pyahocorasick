@@ -26,6 +26,12 @@
 
 #if PY_MAJOR_VERSION >= 3
     #define PY3K
+    #if PY_MINOR_VERSION >= 3 || PY_MAJOR_VERSION > 3
+	#define PEP393
+	#ifdef AHOCORASICK_UNICODE
+	    #define PEP393_UNICODE
+	#endif
+    #endif
 #else
     #ifdef AHOCORASICK_UNICODE
         #warning "No support for unicode in version for Python2"
@@ -35,8 +41,9 @@
 
 // setup supported character set
 #ifdef AHOCORASICK_UNICODE
-#	ifdef Py_UNICODE_WIDE
-		// Python use UCS-4
+#       if defined PEP393_UNICODE || defined Py_UNICODE_WIDE
+		// Either Python uses UCS-4 or we don't know what Python uses,
+		// but we use UCS-4
 #		define TRIE_LETTER_TYPE	uint32_t
 #		define TRIE_LETTER_SIZE 4
 #	else

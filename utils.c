@@ -35,17 +35,49 @@ void xfree(void* ptr) {
 #   define INPUT_KEEPS_COPY
 #endif
 
+#if defined INPUT_KEEPS_COPY
+#    define maybe_free(flag, word) memory_free(word);
+#    define maybe_decref(flag, ref)
+#elif defined PEP393_UNICODE
+#    define maybe_free(flag, word) if (flag) { memory_free(word); }
+#    define maybe_decref(flag, ref) if (ref && !flag) { Py_DECREF(ref); }
+#else
+#    define maybe_free(flag, word)
+#    define maybe_decref(flag, ref) if (ref) { Py_DECREF(ref); }
+#endif
 
 /* returns bytes or unicode internal buffer */
 static PyObject*
-pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool* is_copy) {
 
 #ifdef INPUT_KEEPS_COPY
 	ssize_t i;
 	char* bytes;
 #endif
 
-#ifdef PY3K
+#if defined PEP393_UNICODE
+    if (PyUnicode_Check(obj)) {
+	PyUnicode_READY(obj);
+	if (PyUnicode_KIND(obj) == PyUnicode_4BYTE_KIND) {
+            *word = (TRIE_LETTER_TYPE*)(PyUnicode_4BYTE_DATA(obj));
+            *wordlen = PyUnicode_GET_LENGTH(obj);
+	    *is_copy = false;
+            Py_INCREF(obj);
+
+	    return obj;
+	} else {
+	    *word = PyUnicode_AsUCS4Copy(obj);
+            *wordlen = PyUnicode_GET_LENGTH(obj);
+	    *is_copy = true;
+	    // No INCREF - we have our copy
+	    return obj;
+	}
+    }
+    else {
+	PyErr_SetString(PyExc_TypeError, "string expected");
+	return NULL;
+    }
+#elif defined PY3K
 #   ifdef AHOCORASICK_UNICODE
         if (PyUnicode_Check(obj)) {
             *word = (TRIE_LETTER_TYPE*)(PyUnicode_AS_UNICODE(obj));
@@ -107,7 +139,6 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 	}
 #endif
 }
-
 
 static bool
 __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
@@ -228,10 +259,13 @@ pymod_parse_start_end(
 bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 #define automaton ((Automaton*)self)
 	if (automaton->key_type == KEY_STRING) {
-		input->py_word = pymod_get_string(tuple, &input->word, &input->wordlen);
+		input->py_word = pymod_get_string(tuple, &input->word, &input->wordlen, &input->is_copy);
 		if (not input->py_word)
 			return false;
 	} else {
+#if defined PEP393_UNICODE
+		input->is_copy = false;
+#endif
 		input->py_word = NULL;
 		if (not pymod_get_sequence(tuple, &input->word, &input->wordlen)) {
 			return false;
@@ -255,13 +289,8 @@ bool prepare_input_from_tuple(PyObject* self, PyObject* args, int index, struct 
 
 
 void destroy_input(struct Input* input) {
-	if (input->py_word) {
-		Py_DECREF(input->py_word);
-	}
-
-#ifdef INPUT_KEEPS_COPY
-	memory_free(input->word);
-#endif
+	maybe_decref(input->is_copy, input->py_word)
+	maybe_free(input->is_copy, input->word)
 }
 
 

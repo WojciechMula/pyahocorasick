@@ -37,6 +37,7 @@ struct Input {
 	Py_ssize_t 			wordlen;
 	TRIE_LETTER_TYPE* 	word;
 	PyObject* 			py_word;
+	bool is_copy;
 };
 
 

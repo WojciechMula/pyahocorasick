@@ -217,7 +217,9 @@ automaton_items_iter_next(PyObject* self) {
 
 			switch (iter->type) {
 				case ITER_KEYS:
-#ifdef AHOCORASICK_UNICODE
+#if defined PEP393_UNICODE
+					return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, (void*)(iter->buffer + 1), depth);
+#elif defined AHOCORASICK_UNICODE
 					return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), depth);
 #else
 					return PyBytes_FromStringAndSize(iter->char_buffer + 1, depth);

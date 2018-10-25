@@ -693,7 +693,6 @@ automaton_find_all(PyObject* self, PyObject* args) {
 	Py_RETURN_NONE;
 }
 
-
 static PyObject*
 automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 #define automaton ((Automaton*)self)
@@ -701,6 +700,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	PyObject* arg2 = NULL;
 	PyObject* arg3 = NULL;
 	TRIE_LETTER_TYPE* word = NULL;
+	TRIE_LETTER_TYPE* tmp = NULL;
 	ssize_t wordlen = 0;
 
 	TRIE_LETTER_TYPE wildcard;
@@ -709,6 +709,9 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 	AutomatonItemsIter* iter;
 
+	bool word_is_copy = false;
+	bool tmp_is_copy = false;
+
 	// arg 1: prefix/prefix pattern
 	if (args)
 		arg1 = PyTuple_GetItem(args, 0);
@@ -716,7 +719,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 		arg1 = NULL;
 
 	if (arg1) {
-		arg1 = pymod_get_string(arg1, &word, &wordlen);
+		arg1 = pymod_get_string(arg1, &word, &wordlen, &word_is_copy);
 		if (arg1 == NULL)
 			goto error;
 	}
@@ -733,13 +736,12 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 		arg2 = NULL;
 
 	if (arg2) {
-		TRIE_LETTER_TYPE* tmp;
 		ssize_t len = 0;
 
-		arg2 = pymod_get_string(arg2, &tmp, &len);
-		if (arg2 == NULL)
+		arg2 = pymod_get_string(arg2, &tmp, &len, &tmp_is_copy);
+		if (arg2 == NULL) {
 			goto error;
-		else {
+		} else {
 			if (len == 1) {
 				wildcard = tmp[0];
 				use_wildcard = true;
@@ -798,8 +800,10 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 					wildcard,
 					matchtype);
 
-	Py_XDECREF(arg1);
-	Py_XDECREF(arg2);
+	maybe_decref(word_is_copy, arg1)
+	maybe_decref(tmp_is_copy, arg2)
+	maybe_free(word_is_copy, word)
+	maybe_free(tmp_is_copy, tmp)
 
 	if (iter) {
 		iter->type = type;
@@ -810,8 +814,10 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 
 error:
-	Py_XDECREF(arg1);
-	Py_XDECREF(arg2);
+	maybe_decref(word_is_copy, arg1)
+	maybe_decref(tmp_is_copy, arg2)
+	maybe_free(word_is_copy, word)
+	maybe_free(tmp_is_copy, tmp)
 	return NULL;
 #undef automaton
 }

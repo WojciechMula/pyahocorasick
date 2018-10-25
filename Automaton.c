@@ -869,21 +869,25 @@ automaton_items(PyObject* self, PyObject* args) {
 
 
 #define automaton_iter_doc \
-	"iter(string, [start, [end]])\n\n" \
+	"iter(string, [start, [end]], ignore_white_space=False)\n\n" \
 	"Perform the Aho-Corasick search procedure using the provided input string.\n" \
 	"Return an iterator of tuples (end_index, value) for keys found in string where:\n\n" \
 	"- end_index is the end index in the input string where a trie key string was found.\n" \
 	"- value is the value associated with the found key string.\n\n" \
 	"The start and end optional arguments can be used to limit the search to an\n" \
-	"input string slice as in string[start:end]."
+	"input string slice as in string[start:end]." \
+	"The ignore_white_space optional arguments can be used to ignore white spaces from input string."
 
 static PyObject*
-automaton_iter(PyObject* self, PyObject* args) {
+automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 #define automaton ((Automaton*)self)
+	static char *kwlist[] = {"string", "start", "end", "ignore_white_space", NULL};
 
 	PyObject* object;
-	ssize_t start;
-	ssize_t end;
+	ssize_t start, start_tmp = -1;
+	ssize_t end, end_tmp = -1;
+	int ignore_white_space_tmp = -1;
+	bool ignore_white_space = false;
 
 	if (automaton->kind != AHOCORASICK) {
 		PyErr_SetString(PyExc_AttributeError,"Not an Aho-Corasick automaton yet: "
@@ -892,7 +896,15 @@ automaton_iter(PyObject* self, PyObject* args) {
 		return NULL;
 	}
 
-	object = PyTuple_GetItem(args, 0);
+	if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|iii", kwlist, &object, &start_tmp, &end_tmp, &ignore_white_space_tmp)) {
+		PyErr_SetString(PyExc_TypeError, "PyArg_ParseTupleAndKeywords fail");
+		return NULL;
+	}
+
+	if(ignore_white_space_tmp == 1) {
+		ignore_white_space = true;
+	}
+
 	if (object) {
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
@@ -927,18 +939,22 @@ automaton_iter(PyObject* self, PyObject* args) {
 			return NULL;
         }
 #endif
+		if(start_tmp != -1) {
+			start = start_tmp;
+		}
+		if(end_tmp != -1) {
+			end = end_tmp;
+		}
 	}
 	else
-		return NULL;
-
-	if (pymod_parse_start_end(args, 1, 2, start, end, &start, &end))
 		return NULL;
 
 	return automaton_search_iter_new(
 		automaton,
 		object,
 		(int)start,
-		(int)end
+		(int)end,
+		ignore_white_space
 	);
 #undef automaton
 }
@@ -1143,7 +1159,7 @@ PyMethodDef automaton_methods[] = {
 	method(get,				METH_VARARGS),
 	method(make_automaton,	METH_NOARGS),
 	method(find_all,		METH_VARARGS),
-	method(iter,			METH_VARARGS),
+	method(iter,			METH_VARARGS|METH_KEYWORDS),
 	method(keys,			METH_VARARGS),
 	method(values,			METH_VARARGS),
 	method(items,			METH_VARARGS),

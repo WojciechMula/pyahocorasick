@@ -136,7 +136,7 @@ automaton_items(PyObject* self, PyObject* args);
 
 /* iter() */
 static PyObject*
-automaton_iter(PyObject* self, PyObject* args);
+automaton_iter(PyObject* self, PyObject* args, PyObject* keywds);
 
 /* get_stats() */
 static PyObject*

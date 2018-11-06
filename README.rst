@@ -185,6 +185,7 @@ for Python you may consider these other libraries:
 
  * Written in pure Python.
  * Poor performance.
+
 * `ahocorapy <https://github.com/abusix/ahocorapy>`_ by abusix
 
  * Written in pure Python.
@@ -193,6 +194,7 @@ for Python you may consider these other libraries:
  * Performs additional suffix shortcutting (more setup overhead, less search overhead for suffix lookups).
  * Includes visualization tool for resulting automaton (using pygraphviz).
  * MIT-licensed, 100% test coverage, tested on all major python versions (+ pypy)
+
 * `noaho <https://github.com/JDonner/NoAho>`_ by Jeff Donner
 
  * Written in C. Does not return overlapping matches.

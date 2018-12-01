@@ -37,7 +37,7 @@ typedef struct NodeID {
 } NodeID;
 
 typedef struct DumpState {
-	int id;					///< next id
+	Py_uintptr_t id;					///< next id
 	size_t total_size;		///< number of nodes
 	TrieNode* failed_on;	///< if fail while numerating, save node in order
 							///  to revert changes made in trie
@@ -300,7 +300,7 @@ automaton_unpickle(
 	TrieNode* dump;
 	TrieNode** next;
 	PyObject* value;
-	unsigned id;
+	size_t id;
 	uint8_t* ptr;
 	size_t i, j;
 	size_t object_idx;

@@ -44,6 +44,18 @@ typedef struct DumpState {
 } DumpState;
 
 
+// We save all TrieNode's fields except the last one, which is a pointer to array,
+// as we're store that array just after the node
+#define PICKLE_TRIENODE_SIZE (sizeof(TrieNode) - sizeof(TrieNode**))
+#define PICKLE_POINTER_SIZE (sizeof(TrieNode*))
+
+static size_t
+get_pickled_size(TrieNode* node) {
+	ASSERT(node != NULL);
+	return PICKLE_TRIENODE_SIZE + node->n * PICKLE_POINTER_SIZE;
+}
+
+
 // replace fail with pairs (fail, id)
 static int
 pickle_dump_replace_fail_with_id(TrieNode* node, const int depth, void* extra) {
@@ -55,7 +67,7 @@ pickle_dump_replace_fail_with_id(TrieNode* node, const int depth, void* extra) {
 	repl = (NodeID*)memory_alloc(sizeof(NodeID));
 	if (LIKELY(repl != NULL)) {
 		state->id += 1;
-		state->total_size += trienode_get_size(node)/* - sizeof(TrieNode*)*/;
+		state->total_size += get_pickled_size(node);
 
 		repl->id   = state->id;
 		repl->fail = node->fail;
@@ -125,7 +137,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	dump = (TrieNode*)(self->data + self->top);
 
 	// we do not save last pointer in array
-	arr = (TrieNode**)(self->data + self->top + sizeof(TrieNode) - sizeof(TrieNode*));
+	arr = (TrieNode**)(self->data + self->top + PICKLE_TRIENODE_SIZE);
 
 	// append python object to the list
 	if (node->eow and self->values) {
@@ -159,7 +171,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	}
 
 	// advance pointer
-	self->top += trienode_get_size(node) - sizeof(TrieNode*);
+	self->top += get_pickled_size(node);
 
 	return 1;
 #undef NODEID
@@ -302,15 +314,11 @@ automaton_unpickle(
 	PyObject* value;
 	size_t id;
 	uint8_t* ptr;
+	uint8_t* end;
 	size_t i, j;
 	size_t object_idx;
 
-    if (UNLIKELY(size < count*(sizeof(TrieNode) - sizeof(TrieNode*)))) {
-        PyErr_SetString(PyExc_ValueError, "binary data truncated (1)");
-        return false;
-    }
-
-	id2node = (TrieNode**)memory_alloc((count+1) * sizeof(TrieNode));
+	id2node = (TrieNode**)memory_alloc((count+1) * sizeof(TrieNode*));
 	if (id2node == NULL) {
 		goto no_mem;
     }
@@ -318,7 +326,15 @@ automaton_unpickle(
 	// 1. make nodes
 	id = 1;
 	ptr = data;
+	end = data + size;
 	for (i=0; i < count; i++) {
+		if (UNLIKELY(ptr + PICKLE_TRIENODE_SIZE > end)) {
+			PyErr_Format(PyExc_ValueError,
+						 "Data truncated [parsing header of node #%lu]: offset %lu, expected at least %lu bytes",
+						 i, ptr - data, PICKLE_TRIENODE_SIZE);
+			goto exception;
+		}
+
 		dump = (TrieNode*)(ptr);
 		node = (TrieNode*)memory_alloc(sizeof(TrieNode));
 		if (LIKELY(node != NULL)) {
@@ -332,31 +348,32 @@ automaton_unpickle(
 		else
 			goto no_mem;
 
-		if (node->n > 0) {
-			node->next = (TrieNode**)memory_alloc(node->n * sizeof(TrieNode*));
-			if (LIKELY(node->next != NULL)) {
-                if (UNLIKELY(ptr + sizeof(TrieNode) - sizeof(TrieNode*) > data + size)) {
-                    PyErr_SetString(PyExc_ValueError, "binary data truncated (2)");
-                    goto exception;
-                }
+		ptr += PICKLE_TRIENODE_SIZE;
 
-				next = (TrieNode**)(ptr + sizeof(TrieNode) - sizeof(TrieNode*));
-				for (j=0; j < node->n; j++) {
-					node->next[j] = next[j];
-				}	
+		if (node->n > 0) {
+			if (UNLIKELY(ptr + node->n * PICKLE_POINTER_SIZE > end)) {
+				PyErr_Format(PyExc_ValueError,
+						 	 "Data truncated [parsing children of node #%lu]: offset %lu, expected at least %d bytes",
+							 i, ptr - data + i, node->n * PICKLE_POINTER_SIZE);
+
+				goto exception;
 			}
-			else {
+
+			node->next = (TrieNode**)memory_alloc(node->n * sizeof(TrieNode*));
+			if (UNLIKELY(node->next == NULL)) {
 				memory_free(node);
 				goto no_mem;
 			}
+
+			next = (TrieNode**)(ptr);
+			for (j=0; j < node->n; j++) {
+				node->next[j] = next[j];
+			}
+
+			ptr += node->n * PICKLE_POINTER_SIZE;
 		}
 
 		id2node[id++] = node;
-		ptr += trienode_get_size(node) - sizeof(TrieNode*);
-		if (UNLIKELY(ptr > data + size)) {
-			PyErr_SetString(PyExc_ValueError, "binary data truncated (3)");
-			goto exception;
-		}
 	}
 
 	// 2. restore pointers and references to pyobjects
@@ -385,7 +402,7 @@ automaton_unpickle(
 #undef POINTER
 	}
 
-	automaton->root  = id2node[1];
+	automaton->root = id2node[1];
 
 	memory_free(id2node);
 	return 1;

@@ -99,7 +99,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		// unpickle: count, data, kind, store, version, values
 		size_t			count;
 		void*			data;
-		size_t			size;
+		int				size;
 		int				version;
 		int				word_count;
 		int				longest_word;

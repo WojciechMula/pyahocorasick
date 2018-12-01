@@ -140,8 +140,6 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 			else
 				goto error;
 		}
-
-		Py_XDECREF(values);
 	}
 	else {
 		store    = STORE_ANY;

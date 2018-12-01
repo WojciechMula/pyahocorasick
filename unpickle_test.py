@@ -81,14 +81,18 @@ class TestUnpickleRaw(unittest.TestCase):
         return ahocorasick.Automaton(*args)
 
 
-    def create_raw_node(self, letter, eow, children):
+    def create_node_builder(self, letter, eow, children):
         builder = TreeNodeBuilder()
         builder.letter  = ord(letter)
         builder.next    = [i + 1 for i in children] # starts from 1
         builder.n       = len(children)
         builder.eow     = eow
 
-        return builder.dump()
+        return builder
+
+
+    def create_raw_node(self, letter, eow, children):
+        return self.create_node_builder(letter, eow, children).dump()
 
 
     # --------------------------------------------------
@@ -214,6 +218,38 @@ class TestUnpickleRaw(unittest.TestCase):
             self.raw = raw[:length] # truncate data and expect fail
             with self.assertRaisesRegex(ValueError, "Data truncated.*"):
                 self.create_automaton()
+
+
+    def test__malicious_next_pointer(self):
+        """
+        #0 -> [? #1 ]
+        """
+
+        node0 = self.create_raw_node('_', 0, [1])
+        node1 = self.create_raw_node('?', 0, [16]) # the second node point to non-existent node
+
+        self.count = 2
+        self.raw   = node0 + node1
+        self.kind  = ahocorasick.TRIE
+
+        with self.assertRaisesRegex(ValueError, "Node #1 malformed: next link #0 points to.*"):
+            self.create_automaton()
+
+
+    def test__malicious_fail_pointer(self):
+        """
+        trie with just one node
+        """
+
+        builder = self.create_node_builder('_', 0, [])
+        builder.fail = 42
+
+        self.count = 1
+        self.raw   = builder.dump()
+        self.kind  = ahocorasick.TRIE
+
+        with self.assertRaisesRegex(ValueError, "Node #0 malformed: the fail link points to.*"):
+            self.create_automaton()
 
 
 if __name__ == '__main__':

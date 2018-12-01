@@ -317,6 +317,7 @@ automaton_unpickle(
 	uint8_t* end;
 	size_t i, j;
 	size_t object_idx;
+	size_t index;
 
 	id2node = (TrieNode**)memory_alloc((count+1) * sizeof(TrieNode*));
 	if (id2node == NULL) {
@@ -393,13 +394,29 @@ automaton_unpickle(
 		}
 
 		// pointers
-#define POINTER(object) id2node[(size_t)(object)]
-		if (node->fail)
-			node->fail = POINTER(node->fail);
+		if (node->fail) {
+			index = (size_t)(node->fail);
+			if (LIKELY(index < count + 1)) {
+				node->fail = id2node[index];
+			} else {
+				PyErr_Format(PyExc_ValueError,
+						 	 "Node #%lu malformed: the fail link points to node #%lu, while there are %lu nodes",
+							 i - 1, index, count); 
+				goto exception;
+			}
+		}
 
-		for (j=0; j < node->n; j++)
-			node->next[j] = POINTER(node->next[j]);
-#undef POINTER
+		for (j=0; j < node->n; j++) {
+			index = (size_t)(node->next[j]);
+			if (LIKELY(index < count + 1)) {
+				node->next[j] = id2node[index];
+			} else {
+				PyErr_Format(PyExc_ValueError,
+						 	 "Node #%lu malformed: next link #%lu points to node #%lu, while there are %lu nodes",
+							 i - 1, j, index, count); 
+				goto exception;
+			}
+		}
 	}
 
 	automaton->root = id2node[1];

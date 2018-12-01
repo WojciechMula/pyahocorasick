@@ -316,7 +316,7 @@ automaton_unpickle(
 	uint8_t* ptr;
 	uint8_t* end;
 	size_t i, j;
-	size_t object_idx;
+	size_t object_idx = 0;
 	size_t index;
 
 	id2node = (TrieNode**)memory_alloc((count+1) * sizeof(TrieNode*));
@@ -378,16 +378,16 @@ automaton_unpickle(
 	}
 
 	// 2. restore pointers and references to pyobjects
-	object_idx = 0;
 	for (i=1; i < id; i++) {
 		node = id2node[i];
 
 		// references
 		if (values and node->eow) {
-			value = PyList_GetItem(values, object_idx++);
+			value = PyList_GetItem(values, object_idx);
 			if (value) {
 				Py_INCREF(value);
 				node->output.object = value;
+				object_idx += 1;
 			}
 			else
 				goto exception;
@@ -427,6 +427,7 @@ automaton_unpickle(
 no_mem:
 	PyErr_NoMemory();
 exception:
+	// free memory
 	if (id2node) {
 		for (i=1; i < id; i++) {
 			TrieNode* tmp = id2node[i];
@@ -437,7 +438,15 @@ exception:
 		}
 
 		memory_free(id2node);
-	};
+	}
+	
+	// If there is value list and some of its items were already
+	// referenced, release them
+	if (values) {
+		for (i=0; i < object_idx; i++) {
+			Py_XDECREF(PyList_GetItem(values, i));
+		}
+	}
 
 	return 0;
 }

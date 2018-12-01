@@ -252,6 +252,30 @@ class TestUnpickleRaw(unittest.TestCase):
             self.create_automaton()
 
 
+    def test__values_leaks(self):
+
+        # create not connected nodes, but each hold a value
+        good_nodes = 1000
+        raw    = b''
+        values = []
+        for i in range(good_nodes):
+            raw += self.create_raw_node('?', 1, [])
+            values.append(tuple("node %d" % i))
+
+        # create the last node that will cause error -- malformed next pointer
+        raw += self.create_raw_node('?', 1, [10000])
+        values.append(tuple("never reached"))
+
+        self.count  = good_nodes + 1
+        self.raw    = raw
+        self.kind   = ahocorasick.TRIE
+        self.values = values
+
+        with self.assertRaises(ValueError):
+            self.create_automaton()
+
+
+
 if __name__ == '__main__':
     print("WARNING: these tests deal with in-memory representation (see TreeNodeBuilder),")
     print("         they were meant to test low-level implementation of pickling.")

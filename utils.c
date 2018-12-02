@@ -1,6 +1,6 @@
 /*
 	This is part of pyahocorasick Python module.
-	
+
 	Helpers functions.
 	This file is included directly.
 
@@ -9,16 +9,71 @@
 	License   : public domain
 */
 
+//#define MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
+const char* debug_path = "memory.dump";
+FILE* debug_file;
+int alloc_num   = 0;            // id of allocation
+int alloc_dump  = 1;            // dump to file
+int alloc_fail  = -1;           // id of allocation that will fail
+int alloc_trap_on_fail = 0;     // rather failing, execute trap (for gdb use)
+
+static
+void initialize_memory_debug() {
+    const char* nodump = getenv("ALLOC_NODUMP");
+    const char* fail   = getenv("ALLOC_FAIL");
+    const char* trap   = getenv("ALLOC_TRAP");
+
+    if (nodump != NULL) {
+        alloc_dump = 0;
+    }
+
+    if (fail != NULL) {
+        alloc_fail = atoi(fail);
+    }
+
+    if (trap != NULL) {
+        alloc_trap_on_fail = 1;
+    }
+
+    if (alloc_dump) {
+        debug_file = fopen(debug_path, "wt");
+        if (debug_file == NULL) {
+            PyErr_WarnEx(PyExc_RuntimeWarning, "Cannot open file, logging on stderr", 1);
+            debug_file = stderr;
+        }
+    }
+}
+#endif
 
 void* memory_alloc(ssize_t size) {
+#ifdef MEMORY_DEBUG
+    if (alloc_num == alloc_fail) {
+        if (alloc_trap_on_fail) {
+            __builtin_trap();
+        }
+
+        printf("DEBUG: allocation #%d failed\n", alloc_num);
+        alloc_num += 1;
+        return NULL;
+    }
+#endif
     void* res = memalloc(size);
 
-    //printf("allocated %p %d\n", res, size);
+#ifdef MEMORY_DEBUG
+    alloc_num += 1;
+    if (alloc_dump)
+        fprintf(debug_file, "A %d %p %ld\n", alloc_num, res, size);
+#endif
+
     return res;
 }
 
 void memory_free(void* ptr) {
-    //printf("freeing %p\n", ptr);
+#ifdef MEMORY_DEBUG
+    if (alloc_dump)
+        fprintf(debug_file, "F %p\n", ptr);
+#endif
     memfree(ptr);
 }
 

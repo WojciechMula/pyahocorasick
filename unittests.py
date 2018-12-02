@@ -646,7 +646,6 @@ class TestPickle(TestAutomatonBase):
 
 
     def test_empty(self):
-        # sample Russian words from issue #8
         import pickle
 
         A = ahocorasick.Automaton()
@@ -849,6 +848,7 @@ class TestBugAutomatonSearch(TestAutomatonBase):
 class TestIntSequenceBase(unittest.TestCase):
     def setUp(self):
         self.A = ahocorasick.Automaton(ahocorasick.STORE_ANY, ahocorasick.KEY_SEQUENCE);
+
 
 class TestIntSequence__TrieMethods(TestIntSequenceBase):
 

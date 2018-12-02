@@ -8,5 +8,6 @@ dist/
 *.sh
 *.o
 MANIFEST
+memory.dump
 /pyahocorasick.egg-info/
 /tmp/

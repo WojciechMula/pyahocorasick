@@ -65,6 +65,13 @@ PyMODINIT_FUNC
 init_function(void) {
 	PyObject* module;
 
+#ifdef MEMORY_DEBUG
+    PyErr_WarnEx(PyExc_RuntimeWarning,
+                 "This is a developer version of pyahcorosick. "
+                 "The module was compiled with flag MEMORY_DEBUG.", 1);
+    initialize_memory_debug();
+#endif
+
 	automaton_as_sequence.sq_length   = automaton_len;
 	automaton_as_sequence.sq_contains = automaton_contains;
 

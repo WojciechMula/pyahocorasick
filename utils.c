@@ -116,13 +116,13 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 	if (PyUnicode_KIND(obj) == PyUnicode_4BYTE_KIND) {
             *word = (TRIE_LETTER_TYPE*)(PyUnicode_4BYTE_DATA(obj));
             *wordlen = PyUnicode_GET_LENGTH(obj);
-	    *is_copy = false;
+	        *is_copy = false;
             Py_INCREF(obj);
 
 	    return obj;
 	} else {
 	    *word = PyUnicode_AsUCS4Copy(obj);
-            *wordlen = PyUnicode_GET_LENGTH(obj);
+        *wordlen = PyUnicode_GET_LENGTH(obj);
 	    *is_copy = true;
 	    // No INCREF - we have our copy
 	    return obj;
@@ -237,7 +237,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 
 static bool
 pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-	if (PyTuple_Check(obj)) {
+	if (LIKELY(PyTuple_Check(obj))) {
 		return __read_sequence__from_tuple(obj, word, wordlen);
 	} else {
 		PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");
@@ -323,9 +323,7 @@ bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 		if (not input->py_word)
 			return false;
 	} else {
-#if defined PEP393_UNICODE
-		input->is_copy = false;
-#endif
+		input->is_copy = true; // we always create a copy of sequence
 		input->py_word = NULL;
 		if (not pymod_get_sequence(tuple, &input->word, &input->wordlen)) {
 			return false;

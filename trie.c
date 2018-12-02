@@ -33,10 +33,14 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
 		child = trienode_get_next(node, letter);
 		if (child == NULL) {
 			child = trienode_new(letter, false);
-			if (child)
+			if (LIKELY(child))
 				trienode_set_next(node, letter, child);
-			else
+			else {
+				// Note: in case of memory error, the already allocate nodes
+				//       are still reachable from the root and will be free
+				//       upon automaton destruction.
 				return NULL;
+            }
 		}
 
 		node = child;

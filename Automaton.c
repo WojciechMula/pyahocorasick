@@ -276,6 +276,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 		destroy_input(&input);
 
 		if (node == NULL) {
+			PyErr_NoMemory();
 			return NULL;
 		}
 	} else {

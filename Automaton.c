@@ -1153,7 +1153,7 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
 #include "Automaton_pickle.c"
 
 
-#define method(name, kind) {#name, automaton_##name, kind, automaton_##name##_doc}
+#define method(name, kind) {#name, (PyCFunction)automaton_##name, kind, automaton_##name##_doc}
 static
 PyMethodDef automaton_methods[] = {
 	method(add_word,		METH_VARARGS),

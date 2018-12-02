@@ -331,7 +331,8 @@ automaton_unpickle(
 	for (i=0; i < count; i++) {
 		if (UNLIKELY(ptr + PICKLE_TRIENODE_SIZE > end)) {
 			PyErr_Format(PyExc_ValueError,
-						 "Data truncated [parsing header of node #%lu]: offset %lu, expected at least %lu bytes",
+						 "Data truncated [parsing header of node #%lu]: "
+						 "offset %lu, expected at least %lu bytes",
 						 i, ptr - data, PICKLE_TRIENODE_SIZE);
 			goto exception;
 		}
@@ -354,7 +355,8 @@ automaton_unpickle(
 		if (node->n > 0) {
 			if (UNLIKELY(ptr + node->n * PICKLE_POINTER_SIZE > end)) {
 				PyErr_Format(PyExc_ValueError,
-						 	 "Data truncated [parsing children of node #%lu]: offset %lu, expected at least %d bytes",
+							"Data truncated [parsing children of node #%lu]: "
+							"offset %lu, expected at least %ld bytes",
 							 i, ptr - data + i, node->n * PICKLE_POINTER_SIZE);
 
 				goto exception;

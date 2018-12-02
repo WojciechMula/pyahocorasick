@@ -9,6 +9,7 @@
 */
 
 #include "AutomatonSearchIter.h"
+#include <wctype.h>
 
 static PyTypeObject automaton_search_iter_type;
 

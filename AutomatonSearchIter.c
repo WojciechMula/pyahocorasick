@@ -83,9 +83,6 @@ automaton_search_iter_new(
 	if (iter == NULL)
 		return NULL;
 
-	if (!prepare_input((PyObject*)automaton, object, &iter->input)) {
-		return NULL;
-	}
 
 	iter->automaton = automaton;
 	iter->version	= automaton->version;
@@ -94,6 +91,13 @@ automaton_search_iter_new(
 	iter->output= NULL;
 	iter->shift	= 0;
 	iter->ignore_white_space = ignore_white_space;
+
+	Py_INCREF(iter->automaton);
+
+	if (!prepare_input((PyObject*)automaton, object, &iter->input)) {
+		goto error;
+	}
+
 #ifdef VARIABLE_LEN_CHARCODES
 	if (automaton->key_type == KEY_STRING) {
 		tmp = automaton_search_iter_substring_index(&iter->input, start);
@@ -101,14 +105,14 @@ automaton_search_iter_new(
 			iter->index	   = tmp - 1;
 			iter->position = start - 1;
 		} else {
-			return NULL;
+			goto error;
 		}
 
 		tmp = automaton_search_iter_substring_index(&iter->input, end);
 		if (tmp >= 0) {
 			iter->end = end;
 		} else {
-			return NULL;
+			goto error;
 		}
 
 		iter->expected	= pyaho_UCS2_Any;
@@ -121,10 +125,11 @@ automaton_search_iter_new(
 	iter->index	= start - 1;
 	iter->end	= end;
 #endif
-
-	Py_INCREF(iter->automaton);
-
 	return (PyObject*)iter;
+
+error:
+	Py_DECREF(iter);
+	return NULL;
 }
 
 #define iter ((AutomatonSearchIter*)self)

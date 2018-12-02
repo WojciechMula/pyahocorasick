@@ -60,6 +60,85 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
 }
 
 
+static PyObject*
+trie_remove_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
+
+	PyObject* object;
+	TrieNode* node;
+	TrieNode** path;
+	unsigned i;
+	unsigned last_multiway;
+
+	if (automaton->root == NULL) {
+		return NULL;
+	}
+
+	node = automaton->root;
+
+	for (i=0; i < wordlen; i++) {
+		const TRIE_LETTER_TYPE letter = word[i];
+
+		node = trienode_get_next(node, letter);
+		if (node == NULL) {
+			return NULL;
+		}
+	}
+
+	if (node->eow != true) {
+		return NULL;
+	}
+
+	object = node->output.object;
+
+	if (trienode_is_leaf(node)) {
+		// Remove dangling path
+
+		// the path includes automaton's root
+		path = (TrieNode**)memory_alloc((wordlen + 1) * sizeof(TrieNode*));
+		if (UNLIKELY(path == NULL)) {
+			return MEMORY_ERROR;
+		}
+
+		// 1. Collect all nodes along the path and find the last node which either
+		//    has more than one children or it's a terminating node.
+		node    = automaton->root;
+		path[0] = automaton->root;
+		last_multiway = 0;
+		for (i=0; i < wordlen; i++) {
+			node = trienode_get_next(node, word[i]);
+			ASSERT(node);
+			path[i + 1] = node;
+			if (node->n > 1 || (node->n == 1 && node->eow)) {
+				last_multiway = i + 1;
+			}
+		}
+
+		// the last will node never be a multiway one
+		ASSERT(last_multiway < wordlen);
+
+		// Here we know that tail path[last_multiway + 1 .. ] is a linear list.
+
+		// 1. Unlink the tail from the trie
+		if (UNLIKELY(trienode_unset_next_pointer(path[last_multiway], path[last_multiway + 1]) == MEMORY_ERROR)) {
+			return MEMORY_ERROR;
+		}
+
+		// 2. Free the tail (reference to value from the last element was already saved)
+		for (i=last_multiway + 1; i < wordlen + 1; i++) {
+			trienode_free(path[i]);
+		}
+
+		memory_free(path);
+	} else {
+		// just unmark the terminating node
+		node->eow = false;
+	}
+
+	automaton->kind = TRIE;
+	return object;
+}
+
+
 static TrieNode* PURE
 trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 	TrieNode* node;

@@ -273,6 +273,12 @@ The Automaton class has the following main trie-like methods:
 ``add_word(key, [value]) => bool``
     Add a ``key`` string to the dict-like trie and associate this key with a ``value``.
 
+``remove_word(key) => bool``
+    Remove a ``key`` string from the dict-like trie.
+
+``pop(key) => value``
+    Remove a ``key`` string from the dict-like trie and return the associated ``value``.
+
 ``exists(key) => bool`` or ``key in ...``
     Return True if the key is present in the trie. 
 
@@ -291,8 +297,10 @@ implements a subset of dict-like methods. Some of them are:
 
 ``keys([prefix, [wildcard, [how]]]) => yield strings``
     Return an iterator on keys.
+
 ``values([prefix, [wildcard, [how]]]) => yield object``
     Return an iterator on values associated with each keys.
+
 ``items([prefix, [wildcard, [how]]]) => yield tuple (string, object)``
     Return an iterator on tuples of (key, value).
 
@@ -420,8 +428,19 @@ Examples
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     KeyError
+    >>> A.remove_word('he')
+    True
+    >>> A.remove_word('he')
+    False
+    >>> A.pop('she')
+    (3, 'she')
+    >>> 'she' in A
+    False
 
     >>> # convert the trie in an Aho-Corasick automaton
+    >>> A = ahocorasick.Automaton()
+    >>> for index, word in enumerate('he her hers she'.split()):
+    ...   A.add_word(word, (index, word))
     >>> A.make_automaton()
 
     >>> # then find all occurrences of the stored keys in a string

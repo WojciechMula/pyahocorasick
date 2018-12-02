@@ -55,6 +55,9 @@ devbuild2:
 devbuild3:
 	python3 setup.py build_ext --inplace
 
+pip-release:
+	python setup.py sdist upload
+
 clean:
 	rm -f stamp/*
 	rm -rf dist build

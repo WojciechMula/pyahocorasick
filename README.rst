@@ -536,7 +536,11 @@ You can submit contributions through `GitHub pull requests
 Authors
 =======
 
-The main author: Wojciech Muła, wojciech_mula@poczta.onet.pl
+The initial author and maintainer is Wojciech Muła. `Philippe Ombredanne
+<https://github.com/pombredanne>`_, the current co-owner, rewrote
+documentation, setup CI servers and did a whole lot of work to make this module
+better accesible to end users.
+
 This library would not be possible without help of many people, who contributed in
 various ways.
 They created `pull requests <https://github.com/WojciechMula/pyahocorasick/pull>`_,

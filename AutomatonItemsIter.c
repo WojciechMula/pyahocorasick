@@ -52,6 +52,8 @@ automaton_items_iter_new(
 	iter->matchtype = matchtype;
 	list_init(&iter->stack);
 
+	Py_INCREF((PyObject*)iter->automaton);
+
 	iter->buffer = memory_alloc((automaton->longest_word + 1) * TRIE_LETTER_SIZE);
 	if (iter->buffer == NULL) {
 		goto no_memory;
@@ -86,16 +88,10 @@ automaton_items_iter_new(
 	new_item->depth = 0;
 	list_push_front(&iter->stack, (ListItem*)new_item);
 
-	Py_INCREF((PyObject*)iter->automaton);
 	return (PyObject*)iter;
 
 no_memory:
-	xfree(iter->buffer);
-	xfree(iter->pattern);
-#ifndef AHOCORASICK_UNICODE
-	xfree(iter->char_buffer);
-#endif
-	PyObject_Del((PyObject*)iter);
+	Py_DECREF((PyObject*)iter);
 	PyErr_NoMemory();
 	return NULL;
 }

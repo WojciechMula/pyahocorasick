@@ -7,6 +7,7 @@
 """
 
 import ahocorasick
+import os
 
 from ahocorasick import EMPTY, TRIE, AHOCORASICK;
 
@@ -15,6 +16,9 @@ def dump2dot(automaton, file):
 
 	def writeln(text=""):
 		file.write(text + "\n")
+
+	def nodename(nodeid):
+		return 'node%x' % (nodeid & 0xffffffff)
 
 	if automaton.kind == EMPTY:
 		writeln("digraph empty {}")
@@ -33,19 +37,31 @@ def dump2dot(automaton, file):
 	# nodes
 	for nodeid, end in nodes:
 		if end:
-			writeln("\tnode%d [shape=doublecircle, label=\"\"]" % nodeid)
+			attr = '[shape=doublecircle, label=""]'
 		else:
-			writeln("\tnode%d [shape=circle, label=\"\"]" % nodeid)
+			attr = '[shape=circle, label=""]'
+
+		writeln("\t%s %s" % (nodename(nodeid), attr))
 
 	# trie edges
 	for nodeid, label, destid in edges:
-		writeln("\tnode%d -> node%d [label=%s]" % (nodeid, destid, str(label, 'ascii')))
+		writeln("\t%s -> %s [label=%s]" % (nodename(nodeid), nodename(destid), str(label, 'ascii')))
 
 	# fail links
 	for nodeid, failid in fail:
-		writeln("\tnode%d -> node%d [color=blue]" % (nodeid, failid))
+		writeln("\t%s -> %s [color=blue]" % (nodename(nodeid), nodename(failid)))
 
 	writeln("}")
+
+
+def show(automaton):
+	path = '/dev/shm/%s.dot' % os.getpid()
+	with open(path, 'wt') as f:
+		dump2dot(automaton, f)
+
+	os.system("xdot %s" % path)
+	#os.system("dotty %s" % path)
+	os.unlink(path)
 
 
 if __name__ == '__main__':

@@ -65,6 +65,11 @@ trienode_get_ith_unsafe(TrieNode* node, size_t letter);
 
 #define trienode_is_leaf(node) ((node)->n == 0)
 
+static void
+trienode_dump_to_file(TrieNode* node, FILE* f);
+
+#define trienode_dump(node) trienode_dump_to_file(node, stdout)
+
 #ifdef DEBUG_LAYOUT
 void trienode_dump_layout();
 #endif

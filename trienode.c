@@ -153,3 +153,30 @@ void trienode_dump_layout() {
 #undef field_ofs
 }
 #endif
+
+
+static void
+trienode_dump_to_file(TrieNode* node, FILE* f) {
+
+    unsigned i;
+
+    ASSERT(node != NULL);
+    ASSERT(f != NULL);
+
+    if (node->n == 0)
+        fprintf(f, "leaf ");
+
+    fprintf(f, "node %p\n", node);
+    fprintf(f, "- letter %d [%c]\n", node->letter, node->letter);
+    if (node->eow)
+        fprintf(f, "- eow [%p]\n", node->output.object);
+
+    fprintf(f, "- fail: %p\n", node->fail);
+    if (node->n > 0) {
+        fprintf(f, "- %d next: [%p", node->n, node->next[0]);
+        for (i=1; i < node->n; i++)
+            fprintf(f, ", %p", node->next[i]);
+        fprintf(f, "]\n");
+    }
+}
+

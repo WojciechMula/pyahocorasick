@@ -235,7 +235,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			py_value = PyTuple_GetItem(args, 1);
 			if (not py_value) {
 				PyErr_SetString(PyExc_ValueError, "A value object is required as second argument.");
-				return NULL;
+				goto py_exception;
 			}
 			break;
 
@@ -245,11 +245,11 @@ automaton_add_word(PyObject* self, PyObject* args) {
 				if (PyNumber_Check(py_value)) {
 					integer = PyNumber_AsSsize_t(py_value, PyExc_ValueError);
 					if (integer == -1 and PyErr_Occurred())
-						return NULL;
+						goto py_exception;
 				}
 				else {
 					PyErr_SetString(PyExc_TypeError, "An integer value is required as second argument.");
-					return NULL;
+					goto py_exception;
 				}
 			}
 			else {
@@ -265,7 +265,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 		default:
 			PyErr_SetString(PyExc_SystemError, "Invalid value for this key: see documentation for supported values.");
-			return NULL;
+			goto py_exception;
 	}
 
 	node = NULL;
@@ -273,15 +273,14 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 	if (input.wordlen > 0) {
 		node = trie_add_word(automaton, input.word, input.wordlen, &new_word);
-		destroy_input(&input);
 
 		if (node == NULL) {
 			PyErr_NoMemory();
-			return NULL;
+			goto py_exception;
 		}
-	} else {
-		destroy_input(&input);
 	}
+
+	destroy_input(&input);
 
 	if (node) {
 		switch (automaton->store) {
@@ -311,6 +310,10 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	}
 
 	Py_RETURN_FALSE;
+
+py_exception:
+	destroy_input(&input);
+	return NULL;
 }
 
 

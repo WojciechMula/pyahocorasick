@@ -68,7 +68,7 @@ module = Extension(
 
 setup(
     name='pyahocorasick',
-    version='1.1.12dev1',
+    version='1.1.12',
     ext_modules=[module],
 
     description=(

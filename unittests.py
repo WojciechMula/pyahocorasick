@@ -959,6 +959,43 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
         self.assertEqual(A.longest_prefix((1, 2, 3, 111, 1111, 11111)), 3);
         self.assertEqual(A.longest_prefix((111, 1111, 11111)), 0);
 
+    def test_iter1(self):
+        A = self.A
+
+        A.add_word((1, 2, 3), "foo")
+        A.add_word((2, 3, 4, 5), "bar")
+        A.add_word((2, 3, 5), "baz")
+        A.make_automaton()
+
+        L = [(index, value) for index, value in A.iter((1, 2, 3, 5))]
+
+        self.assertEqual(L, [
+            (2, "foo"),
+            (3, "baz"),
+        ])
+
+    def test_iter2(self):
+        A = self.A
+
+        A.add_word((43, 89), (43, 89))
+        A.add_word((43, 89, 64), (43, 89, 64))
+        A.add_word((89, 64), (89, 64))
+        A.add_word((89, 100), (89, 100))
+        A.make_automaton()
+
+        L = [
+            (index, value)
+            for index, value in
+            A.iter((80, 80, 43, 89, 90, 89, 64, 100, 43, 89, 100))
+        ]
+
+        self.assertEqual(L, [
+            (3, (43, 89)),
+            (6, (89, 64)),
+            (9, (43, 89)),
+            (10, (89, 100)),
+        ])
+
 
 class TestIssue53(unittest.TestCase):
     """

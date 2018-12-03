@@ -10,9 +10,14 @@
 """
 
 import sys
+import os
 import unittest
-
 import ahocorasick
+
+try:
+    import _pickle
+except ImportError:
+    _pickle = None
 
 
 if ahocorasick.unicode:
@@ -1029,6 +1034,33 @@ class TestIssue53(unittest.TestCase):
 
         # wrongly calculated the input's length
         for item in a.iter(test_string):
+            pass
+
+
+class TestIssue68(unittest.TestCase):
+    """
+    Test problems with pickling
+    """
+
+    def test_case1(self):
+        if _pickle is None:
+            print("module _pickle not available")
+            return
+
+        A = ahocorasick.Automaton()
+        for i in range(0, 65):
+            A.add_word(str(i), (i, i))
+    
+        path = 'TestIssue68.test_case1'
+        with open(path, 'wb') as f:
+            _pickle.dump(A, f)
+    
+        with open(path, 'rb') as f:
+            _pickle.load(f)
+
+        try:
+            os.unlink(path)
+        except:
             pass
 
 

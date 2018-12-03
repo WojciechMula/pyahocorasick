@@ -329,6 +329,7 @@ automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
 	}
 
 	if (input.wordlen == 0) {
+		destroy_input(&input);
 		return FALSE;
 	}
 

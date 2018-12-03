@@ -948,7 +948,6 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 	    }
 	    else {
 		if (PyTuple_Check(object)) {
-		    // TODO: Check is tuple
 		    start = 0;
 		    end = PyTuple_GET_SIZE(object);
 		} else {
@@ -960,10 +959,11 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 	else
 		return NULL;
 
-	if(start_tmp != -1) {
+	if (start_tmp != -1) {
 		start = start_tmp;
 	}
-	if(end_tmp != -1) {
+
+	if (end_tmp != -1) {
 		end = end_tmp;
 	}
 

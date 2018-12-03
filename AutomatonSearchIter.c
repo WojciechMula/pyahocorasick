@@ -270,8 +270,8 @@ return_output:
 	}
 #else
 	iter->index += 1;
-	if(iter->ignore_white_space) {
-		while(iswspace(iter->input.word[iter->index]) && (iter->index < iter->end)) {
+	if (iter->ignore_white_space) {
+		while (iswspace(iter->input.word[iter->index]) && (iter->index < iter->end)) {
 			iter->index += 1;
 		}
 	}

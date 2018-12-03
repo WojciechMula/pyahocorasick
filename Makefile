@@ -1,5 +1,5 @@
 .SUFFIXES:
-.PHONY: test clean
+.PHONY: test clean valgrind
 
 export PYTHONPATH := .:$(PYTHONPATH):$(PATH)
 
@@ -54,6 +54,10 @@ devbuild2:
 
 devbuild3:
 	python3 setup.py build_ext --inplace
+
+valgrind:
+	python -c "import sys;print(sys.version)"
+	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log python unittests.py
 
 pip-release:
 	python setup.py sdist upload

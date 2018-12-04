@@ -19,7 +19,7 @@ int alloc_fail  = -1;           // id of allocation that will fail
 int alloc_trap_on_fail = 0;     // rather failing, execute trap (for gdb use)
 
 static
-void initialize_memory_debug() {
+void initialize_memory_debug(void) {
     const char* nodump = getenv("ALLOC_NODUMP");
     const char* fail   = getenv("ALLOC_FAIL");
     const char* trap   = getenv("ALLOC_TRAP");

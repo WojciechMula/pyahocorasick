@@ -883,8 +883,9 @@ automaton_items(PyObject* self, PyObject* args) {
 	"- end_index is the end index in the input string where a trie key string was found.\n" \
 	"- value is the value associated with the found key string.\n\n" \
 	"The start and end optional arguments can be used to limit the search to an\n" \
-	"input string slice as in string[start:end]." \
-	"The ignore_white_space optional arguments can be used to ignore white spaces from input string."
+	"input string slice as in string[start:end].\n\n" \
+	"The ignore_white_space optional arguments can be used to ignore white spaces\n" \
+	"from input string."
 
 static PyObject*
 automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {

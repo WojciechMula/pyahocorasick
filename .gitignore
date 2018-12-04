@@ -9,5 +9,7 @@ dist/
 *.o
 MANIFEST
 memory.dump
+valgrind.log
+pickle_stresstest.pickle
 /pyahocorasick.egg-info/
 /tmp/

@@ -15,12 +15,19 @@
 static PyTypeObject automaton_type;
 
 #define automaton_doc \
-	"Automaton(value_type=ahocorasick.STORE_ANY)\n\n" \
-	"Create a new empty Automaton. value_type is optional and one of these constants:\n" \
+	"Automaton(value_type=ahocorasick.STORE_ANY, [key_type])\n\n" \
+	"Create a new empty Automaton. Both value_type and key_type are optional.\n\n" \
+	"value_type is one of these constants:\n" \
 	" - ahocorasick.STORE_ANY : The associated value can be any Python object (default).\n" \
 	" - ahocorasick.STORE_LENGTH : The length of an added string key is automatically\n" \
 	"   used as the associated value stored in the trie for that key.\n" \
-	" - ahocorasick.STORE_INTS : The associated value must be a 32-bit integer."
+	" - ahocorasick.STORE_INTS : The associated value must be a 32-bit integer.\n\n" \
+	"key_type defines the type of data that can be stored in an automaton; it is one of\n" \
+	"these constants and defines type of data might be stored:\n" \
+	" - ahocorasick.KEY_STRING [default] : string\n" \
+	" - ahocorasick.KEY_SEQUENCE : sequences of integers; The size of integer depends\n" \
+	"   the version and platform Python, but for versions of Python >= 3.3, it is\n" \
+	"   guaranteed to be 32-bits."
 
 
 static bool

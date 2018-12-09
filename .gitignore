@@ -11,5 +11,6 @@ MANIFEST
 memory.dump
 valgrind.log
 pickle_stresstest.pickle
+!runtest.sh
 /pyahocorasick.egg-info/
 /tmp/

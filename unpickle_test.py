@@ -50,13 +50,12 @@ class TreeNodeBuilder(object):
 
 class TestUnpickleRaw(unittest.TestCase):
 
-    # raw constructor get 9-tuple (see Automaton.c):
+    # raw constructor get 7-tuple (see Automaton.c):
     # 1. count of nodes
     # 2. serialized nodes (as bytes or string in Py2)
     # 3. kind
     # 4. store
     # 5. key type
-    # 6. version (internal counter)
     # 7. word count
     # 8. length of the longest word
     # 9. python values saved in a trie (if store == ahocorasick.STORE_ANY
@@ -67,7 +66,6 @@ class TestUnpickleRaw(unittest.TestCase):
         self.kind        = ahocorasick.EMPTY
         self.store       = ahocorasick.STORE_ANY
         self.key_type    = ahocorasick.KEY_STRING
-        self.version     = 0
         self.word_count  = 0
         self.longest     = 0
         self.values      = []
@@ -77,7 +75,7 @@ class TestUnpickleRaw(unittest.TestCase):
         # alter values set in setUp
         raw = struct.pack('Q', self.count) + self.raw;
         args = ([raw], self.kind, self.store, self.key_type,
-                self.version, self.word_count, self.longest, self.values);
+                self.word_count, self.longest, self.values);
 
         return ahocorasick.Automaton(*args)
 

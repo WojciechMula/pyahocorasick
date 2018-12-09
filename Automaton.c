@@ -101,9 +101,8 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 8)) {
+	if (UNLIKELY(PyTuple_Size(args) == 7)) {
 
-		int				version;
 		int				word_count;
 		int				longest_word;
 		AutomatonKind	kind;
@@ -112,9 +111,9 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		PyObject*		bytes_list = NULL;
 		PyObject*		values = NULL;
 
-        const char* fmt = "OiiiiiiO";
+        const char* fmt = "OiiiiiO";
 
-		if (!F(PyArg_ParseTuple)(args, fmt, &bytes_list, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
+		if (!F(PyArg_ParseTuple)(args, fmt, &bytes_list, &kind, &store, &key_type, &word_count, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "Unable to load from pickle.");
 			goto error;
 		}
@@ -138,7 +137,6 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 				automaton->kind		= kind;
 				automaton->store	= store;
 				automaton->key_type	= key_type;
-				automaton->version	= version;
 				automaton->count    = word_count;
 				automaton->longest_word	= longest_word;
 			}

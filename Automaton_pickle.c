@@ -254,20 +254,18 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		* automaton->kind
 		* automaton->store
 		* automaton->key_type
-		* automaton->version
 		* automaton->count
 		* automaton->longest_word
 		* list of values
 	*/
 
 	tuple = F(Py_BuildValue)(
-        "O(OiiiiiiO)",
+        "O(OiiiiiO)",
 		Py_TYPE(self),
 		data.bytes_list,
 		automaton->kind,
 		automaton->store,
 		automaton->key_type,
-		automaton->version,
 		automaton->count,
 		automaton->longest_word,
 		data.values

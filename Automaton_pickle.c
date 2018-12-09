@@ -14,10 +14,26 @@ Pickling (automaton___reduce__):
 1. assign sequential numbers to nodes in order to replace
    address with these numbers
    (pickle_dump_replace_fail_with_id)
-2. save in array(s) all nodes data in the same order as numbers,
+2. save in array all nodes data in the same order as numbers,
    also replace fail and next links with numbers; collect on
    a list all values (python objects) stored in a trie
    (pickle_dump_save);
+
+   Before we start, all nodes of trie are visited and total
+   size of pickled data is calculated. If it is small enough
+   (less than given threshold), all data is saved in a single
+   byte array. Otherwise, data is saved in several byte arrays.
+   
+   In either case, the format of byte array is the same:
+   * 8 first bytes is number of nodes stored in this
+     chunk of memory
+   * the number if followed by some raw data.
+
+   When there is just one byte array, it's size is fit to
+   needs. If data is split, then each array has exactly the
+   same size of bytes, but not all might be used (only the
+   last array is fit).
+
 3. clean up
    (pickle_dump_undo_replace or pickle_dump_revert_replace)
 

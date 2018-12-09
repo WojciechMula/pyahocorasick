@@ -551,6 +551,7 @@ class TestAutomatonIterSearchWithIgnoreWhiteSpace(TestAutomatonBase):
             (13, "he")
         ]
 
+
     def test_iter1(self):
         self.add_words_and_make_automaton()
         A = self.A
@@ -571,6 +572,15 @@ class TestAutomatonIterSearchWithIgnoreWhiteSpace(TestAutomatonBase):
         for index, word in A.iter(conv(self.string), ignore_white_space=True, start=12):
             L.append((index, word))
         self.assertEqual(L, self.correct_positons_start_12)
+
+
+    def test_wrong_keyword(self):
+        self.add_words_and_make_automaton()
+        A = self.A
+        self.assertEqual(A.kind, ahocorasick.AHOCORASICK)
+
+        with self.assertRaises(TypeError):
+            A.iter(conv(self.string), ignore_white_space2=True)
 
 
 class TestAutomatonIterInvalidate(TestAutomatonBase):

@@ -239,7 +239,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 
 	switch (automaton->store) {
 		case STORE_ANY:
-			py_value = PyTuple_GetItem(args, 1);
+			py_value = F(PyTuple_GetItem)(args, 1);
 			if (not py_value) {
 				PyErr_SetString(PyExc_ValueError, "A value object is required as second argument.");
 				goto py_exception;
@@ -247,7 +247,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			break;
 
 		case STORE_INTS:
-			py_value = PyTuple_GetItem(args, 1);
+			py_value = F(PyTuple_GetItem)(args, 1);
 			if (py_value) {
 				if (PyNumber_Check(py_value)) {
 					integer = PyNumber_AsSsize_t(py_value, PyExc_ValueError);
@@ -400,7 +400,7 @@ static PyObject*
 automaton_exists(PyObject* self, PyObject* args) {
 	PyObject* word;
 
-	word = PyTuple_GetItem(args, 0);
+	word = F(PyTuple_GetItem)(args, 0);
 	if (word)
 		switch (automaton_contains(self, word)) {
 			case 1:
@@ -506,7 +506,7 @@ automaton_get(PyObject* self, PyObject* args) {
 		}
 	}
 	else {
-		py_def = PyTuple_GetItem(args, 1);
+		py_def = F(PyTuple_GetItem)(args, 1);
 		if (py_def) {
 			Py_INCREF(py_def);
 			return py_def;
@@ -656,7 +656,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 	}
 
 	// arg 2
-	callback = PyTuple_GetItem(args, 1);
+	callback = F(PyTuple_GetItem)(args, 1);
 	if (callback == NULL) {
 		destroy_input(&input);
 		return NULL;
@@ -723,7 +723,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 	// arg 1: prefix/prefix pattern
 	if (args)
-		arg1 = PyTuple_GetItem(args, 0);
+		arg1 = F(PyTuple_GetItem)(args, 0);
 	else
 		arg1 = NULL;
 
@@ -740,7 +740,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 	// arg 2: wildcard
 	if (args)
-		arg2 = PyTuple_GetItem(args, 1);
+		arg2 = F(PyTuple_GetItem)(args, 1);
 	else
 		arg2 = NULL;
 
@@ -770,7 +770,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	// arg3: matchtype
 	matchtype = MATCH_AT_LEAST_PREFIX;
 	if (args) {
-		arg3 = PyTuple_GetItem(args, 2);
+		arg3 = F(PyTuple_GetItem)(args, 2);
 		if (arg3) {
 			Py_ssize_t val = PyNumber_AsSsize_t(arg3, PyExc_OverflowError);
 			if (val == -1 and PyErr_Occurred())

@@ -319,7 +319,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 	struct Input new_input;
 
 	// first argument - required string or buffer
-	object = PyTuple_GetItem(args, 0);
+	object = F(PyTuple_GetItem)(args, 0);
 	if (object) {
 		if (!prepare_input((PyObject*)iter->automaton, object, &new_input)) {
 			return NULL;
@@ -329,7 +329,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
 		return NULL;
 
 	// second argument - optional bool
-	flag = PyTuple_GetItem(args, 1);
+	flag = F(PyTuple_GetItem)(args, 1);
 	if (flag) {
 		switch (PyObject_IsTrue(flag)) {
 			case 0:

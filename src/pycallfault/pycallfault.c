@@ -37,6 +37,16 @@ int check(void) {
 }
 
 
+int check_and_set_error(void) {
+    if (check()) {
+        PyErr_NoMemory();
+        return 1;
+    }
+    
+    return 0;
+}
+
+
 PyObject* _PyObject_New_custom(PyTypeObject* typeobj) {
     if (check()) {
         PyErr_NoMemory();
@@ -45,3 +55,4 @@ PyObject* _PyObject_New_custom(PyTypeObject* typeobj) {
 
     return PyObject_New(PyObject, typeobj);
 }
+

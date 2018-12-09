@@ -78,11 +78,21 @@ function force_rebuild
 function handle_unit
 {
     ${PYTHON} unittests.py
+    if [[ $? != 0 ]]
+    then
+        echo "Unit tests failed!"
+        exit 1
+    fi
 }
 
 function handle_unpickle
 {
     ${PYTHON} unpickle_test.py
+    if [[ $? != 0 ]]
+    then
+        echo "Unpickle tests failed!"
+        exit 1
+    fi
 }
 
 function handle_leaks
@@ -109,15 +119,48 @@ function handle_valgrind
     export CFLAGS=""
     force_rebuild
 
-    LOGFILE=${TMPDIR}/valgrind.log
+    local LOGFILE=${TMPDIR}/valgrind.log
     echo "Running valgrind..."
     valgrind --log-file=${LOGFILE} ${PYTHON} unittests.py
     ${PYTHON} tests/valgrind_check.py . ${LOGFILE}
 }
 
+function mallocfault
+{
+    export ALLOC_NODUMP=1
+    export ALLOC_FAIL=$1
+
+    local LOG=${TMPDIR}/mallocfault${ID}.log
+    ${PYTHON} unittests.py -q > ${LOG} 2>&1
+    ${PYTHON} tests/unittestlog_check.py ${LOG}
+    if [[ $? != 0 ]]
+    then
+        echo "Inspect ${LOG}, there are errors other than expected MemoryError"
+    fi
+}
+
 function handle_mallocfaults
 {
-    echo "Not implemented yet"
+    export CFLAGS="-DMEMORY_DEBUG"
+    force_rebuild
+
+    # obtain max allocation number
+    ${PYTHON} unittests.py
+    if [[ $? != 0 ]]
+    then
+        echo "Unit tests failed!"
+        exit 1
+    fi
+
+    local MINID=0
+    local MAXID=$(${PYTHON} tests/memdump_maxalloc.py)
+
+    # simulate failures of all allocations
+    for ID in `seq 0 ${MAXID}`
+    do
+        echo "Checking ${ID} of ${MAXID}"
+        mallocfault ${ID}
+    done
 }
 
 function handle_pycallfaults

@@ -220,8 +220,13 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		goto exception;
 
 	trie_traverse(automaton->root, pickle_dump_save, &data);
-	if (data.error)
+	if (UNLIKELY(data.error)) {
 		goto exception;
+	}
+
+	if (UNLIKELY(!pickle_data__shrink_last_buffer(&data))) {
+		goto exception;
+	}
 
 	if (automaton->store != STORE_ANY) { // always pickle a Python object
 		data.values = Py_None;

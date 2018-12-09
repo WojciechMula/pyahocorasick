@@ -7,6 +7,7 @@ pickle_data__init_default(PickleData* data) {
 	ASSERT(data != NULL);
 
 	data->bytes_list	= NULL;
+	data->chunked		= false;
 	data->size			= 0;
 	data->data			= NULL;
 	data->count			= NULL;
@@ -54,6 +55,42 @@ pickle_data__add_next_buffer(PickleData* data) {
 }
 
 
+static bool
+pickle_data__shrink_last_buffer(PickleData* data) {
+
+	PyObject* bytes;
+	PyObject* new;
+	Py_ssize_t last_idx;
+
+	ASSERT(data != NULL);
+
+	if (data->top >= data->size) {
+		return true;
+	}
+
+	ASSERT(data->bytes_list);
+
+	last_idx = PyList_GET_SIZE(data->bytes_list) - 1;
+
+	bytes = F(PyList_GetItem)(data->bytes_list, last_idx);
+	if (UNLIKELY(bytes == NULL)) {
+		puts("HERE?");
+		return false;
+	}
+
+	new = F(PyBytes_FromStringAndSize)(PyBytes_AS_STRING(bytes), data->top);
+	if (UNLIKELY(new == NULL)) {
+		return false;
+	}
+
+	if (F(PyList_SetItem)(data->bytes_list, last_idx, new) < 0) {
+		return false;
+	}
+
+	return true;
+}
+
+
 static int
 pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t max_array_size) {
 
@@ -77,8 +114,11 @@ pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t m
 
 	if (total_size <= max_array_size) {
 		data->size = total_size + PICKLE_CHUNK_COUNTER_SIZE;
+		data->chunked = false;
 	} else {
+		// TODO: more heuristic here: what if total_size > 100MB? what if > 1GB, > 10GB?
 		data->size = max_array_size;
+		data->chunked = true;
 	}
 
 	return pickle_data__add_next_buffer(data);

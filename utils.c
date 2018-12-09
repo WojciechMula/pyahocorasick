@@ -274,7 +274,7 @@ pymod_parse_start_end(
 		return 0;
 	}
 
-	obj = PyNumber_Index(obj);
+	obj = F(PyNumber_Index)(obj);
 	if (obj == NULL)
 		return -1;
 
@@ -298,7 +298,7 @@ pymod_parse_start_end(
 		return 0;
 	}
 
-	obj = PyNumber_Index(obj);
+	obj = F(PyNumber_Index)(obj);
 	if (obj == NULL)
 		return -1;
 

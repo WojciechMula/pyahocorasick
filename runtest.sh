@@ -169,7 +169,7 @@ function handle_pycallfaults
     force_rebuild
 
     local MINID=0
-    local MAXID=2054 # obtained manually
+    local MAXID=2072 # obtained manually
 
     # simulate failures of all allocations
     for ID in `seq 0 ${MAXID}`

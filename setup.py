@@ -44,7 +44,6 @@ module = Extension(
     'ahocorasick',
     sources=[
         'pyahocorasick.c',
-        'src/pycallfault/pycallfault.c',
     ],
     define_macros=macros,
     depends=[

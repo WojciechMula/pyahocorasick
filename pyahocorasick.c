@@ -26,7 +26,9 @@
 #include "Automaton.c"
 #include "AutomatonItemsIter.c"
 #include "AutomatonSearchIter.c"
-
+#ifdef PYCALLS_INJECT_FAULTS
+#include "src/pycallfault/pycallfault.c"
+#endif
 
 
 #define ahocorasick_doc \

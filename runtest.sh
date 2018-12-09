@@ -2,12 +2,19 @@
 
 TMPDIR=/dev/shm
 
+if [[ ${PYTHON} == "" ]]
+then
+    PYTHON=python
+fi
+
 function print_help
 {
     echo "Utility to run various tests"
     echo
     echo "Define variable PYTHON to point custom executable (if needed);"
-    echo "by default standard python command is invoked"
+    echo "by default standard python command is invoked."
+    echo
+    echo "Python interpreter is currently set to: '${PYTHON}'"
     echo
     usage
 }
@@ -39,7 +46,7 @@ then
 fi
  
 ACTION=
-REBUILD=0
+REBUILD=1
 arg=$1
 for action in ${ACTIONS}
 do
@@ -59,7 +66,6 @@ fi
 
 ######################################################################
 
-PYTHON=python
 
 function rebuild
 {
@@ -121,7 +127,7 @@ function handle_valgrind
 
     local LOGFILE=${TMPDIR}/valgrind.log
     echo "Running valgrind..."
-    valgrind --log-file=${LOGFILE} ${PYTHON} unittests.py
+    valgrind --log-file=${LOGFILE} --leak-check=full --track-origins=yes ${PYTHON} unittests.py
     ${PYTHON} tests/valgrind_check.py . ${LOGFILE}
 }
 
@@ -158,7 +164,7 @@ function handle_mallocfaults
     # simulate failures of all allocations
     for ID in `seq 0 ${MAXID}`
     do
-        echo "Checking ${ID} of ${MAXID}"
+        echo "Checking memalloc fail ${ID} of ${MAXID}"
         mallocfault ${ID}
     done
 }
@@ -171,15 +177,15 @@ function handle_pycallfaults
     local MINID=0
     local MAXID=2096 # obtained manually
 
-    # simulate failures of all allocations
+    # simulate failures of all call to Python C-API
     for ID in `seq 0 ${MAXID}`
     do
-        echo -n "Python C-API call #${ID} will fail"
+        echo -n "Checking Python C-API fail ${ID} of ${MAXID}"
         local LOG=${TMPDIR}/pycallfaults${ID}.log
         export PYCALL_FAIL=${ID}
-        python3 unittests.py > ${LOG} 2>&1
-        echo " retcode $?"
-        python3 tests/pyfault_check.py ${LOG}
+        ${PYTHON} unittests.py > ${LOG} 2>&1
+        echo " return code $?"
+        ${PYTHON} tests/pyfault_check.py ${LOG}
     done
 }
 

@@ -40,4 +40,6 @@ int check_and_set_error(void);
 
 #define PyObject_CallFunction_custom(arg1, arg2, ...) (check_and_set_error() ? NULL : PyObject_CallFunction(arg1, arg2, __VA_ARGS__))
 
+#define PyArg_ParseTupleAndKeywords_custom(arg1, arg2, arg3, arg4, ...) (check_and_set_error() ? 0 : PyArg_ParseTupleAndKeywords(arg1, arg2, arg3, arg4, __VA_ARGS__))
+
 #endif // PYCALLFAULT_H_

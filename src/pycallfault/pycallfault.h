@@ -19,4 +19,6 @@ PyObject* _PyObject_New_custom(PyTypeObject* typeobj);
 
 #define PyTuple_GetItem_custom(arg1, arg2) (check_and_set_error() ? NULL : PyTuple_GetItem(arg1, arg2))
 
+#define PyNumber_AsSsize_t_custom(arg1, arg2) (check_and_set_error() ? -1 : PyNumber_AsSsize_t(arg1, arg2))
+
 #endif // PYCALLFAULT_H_

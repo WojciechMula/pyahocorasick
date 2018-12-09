@@ -23,6 +23,7 @@ void initialize_pycallfault(void) {
 
 int check(void) {
     pycall += 1;
+    printf("Fail ID: %d\n", pycall);
 
     if (pycall == pycall_fail) {
         if (pycall_trap) {

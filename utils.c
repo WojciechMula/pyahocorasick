@@ -211,7 +211,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 	}
 
 	for (i=0; i < size; i++) {
-		Py_ssize_t value = PyNumber_AsSsize_t(PyTuple_GetItem(obj, i), PyExc_ValueError);
+		Py_ssize_t value = F(PyNumber_AsSsize_t)(F(PyTuple_GetItem)(obj, i), PyExc_ValueError);
 		if (value == -1 && PyErr_Occurred()) {
 			PyErr_Format(PyExc_ValueError, "item #%zd is not a number", i);
 			memory_free(*word);
@@ -265,7 +265,7 @@ pymod_parse_start_end(
 	end		= max;
 
 	// first argument
-	obj = PyTuple_GetItem(args, idx_start);
+	obj = F(PyTuple_GetItem)(args, idx_start);
 	if (obj == NULL) {
 		PyErr_Clear();
 		return 0;
@@ -275,7 +275,7 @@ pymod_parse_start_end(
 	if (obj == NULL)
 		return -1;
 
-	start = PyNumber_AsSsize_t(obj, PyExc_IndexError);
+	start = F(PyNumber_AsSsize_t)(obj, PyExc_IndexError);
     Py_DECREF(obj);
 	if (start == -1 and PyErr_Occurred())
 		return -1;
@@ -289,7 +289,7 @@ pymod_parse_start_end(
 	}
 
 	// second argument
-	obj = PyTuple_GetItem(args, idx_end);
+	obj = F(PyTuple_GetItem)(args, idx_end);
 	if (obj == NULL) {
 		PyErr_Clear();
 		return 0;
@@ -299,7 +299,7 @@ pymod_parse_start_end(
 	if (obj == NULL)
 		return -1;
 
-	end = PyNumber_AsSsize_t(obj, PyExc_IndexError);
+	end = F(PyNumber_AsSsize_t)(obj, PyExc_IndexError);
     Py_DECREF(obj);
 	if (end == -1 and PyErr_Occurred())
 		return -1;
@@ -341,7 +341,7 @@ bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 bool prepare_input_from_tuple(PyObject* self, PyObject* args, int index, struct Input* input) {
 	PyObject* tuple;
 
-	tuple = PyTuple_GetItem(args, index);
+	tuple = F(PyTuple_GetItem)(args, index);
 	if (tuple)
 		return prepare_input(self, tuple, input);
 	else

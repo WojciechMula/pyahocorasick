@@ -250,7 +250,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 			py_value = F(PyTuple_GetItem)(args, 1);
 			if (py_value) {
 				if (PyNumber_Check(py_value)) {
-					integer = PyNumber_AsSsize_t(py_value, PyExc_ValueError);
+					integer = F(PyNumber_AsSsize_t)(py_value, PyExc_ValueError);
 					if (integer == -1 and PyErr_Occurred())
 						goto py_exception;
 				}
@@ -772,7 +772,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 	if (args) {
 		arg3 = F(PyTuple_GetItem)(args, 2);
 		if (arg3) {
-			Py_ssize_t val = PyNumber_AsSsize_t(arg3, PyExc_OverflowError);
+			Py_ssize_t val = F(PyNumber_AsSsize_t)(arg3, PyExc_OverflowError);
 			if (val == -1 and PyErr_Occurred())
 				goto error;
 

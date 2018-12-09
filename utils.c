@@ -202,10 +202,10 @@ static bool
 __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 	Py_ssize_t i;
 	Py_ssize_t size = PyTuple_Size(obj);
+	TRIE_LETTER_TYPE* tmpword;
 
-	*wordlen = size;
-	*word = (TRIE_LETTER_TYPE*)memory_alloc(size * TRIE_LETTER_SIZE);
-	if (*word == NULL) {
+	tmpword = (TRIE_LETTER_TYPE*)memory_alloc(size * TRIE_LETTER_SIZE);
+	if (UNLIKELY(tmpword == NULL)) {
 		PyErr_NoMemory();
 		return false;
 	}
@@ -214,7 +214,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 		Py_ssize_t value = F(PyNumber_AsSsize_t)(F(PyTuple_GetItem)(obj, i), PyExc_ValueError);
 		if (value == -1 && PyErr_Occurred()) {
 			PyErr_Format(PyExc_ValueError, "item #%zd is not a number", i);
-			memory_free(*word);
+			memory_free(tmpword);
 			return false;
 		}
 
@@ -227,12 +227,15 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 #endif
 		if (value < 0 || value > MAX_VAL) {
 			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd outside range [%d..%lu]", i, value, 0, MAX_VAL);
-			memory_free(*word);
+			memory_free(tmpword);
 			return false;
 		}
 
-		(*word)[i] = (TRIE_LETTER_TYPE)value;
+		tmpword[i] = (TRIE_LETTER_TYPE)value;
 	}
+
+	*word = tmpword;
+	*wordlen = size;
 
 	return true;
 }

@@ -319,6 +319,12 @@ pymod_parse_start_end(
 }
 
 
+void init_input(struct Input* input) {
+	input->word = NULL;
+	input->py_word = NULL;
+}
+
+
 bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 #define automaton ((Automaton*)self)
 	if (automaton->key_type == KEY_STRING) {

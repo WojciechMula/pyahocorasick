@@ -93,6 +93,8 @@ automaton_search_iter_new(
 	iter->shift	= 0;
 	iter->ignore_white_space = ignore_white_space;
 
+	init_input(&iter->input);
+
 	Py_INCREF(iter->automaton);
 
 	if (!prepare_input((PyObject*)automaton, object, &iter->input)) {

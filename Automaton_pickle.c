@@ -385,7 +385,7 @@ automaton_unpickle(
 
 		// references
 		if (values and node->eow) {
-			value = PyList_GetItem(values, object_idx);
+			value = F(PyList_GetItem)(values, object_idx);
 			if (value) {
 				Py_INCREF(value);
 				node->output.object = value;
@@ -446,7 +446,7 @@ exception:
 	// referenced, release them
 	if (values) {
 		for (i=0; i < object_idx; i++) {
-			Py_XDECREF(PyList_GetItem(values, i));
+			Py_XDECREF(F(PyList_GetItem)(values, i));
 		}
 	}
 

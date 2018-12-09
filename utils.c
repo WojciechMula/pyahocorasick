@@ -11,7 +11,10 @@
 
 //#define MEMORY_DEBUG
 #ifdef MEMORY_DEBUG
-const char* debug_path = "memory.dump";
+#ifndef MEMORY_DUMP_PATH
+#   define MEMORY_DUMP_PATH "memory.dump";
+#endif
+const char* debug_path = MEMORY_DUMP_PATH;
 FILE* debug_file;
 int alloc_num   = 0;            // id of allocation
 int alloc_dump  = 1;            // dump to file

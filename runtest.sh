@@ -169,15 +169,16 @@ function handle_pycallfaults
     force_rebuild
 
     local MINID=0
-    local MAXID=1281
+    local MAXID=1451
 
     # simulate failures of all allocations
     for ID in `seq 0 ${MAXID}`
     do
-        echo "Python C-API call #${ID} will fail"
+        echo -n "Python C-API call #${ID} will fail"
         local LOG=${TMPDIR}/pycallfaults${ID}.log
         export PYCALL_FAIL=${ID}
         python3 unittests.py > ${LOG} 2>&1
+        echo " retcode $?"
         python3 tests/pyfault_check.py ${LOG}
     done
 }

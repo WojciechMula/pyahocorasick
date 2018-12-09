@@ -23,4 +23,6 @@ PyObject* _PyObject_New_custom(PyTypeObject* typeobj);
 
 #define PyList_New_custom(arg) (check_and_set_error() ? NULL : PyList_New(arg))
 
+#define Py_BuildValue_custom(arg, ...) (check_and_set_error() ? NULL : Py_BuildValue(arg, __VA_ARGS__))
+
 #endif // PYCALLFAULT_H_

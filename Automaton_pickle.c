@@ -192,7 +192,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	// 0. for an empty automaton do nothing
     if (automaton->count == 0) {
         // the class constructor feeded with an empty argument build an empty automaton
-        return Py_BuildValue("O()", Py_TYPE(self));
+        return F(Py_BuildValue)("O()", Py_TYPE(self));
     }
 
 	// 1. numerate nodes
@@ -249,7 +249,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 		* list of values
 	*/
 
-	tuple = Py_BuildValue(
+	tuple = F(Py_BuildValue)(
 #ifdef PY3K
         "O(ky#iiiiiiO)",
 #else

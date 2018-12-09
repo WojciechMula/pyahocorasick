@@ -464,7 +464,7 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
 
 	destroy_input(&input);
 
-	return Py_BuildValue("i", len);
+	return F(Py_BuildValue)("i", len);
 #undef automaton
 }
 
@@ -494,7 +494,7 @@ automaton_get(PyObject* self, PyObject* args) {
 		switch (automaton->store) {
 			case STORE_INTS:
 			case STORE_LENGTH:
-				return Py_BuildValue("i", node->output.integer);
+				return F(Py_BuildValue)("i", node->output.integer);
 
 			case STORE_ANY:
 				Py_INCREF(node->output.object);
@@ -1042,16 +1042,14 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 	if (automaton->stats.version != automaton->version)
 		get_stats(automaton);
 
-	dict = Py_BuildValue(
+	dict = F(Py_BuildValue)(
 		"{s:i,s:i,s:i,s:i,s:i,s:i}",
-#define emit(name) #name, automaton->stats.name
-		emit(nodes_count),
-		emit(words_count),
-		emit(longest_word),
-		emit(links_count),
-		emit(sizeof_node),
-		emit(total_size)
-#undef emit
+		"nodes_count",  automaton->stats.nodes_count,
+		"words_count",  automaton->stats.words_count,
+		"longest_word", automaton->stats.longest_word,
+		"links_count",  automaton->stats.links_count,
+		"sizeof_node",  automaton->stats.sizeof_node,
+		"total_size",   automaton->stats.total_size
 	);
 	return dict;
 #undef automaton
@@ -1084,19 +1082,19 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 
 
 	// 1.
-	tuple = Py_BuildValue("ii", node, (int)(node->eow));
+	tuple = F(Py_BuildValue)("ii", node, (int)(node->eow));
 	append_tuple(Dump->nodes)
 
 	// 2.
 	for (i=0; i < node->n; i++) {
 		child = node->next[i];
-		tuple = Py_BuildValue("ici", node, child->letter, child);
+		tuple = F(Py_BuildValue)("ici", node, child->letter, child);
 		append_tuple(Dump->edges)
 	}
 
 	// 3.
 	if (node->fail) {
-		tuple = Py_BuildValue("ii", node, node->fail);
+		tuple = F(Py_BuildValue)("ii", node, node->fail);
 		append_tuple(Dump->fail);
 	}
 
@@ -1139,7 +1137,7 @@ automaton_dump(PyObject* self, PyObject* args) {
 	if (dump.error)
 		goto error;
 	else
-		return Py_BuildValue("OOO", dump.nodes, dump.edges, dump.fail);
+		return F(Py_BuildValue)("OOO", dump.nodes, dump.edges, dump.fail);
 
 error:
 	Py_XDECREF(dump.nodes);

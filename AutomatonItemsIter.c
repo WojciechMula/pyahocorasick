@@ -230,7 +230,7 @@ automaton_items_iter_next(PyObject* self) {
 
 						case STORE_LENGTH:
 						case STORE_INTS:
-							return Py_BuildValue("i", iter->state->output.integer);
+							return F(Py_BuildValue)("i", iter->state->output.integer);
 
 						default:
 							PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
@@ -242,7 +242,7 @@ automaton_items_iter_next(PyObject* self) {
 				case ITER_ITEMS:
 					switch (iter->automaton->store) {
 						case STORE_ANY:
-							return Py_BuildValue(
+							return F(Py_BuildValue)(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
 								"(u#O)", /*key*/ iter->buffer + 1, depth,
@@ -257,7 +257,7 @@ automaton_items_iter_next(PyObject* self) {
 
 						case STORE_LENGTH:
 						case STORE_INTS:
-							return Py_BuildValue(
+							return F(Py_BuildValue)(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
 								"(u#i)", /*key*/ iter->buffer + 1, depth,

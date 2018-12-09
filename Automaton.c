@@ -89,7 +89,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	int key_type;
 	int store;
 
-	automaton = (Automaton*)PyObject_New(Automaton, &automaton_type);
+	automaton = (Automaton*)F(PyObject_New)(Automaton, &automaton_type);
 	if (UNLIKELY(automaton == NULL))
 		return NULL;
 

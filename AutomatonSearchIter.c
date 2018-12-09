@@ -80,7 +80,7 @@ automaton_search_iter_new(
 	int tmp;
 #endif
 
-	iter = (AutomatonSearchIter*)PyObject_New(AutomatonSearchIter, &automaton_search_iter_type);
+	iter = (AutomatonSearchIter*)F(PyObject_New)(AutomatonSearchIter, &automaton_search_iter_type);
 	if (iter == NULL)
 		return NULL;
 

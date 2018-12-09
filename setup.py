@@ -43,7 +43,8 @@ else:
 module = Extension(
     'ahocorasick',
     sources=[
-        'pyahocorasick.c'
+        'pyahocorasick.c',
+        'src/pyfault/pyfault.c',
     ],
     define_macros=macros,
     depends=[
@@ -62,6 +63,7 @@ module = Extension(
         'trienode.c',
         'trienode.h',
         'msinttypes/stdint.h',
+        'src/pycall/pycall.h',
     ],
 )
 

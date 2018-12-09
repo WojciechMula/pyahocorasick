@@ -34,7 +34,7 @@ automaton_items_iter_new(
 	AutomatonItemsIter* iter;
 	StackItem* new_item;
 
-	iter = (AutomatonItemsIter*)PyObject_New(AutomatonItemsIter, &automaton_items_iter_type);
+	iter = (AutomatonItemsIter*)F(PyObject_New)(AutomatonItemsIter, &automaton_items_iter_type);
 	if (iter == NULL)
 		return NULL;
 

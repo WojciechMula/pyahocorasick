@@ -72,6 +72,13 @@ init_function(void) {
     initialize_memory_debug();
 #endif
 
+#ifdef PYCALLS_INJECT_FAULTS
+    PyErr_WarnEx(PyExc_RuntimeWarning,
+                 "This is a developer version of pyahcorosick. "
+                 "The module was compiled with flag PYCALLS_INJECT_FAULTS.", 1);
+    initialize_pyfault();
+#endif
+
 	automaton_as_sequence.sq_length   = automaton_len;
 	automaton_as_sequence.sq_contains = automaton_contains;
 

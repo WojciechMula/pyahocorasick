@@ -82,6 +82,12 @@
 #	define	ASSERT(expr)
 #endif
 
+#if defined(PYCALLS_INJECT_FAULTS) && defined(PY3K)
+#   include "src/pyfault/pyfault.h"
+#else
+#   define F(name) name
+#endif
+
 typedef char	bool;
 #define true 1
 #define false 0

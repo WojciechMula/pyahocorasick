@@ -83,7 +83,7 @@
 #endif
 
 #if defined(PYCALLS_INJECT_FAULTS) && defined(PY3K)
-#   include "src/pyfault/pyfault.h"
+#   include "src/pycallfault/pycallfault.h"
 #else
 #   define F(name) name
 #endif

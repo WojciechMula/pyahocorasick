@@ -1,4 +1,4 @@
-#include "pyfault.h"
+#include "pycallfault.h"
 
 #include <stdlib.h>
 
@@ -7,7 +7,7 @@ static int pycall      = -1;
 static int pycall_fail = -1;
 static int pycall_trap = 0;
 
-void initialize_pyfault(void) {
+void initialize_pycallfault(void) {
     const char* fail   = getenv("PYCALL_FAIL");
     const char* trap   = getenv("PYCALL_TRAP");
 

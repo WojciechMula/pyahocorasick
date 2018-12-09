@@ -114,7 +114,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 #endif
 
 #if defined PEP393_UNICODE
-    if (PyUnicode_Check(obj)) {
+    if (F(PyUnicode_Check)(obj)) {
 	PyUnicode_READY(obj);
 	if (PyUnicode_KIND(obj) == PyUnicode_4BYTE_KIND) {
             *word = (TRIE_LETTER_TYPE*)(PyUnicode_4BYTE_DATA(obj));
@@ -137,7 +137,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
     }
 #elif defined PY3K
 #   ifdef AHOCORASICK_UNICODE
-        if (PyUnicode_Check(obj)) {
+        if (F(PyUnicode_Check)(obj)) {
             *word = (TRIE_LETTER_TYPE*)(PyUnicode_AS_UNICODE(obj));
             *wordlen = PyUnicode_GET_SIZE(obj);
             Py_INCREF(obj);
@@ -151,7 +151,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 #       ifndef INPUT_KEEPS_COPY
 #           error "defines inconsistency"
 #       endif
-        if (PyBytes_Check(obj)) {
+        if (F(PyBytes_Check)(obj)) {
             *wordlen = PyBytes_GET_SIZE(obj);
 			*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
             if (*word == NULL) {
@@ -175,7 +175,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 #       ifndef INPUT_KEEPS_COPY
 #           error "defines inconsistency"
 #       endif
-	if (PyString_Check(obj)) {
+	if (F(PyString_Check)(obj)) {
         *wordlen = PyString_GET_SIZE(obj);
 		*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
         if (*word == NULL) {
@@ -240,7 +240,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 
 static bool
 pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-	if (LIKELY(PyTuple_Check(obj))) {
+	if (LIKELY(F(PyTuple_Check)(obj))) {
 		return __read_sequence__from_tuple(obj, word, wordlen);
 	} else {
 		PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");

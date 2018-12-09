@@ -249,7 +249,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
 		case STORE_INTS:
 			py_value = F(PyTuple_GetItem)(args, 1);
 			if (py_value) {
-				if (PyNumber_Check(py_value)) {
+				if (F(PyNumber_Check)(py_value)) {
 					integer = F(PyNumber_AsSsize_t)(py_value, PyExc_ValueError);
 					if (integer == -1 and PyErr_Occurred())
 						goto py_exception;
@@ -662,7 +662,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		return NULL;
 	}
 	else
-	if (not PyCallable_Check(callback)) {
+	if (not F(PyCallable_Check)(callback)) {
 		PyErr_SetString(PyExc_TypeError, "The callback argument must be a callable such as a function.");
 		destroy_input(&input);
 		return NULL;
@@ -925,7 +925,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 	    if (automaton->key_type == KEY_STRING) {
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-		if (PyUnicode_Check(object)) {
+		if (F(PyUnicode_Check)(object)) {
 			start	= 0;
 			#if PY_MINOR_VERSION >= 3
 				end = PyUnicode_GET_LENGTH(object);
@@ -938,7 +938,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 			return NULL;
 		}
     #else
-		if (PyBytes_Check(object)) {
+		if (F(PyBytes_Check)(object)) {
 			start 	= 0;
 			end		= PyBytes_GET_SIZE(object);
 		}
@@ -948,7 +948,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 		}
     #endif
 #else
-        if (PyString_Check(object)) {
+        if (F(PyString_Check)(object)) {
 			start	= 0;
 			end		= PyString_GET_SIZE(object);
         } else {
@@ -958,7 +958,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 #endif
 	    }
 	    else {
-		if (PyTuple_Check(object)) {
+		if (F(PyTuple_Check)(object)) {
 		    start = 0;
 		    end = PyTuple_GET_SIZE(object);
 		} else {

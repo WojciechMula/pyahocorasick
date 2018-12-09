@@ -27,4 +27,16 @@ PyObject* _PyObject_New_custom(PyTypeObject* typeobj);
 
 #define Py_BuildValue_custom(arg, ...) (check_and_set_error() ? NULL : Py_BuildValue(arg, __VA_ARGS__))
 
+#define PyCallable_Check_custom(arg) (check() ? 0 : PyCallable_Check(arg))
+
+#define PyUnicode_Check_custom(arg) (check() ? 0 : PyUnicode_Check(arg))
+
+#define PyBytes_Check_custom(arg) (check() ? 0 : PyBytes_Check(arg))
+
+#define PyCallable_Check_custom(arg) (check() ? 0 : PyCallable_Check(arg))
+
+#define PyNumber_Check_custom(arg) (check() ? 0 : PyNumber_Check(arg))
+
+#define PyTuple_Check_custom(arg) (check() ? 0 : PyTuple_Check(arg))
+
 #endif // PYCALLFAULT_H_

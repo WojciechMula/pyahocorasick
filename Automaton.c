@@ -1129,9 +1129,9 @@ automaton_dump(PyObject* self, PyObject* args) {
 	dump.fail  = 0;
 	dump.error = 0;
 
-	dump.nodes = PyList_New(0);
-	dump.edges = PyList_New(0);
-	dump.fail  = PyList_New(0);
+	dump.nodes = F(PyList_New)(0);
+	dump.edges = F(PyList_New)(0);
+	dump.fail  = F(PyList_New)(0);
 	if (dump.edges == NULL or dump.fail == NULL or dump.nodes == NULL)
 		goto error;
 

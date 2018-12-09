@@ -223,7 +223,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	}
 
 	if (automaton->store == STORE_ANY) {
-		data.values = PyList_New(0);
+		data.values = F(PyList_New)(0);
 		if (not data.values)
 			goto exception;
 	}

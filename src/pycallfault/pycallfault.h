@@ -21,4 +21,6 @@ PyObject* _PyObject_New_custom(PyTypeObject* typeobj);
 
 #define PyNumber_AsSsize_t_custom(arg1, arg2) (check_and_set_error() ? -1 : PyNumber_AsSsize_t(arg1, arg2))
 
+#define PyList_New_custom(arg) (check_and_set_error() ? NULL : PyList_New(arg))
+
 #endif // PYCALLFAULT_H_

@@ -682,9 +682,9 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		while (tmp) {
 			if (tmp->eow) {
 				if (automaton->store == STORE_ANY)
-					callback_ret = PyObject_CallFunction(callback, "iO", i, tmp->output.object);
+					callback_ret = F(PyObject_CallFunction)(callback, "iO", i, tmp->output.object);
 				else
-					callback_ret = PyObject_CallFunction(callback, "ii", i, tmp->output.integer);
+					callback_ret = F(PyObject_CallFunction)(callback, "ii", i, tmp->output.integer);
 
 				if (callback_ret == NULL) {
 					destroy_input(&input);

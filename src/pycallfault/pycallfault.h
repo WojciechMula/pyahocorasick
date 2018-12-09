@@ -38,4 +38,6 @@ int check_and_set_error(void);
 
 #define PyTuple_Check_custom(arg) (check() ? 0 : PyTuple_Check(arg))
 
+#define PyObject_CallFunction_custom(arg1, arg2, ...) (check_and_set_error() ? NULL : PyObject_CallFunction(arg1, arg2, __VA_ARGS__))
+
 #endif // PYCALLFAULT_H_

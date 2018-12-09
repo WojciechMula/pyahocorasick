@@ -250,7 +250,6 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	}
 
 	/* 3: save tuple:
-		* count
 		* binary data
 		* automaton->kind
 		* automaton->store
@@ -262,9 +261,8 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	*/
 
 	tuple = F(Py_BuildValue)(
-        "O(kOiiiiiiO)",
+        "O(OiiiiiiO)",
 		Py_TYPE(self),
-		state.id,
 		data.bytes_list,
 		automaton->kind,
 		automaton->store,
@@ -300,13 +298,50 @@ exception:
 
 
 static bool
+automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
+
+	PyObject* bytes;
+	Py_ssize_t k;
+	Py_ssize_t nodes_count;
+	const uint8_t* data;
+
+	size_t count = 0;
+
+	// calculate the total number of nodes (and do validate data at the same time)
+	for (k=0; k < PyList_GET_SIZE(bytes_list); k++) {
+		bytes = PyList_GET_ITEM(bytes_list, k);
+		if (UNLIKELY(!F(PyBytes_CheckExact)(bytes))) {
+			PyErr_Format(PyExc_ValueError,
+						 "Item #%d on the bytes list is not a bytes object",
+						 k);
+			return false;
+		}
+
+		data = (const uint8_t*)PyBytes_AS_STRING(bytes);
+
+		nodes_count = *((Py_ssize_t*)data);
+		if (UNLIKELY(nodes_count <= 0)) {
+			PyErr_Format(PyExc_ValueError,
+						 "Nodes count for item #%d on the bytes list is not positive (%d)",
+						 k, nodes_count);
+			return false;
+		}
+
+		count += nodes_count;
+	}
+
+	*result = count;
+	return true;
+}
+
+
+static bool
 automaton_unpickle(
 	Automaton* automaton,
-	const size_t count,
 	PyObject* bytes_list,
 	PyObject* values
 ) {
-	TrieNode** id2node;
+	TrieNode** id2node = NULL;
 
 	TrieNode* node;
 	TrieNode* dump;
@@ -324,9 +359,14 @@ automaton_unpickle(
 	size_t j;
 	size_t object_idx = 0;
 	size_t index;
+	size_t count;
+
+	if (!automaton_unpickle__validate_bytes_list(bytes_list, &count)) {
+		goto exception;
+	}
 
 	id2node = (TrieNode**)memory_alloc((count+1) * sizeof(TrieNode*));
-	if (id2node == NULL) {
+	if (UNLIKELY(id2node == NULL)) {
 		goto no_mem;
     }
 
@@ -334,22 +374,9 @@ automaton_unpickle(
 	id = 1;
 	for (k=0; k < PyList_GET_SIZE(bytes_list); k++) {
 		bytes = PyList_GET_ITEM(bytes_list, k);
-		if (UNLIKELY(!F(PyBytes_CheckExact)(bytes))) {
-			PyErr_Format(PyExc_ValueError,
-						 "Item #%d on the bytes list is not a bytes object",
-						 k);
-			goto exception;
-		}
-
 		data = (const uint8_t*)PyBytes_AS_STRING(bytes);
 
 		nodes_count = *((Py_ssize_t*)data);
-		if (UNLIKELY(nodes_count <= 0)) {
-			PyErr_Format(PyExc_ValueError,
-						 "Nodes count for item #%d on the bytes list is not is not positive",
-						 k);
-			goto exception;
-		}
 
 		ptr  = data + PICKLE_CHUNK_COUNTER_SIZE;
 		end  = ptr + PyBytes_GET_SIZE(bytes) - PICKLE_CHUNK_COUNTER_SIZE;

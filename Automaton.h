@@ -73,7 +73,6 @@ typedef struct Automaton {
 static bool
 automaton_unpickle(
 	Automaton* automaton,
-	const size_t count,
 	PyObject* bytes_list,
 	PyObject* values
 );

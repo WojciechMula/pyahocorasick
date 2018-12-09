@@ -76,7 +76,7 @@ class TestUnpickleRaw(unittest.TestCase):
     def create_automaton(self):
         # alter values set in setUp
         raw = struct.pack('Q', self.count) + self.raw;
-        args = (self.count, [raw], self.kind, self.store, self.key_type,
+        args = ([raw], self.kind, self.store, self.key_type,
                 self.version, self.word_count, self.longest, self.values);
 
         return ahocorasick.Automaton(*args)

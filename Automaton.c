@@ -101,9 +101,8 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 9)) {
+	if (UNLIKELY(PyTuple_Size(args) == 8)) {
 
-		size_t			count;
 		int				version;
 		int				word_count;
 		int				longest_word;
@@ -113,9 +112,9 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		PyObject*		bytes_list = NULL;
 		PyObject*		values = NULL;
 
-        const char* fmt = "kOiiiiiiO";
+        const char* fmt = "OiiiiiiO";
 
-		if (not F(PyArg_ParseTuple)(args, fmt, &count, &bytes_list, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
+		if (!F(PyArg_ParseTuple)(args, fmt, &bytes_list, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "Unable to load from pickle.");
 			goto error;
 		}
@@ -135,7 +134,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 				values = NULL;
 			}
 
-			if (automaton_unpickle(automaton, count, bytes_list, values)) {
+			if (automaton_unpickle(automaton, bytes_list, values)) {
 				automaton->kind		= kind;
 				automaton->store	= store;
 				automaton->key_type	= key_type;
@@ -915,7 +914,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 		return NULL;
 	}
 
-	if(ignore_white_space_tmp == 1) {
+	if (ignore_white_space_tmp == 1) {
 		ignore_white_space = true;
 	}
 

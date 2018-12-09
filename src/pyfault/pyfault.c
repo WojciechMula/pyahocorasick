@@ -21,7 +21,7 @@ void initialize_pyfault(void) {
 }
 
 
-PyObject* _PyObject_New_custom(PyTypeObject* typeobj) {
+int check(void) {
     pycall += 1;
 
     if (pycall == pycall_fail) {
@@ -30,6 +30,15 @@ PyObject* _PyObject_New_custom(PyTypeObject* typeobj) {
         }
 
         printf("Failed pycall #%d\n", pycall);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+PyObject* _PyObject_New_custom(PyTypeObject* typeobj) {
+    if (check()) {
         PyErr_NoMemory();
         return NULL;
     }

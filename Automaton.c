@@ -121,7 +121,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
         const char* fmt = "ks#iiiiiiO";
 #endif
 
-		if (not PyArg_ParseTuple(args, fmt, &count, &data, &size, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
+		if (not F(PyArg_ParseTuple)(args, fmt, &count, &data, &size, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "Invalid data: unable to load from pickle.");
 			goto error;
 		}
@@ -153,7 +153,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		key_type = KEY_STRING;
 
 		// construct new object
-		if (PyArg_ParseTuple(args, "ii", &store, &key_type)) {
+		if (F(PyArg_ParseTuple)(args, "ii", &store, &key_type)) {
 			if (not check_store(store)) {
 				goto error;
 			}
@@ -162,7 +162,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 				goto error;
 			}
 		}
-		else if (PyArg_ParseTuple(args, "i", &store)) {
+		else if (F(PyArg_ParseTuple)(args, "i", &store)) {
 			if (not check_store(store)) {
 				goto error;
 			}

@@ -165,7 +165,21 @@ function handle_mallocfaults
 
 function handle_pycallfaults
 {
-    echo "Not implemented yet"
+    export CFLAGS="-DPYCALLS_INJECT_FAULTS"
+    force_rebuild
+
+    local MINID=0
+    local MAXID=250
+
+    # simulate failures of all allocations
+    for ID in `seq 0 ${MAXID}`
+    do
+        echo "Python C-API call #${ID} will fail"
+        local LOG=${TMPDIR}/pycallfaults${ID}.log
+        export PYCALL_FAIL=${ID}
+        python3 unittests.py > ${LOG} 2>&1
+        python3 tests/pyfault_check.py ${LOG}
+    done
 }
 
 case "${arg}"

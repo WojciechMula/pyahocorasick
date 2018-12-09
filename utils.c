@@ -201,7 +201,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 static bool
 __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
 	Py_ssize_t i;
-	Py_ssize_t size = PyTuple_Size(obj);
+	Py_ssize_t size = PyTuple_GET_SIZE(obj);
 	TRIE_LETTER_TYPE* tmpword;
 
 	tmpword = (TRIE_LETTER_TYPE*)memory_alloc(size * TRIE_LETTER_SIZE);

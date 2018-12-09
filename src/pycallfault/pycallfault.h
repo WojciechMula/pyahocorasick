@@ -12,8 +12,7 @@ void initialize_pycallfault(void);
 int check(void);
 int check_and_set_error(void);
 
-#define PyObject_New_custom(type, typeobj) ((type*)(_PyObject_New_custom(typeobj)))
-PyObject* _PyObject_New_custom(PyTypeObject* typeobj);
+#define PyObject_New_custom(type, typeobj) (check_and_set_error() ? NULL : PyObject_New(type, typeobj))
 
 #define PyArg_ParseTuple_custom(arg1, arg2, ...) (check() ? 0 : PyArg_ParseTuple(arg1, arg2, __VA_ARGS__))
 

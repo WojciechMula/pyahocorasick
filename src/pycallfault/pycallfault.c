@@ -23,7 +23,7 @@ void initialize_pycallfault(void) {
 
 int check(void) {
     pycall += 1;
-    printf("Fail ID: %d\n", pycall);
+    //printf("Fail ID: %d\n", pycall);
 
     if (pycall == pycall_fail) {
         if (pycall_trap) {
@@ -45,15 +45,5 @@ int check_and_set_error(void) {
     }
     
     return 0;
-}
-
-
-PyObject* _PyObject_New_custom(PyTypeObject* typeobj) {
-    if (check()) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-
-    return PyObject_New(PyObject, typeobj);
 }
 

@@ -123,7 +123,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		}
 
 		if (!PyList_CheckExact(bytes_list)) {
-			PyErr_SetString(PyExc_ValueError, "Expected list");
+			PyErr_SetString(PyExc_TypeError, "Expected list");
 			goto error;
 		}
 

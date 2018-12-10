@@ -81,6 +81,13 @@ init_function(void) {
     initialize_pycallfault();
 #endif
 
+#if DEBUG_LAYOUT
+    PyErr_WarnEx(PyExc_RuntimeWarning,
+                 "This is a developer version of pyahcorosick. "
+                 "The module was compiled with flag DEBUG_LAYOUT.", 1);
+    trienode_dump_layout();
+#endif
+
 	automaton_as_sequence.sq_length   = automaton_len;
 	automaton_as_sequence.sq_contains = automaton_contains;
 

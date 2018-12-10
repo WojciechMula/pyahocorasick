@@ -74,3 +74,22 @@ trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child
 }
 
 
+#ifdef DEBUG_LAYOUT
+void trienode_dump_layout() {
+#define field_size(name) sizeof(((TrieNode*)NULL)->name)
+#define field_ofs(name) offsetof(TrieNode, name)
+#define field_dump(name) printf("- %-12s: %d %d\n", #name, field_size(name), field_ofs(name));
+
+    puts("TrieNode:");
+    field_dump(output);
+    field_dump(fail);
+    field_dump(n);
+    field_dump(eow);
+    field_dump(letter);
+    field_dump(next);
+
+#undef field_dump
+#undef field_size
+#undef field_ofs
+}
+#endif

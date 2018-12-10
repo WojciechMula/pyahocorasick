@@ -52,7 +52,7 @@ class TestApplication(object):
 
         print("Automaton statistics:")
         d = self.A.get_stats()
-        print("- nodes_count  : %d" % d['longest_word'])
+        print("- nodes_count  : %d" % d['nodes_count'])
         print("- words_count  : %d" % d['words_count'])
         print("- links_count  : %d" % d['links_count'])
         print("- longest_word : %d" % d['longest_word'])

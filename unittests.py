@@ -1060,11 +1060,11 @@ class TestIssue68(unittest.TestCase):
         A = ahocorasick.Automaton()
         for i in range(0, 65):
             A.add_word(str(i), (i, i))
-    
+
         path = 'TestIssue68.test_case1'
         with open(path, 'wb') as f:
             _pickle.dump(A, f)
-    
+
         with open(path, 'rb') as f:
             _pickle.load(f)
 

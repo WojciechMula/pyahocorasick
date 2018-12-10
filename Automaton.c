@@ -101,32 +101,29 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 9)) {
+	if (UNLIKELY(PyTuple_Size(args) == 7)) {
 
-		// unpickle: count, data, kind, store, version, values
-		size_t			count;
-		void*			data;
-		int				size;
-		int				version;
 		int				word_count;
 		int				longest_word;
 		AutomatonKind	kind;
 		KeysStore		store;
 		KeyType			key_type;
+		PyObject*		bytes_list = NULL;
 		PyObject*		values = NULL;
 
-#ifdef PY3K
-        const char* fmt = "ky#iiiiiiO";
-#else
-        const char* fmt = "ks#iiiiiiO";
-#endif
+        const char* fmt = "OiiiiiO";
 
-		if (not F(PyArg_ParseTuple)(args, fmt, &count, &data, &size, &kind, &store, &key_type, &version, &word_count, &longest_word, &values)) {
-			PyErr_SetString(PyExc_ValueError, "Invalid data: unable to load from pickle.");
+		if (!F(PyArg_ParseTuple)(args, fmt, &bytes_list, &kind, &store, &key_type, &word_count, &longest_word, &values)) {
+			PyErr_SetString(PyExc_ValueError, "Unable to load from pickle.");
 			goto error;
 		}
 
 		if (!check_store(store) || !check_kind(kind) || !check_key_type(key_type)) {
+			goto error;
+		}
+
+		if (!PyList_CheckExact(bytes_list)) {
+			PyErr_SetString(PyExc_TypeError, "Expected list");
 			goto error;
 		}
 
@@ -136,11 +133,10 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 				values = NULL;
 			}
 
-			if (automaton_unpickle(automaton, count, data, size, values)) {
+			if (automaton_unpickle(automaton, bytes_list, values)) {
 				automaton->kind		= kind;
 				automaton->store	= store;
 				automaton->key_type	= key_type;
-				automaton->version	= version;
 				automaton->count    = word_count;
 				automaton->longest_word	= longest_word;
 			}
@@ -916,7 +912,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 		return NULL;
 	}
 
-	if(ignore_white_space_tmp == 1) {
+	if (ignore_white_space_tmp == 1) {
 		ignore_white_space = true;
 	}
 

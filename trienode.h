@@ -26,7 +26,7 @@ typedef struct TrieNode {
 #else
 	uint32_t			n;		///< length of next
 #endif
-	uint8_t  			eow:1;	    ///< end of word marker
+	uint8_t  			eow;	///< end of word marker
 	TRIE_LETTER_TYPE	letter;	///< incoming edge label
 
 	struct TrieNode**	next;	///< table of pointers
@@ -47,5 +47,9 @@ trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child
 
 static TrieNode* PURE
 trienode_get_ith_unsafe(TrieNode* node, size_t letter);
+
+#ifdef DEBUG_LAYOUT
+void trienode_dump_layout();
+#endif
 
 #endif

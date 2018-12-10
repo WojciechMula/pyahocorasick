@@ -3,9 +3,10 @@
 import ahocorasick
 import unittest
 import struct
+import sys
 
 
-class TreeNodeBuilder(object):
+class TreeNodeBuilderBase(object):
     def __init__(self):
         self.integer = 0
         self.fail    = 0
@@ -16,19 +17,6 @@ class TreeNodeBuilder(object):
 
 
     def dump(self):
-        """
-        On Debian 64-bit, GCC 7.2 it is:
-
-        integer   : size 8, offset 0
-        fail      : size 8, offset 8
-        n         : size 4, offset 16
-        eow       : size 1, offset 20
-        padding   : size 3
-        letter    : size 4, offset 24
-        padding   : size 4
-        next      : size 8, offset 32 -- omitted in dump
-
-        """
 
         assert self.n == len(self.next)
 
@@ -36,30 +24,103 @@ class TreeNodeBuilder(object):
         for node in self.next:
             next += struct.pack('Q', node)
 
-        node = struct.pack('QQIBBBBII',
-            self.integer,
-            self.fail,
-            self.n,
-            self.eow, 0, 0, 0,
-            self.letter, 0)
+        return self.dump_node() + next
 
-        assert len(node) == 32
+if sys.version_info.major == 3:
 
-        return node + next
+    class TreeNodeBuilderPy3(TreeNodeBuilderBase):
+        def dump_node(self):
+            """
+            On Debian 64-bit, GCC 7.3
+
+            python3:
+
+                integer   : size 8, offset 0
+                fail      : size 8, offset 8
+                n         : size 4, offset 16
+                eow       : size 1, offset 20
+                padding   : size 3
+                letter    : size 4, offset 24
+                padding   : size 4
+                next      : size 8, offset 32 -- omitted in dump
+
+            python2:
+
+                integer   : size 8, offset 0
+                fail      : size 8, offset 8
+                n         : size 4, offset 16
+                eow       : size 1, offset 20
+                padding   : size 1
+                letter    : size 2, offset 22
+                next      : size 8, offset 24 -- omitted in dump
+            """
+            node = struct.pack('QQIBBBBII',
+                self.integer,
+                self.fail,
+                self.n,
+                self.eow, 0, 0, 0,
+                self.letter, 0)
+
+            assert len(node) == 32
+
+            return node
+
+
+    TreeNodeBuilder = TreeNodeBuilderPy3
+
+elif sys.version_info.major == 2:
+
+    class TreeNodeBuilderPy2(TreeNodeBuilderBase):
+        def dump_node(self):
+            """
+            On Debian 64-bit, GCC 7.3
+
+            python2:
+
+                integer   : size 8, offset 0
+                fail      : size 8, offset 8
+                n         : size 4, offset 16
+                eow       : size 1, offset 20
+                padding   : size 1
+                letter    : size 2, offset 22
+                next      : size 8, offset 24 -- omitted in dump
+            """
+            node = struct.pack('QQIBBH',
+                self.integer,
+                self.fail,
+                self.n,
+                self.eow, 0,
+                self.letter)
+
+            assert len(node) == 24
+
+            return node
+
+
+    TreeNodeBuilder = TreeNodeBuilderPy2
+
+
+USE_EXACT_RAW = True
 
 
 class TestUnpickleRaw(unittest.TestCase):
 
-    # raw constructor get 9-tuple (see Automaton.c):
-    # 1. count of nodes
-    # 2. serialized nodes (as bytes or string in Py2)
-    # 3. kind
-    # 4. store
-    # 5. key type
-    # 6. version (internal counter)
-    # 7. word count
-    # 8. length of the longest word
-    # 9. python values saved in a trie (if store == ahocorasick.STORE_ANY
+    def __init__(self, *args):
+        super(TestUnpickleRaw, self).__init__(*args)
+
+        if not hasattr(self, 'assertRaisesRegex'):
+            # fixup for Py2
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+
+    # raw constructor get 7-tuple (see Automaton.c):
+    # 1. serialized nodes (as list of bytes or strings)
+    # 2. kind
+    # 3. store
+    # 4. key type
+    # 5. word count
+    # 6. length of the longest word
+    # 7. python values saved in a trie (if store == ahocorasick.STORE_ANY)
 
     def setUp(self):
         self.count       = 0
@@ -67,16 +128,20 @@ class TestUnpickleRaw(unittest.TestCase):
         self.kind        = ahocorasick.EMPTY
         self.store       = ahocorasick.STORE_ANY
         self.key_type    = ahocorasick.KEY_STRING
-        self.version     = 0
         self.word_count  = 0
         self.longest     = 0
         self.values      = []
 
 
-    def create_automaton(self):
-        # alter values set in setUp
-        args = (self.count, self.raw, self.kind, self.store, self.key_type,
-                self.version, self.word_count, self.longest, self.values);
+    def create_automaton(self, use_exact_raw=False):
+        # alter values that were set in setUp
+        if use_exact_raw:
+            raw = self.raw
+        else:
+            raw = [self.create_raw_count(self.count) + self.raw]
+
+        args = (raw, self.kind, self.store, self.key_type,
+                self.word_count, self.longest, self.values);
 
         return ahocorasick.Automaton(*args)
 
@@ -89,6 +154,10 @@ class TestUnpickleRaw(unittest.TestCase):
         builder.eow     = eow
 
         return builder
+
+    
+    def create_raw_count(self, n):
+        return struct.pack('Q', n)
 
 
     def create_raw_node(self, letter, eow, children):
@@ -136,6 +205,49 @@ class TestUnpickleRaw(unittest.TestCase):
         self.word_count = 5
 
         A = self.create_automaton()
+        self.assertEqual(len(A), 5)
+        self.assertEqual(A.get("he"), "HE")
+        self.assertEqual(A.get("her"), "HER")
+        self.assertEqual(A.get("him"), "HIM")
+        self.assertEqual(A.get("his"), "HIS")
+        self.assertEqual(A.get("it"),  "IT")
+
+
+    def test__construct_simple_trie__split_across_a_few_chunks(self):
+
+        """
+        trie for set {he, her, his, him, it}
+
+        #0 -> [h #1 ] -> [e #2*] -> [r #3*]
+         |           \-> [i #4 ] -> [s #5*]
+         |                      \-> [m #6*]
+         |
+         +--> [i #7 ] -> [t #8 ]
+        """
+        values = ["HE", "HER", "HIS", "HIM", "IT"]
+
+        node0 = self.create_raw_node('_', 0, [1, 7])
+        node1 = self.create_raw_node('h', 0, [2, 4])
+        node2 = self.create_raw_node('e', 1, [3])       # HE
+        node3 = self.create_raw_node('r', 1, [])        # HER
+        node4 = self.create_raw_node('i', 0, [5, 6])
+        node5 = self.create_raw_node('s', 1, [])        # HIS
+        node6 = self.create_raw_node('m', 1, [])        # HIM
+        node7 = self.create_raw_node('i', 0, [8])
+        node8 = self.create_raw_node('t', 1, [])        # IT
+
+        self.count = 9
+        self.raw   = [
+            self.create_raw_count(2) + node0 + node1,
+            self.create_raw_count(3) + node2 + node3 + node4,
+            self.create_raw_count(1) + node5,
+            self.create_raw_count(3) + node6 + node7 + node8
+        ]
+        self.kind  = ahocorasick.TRIE
+        self.values = values
+        self.word_count = 5
+
+        A = self.create_automaton(USE_EXACT_RAW)
         self.assertEqual(len(A), 5)
         self.assertEqual(A.get("he"), "HE")
         self.assertEqual(A.get("her"), "HER")
@@ -273,6 +385,58 @@ class TestUnpickleRaw(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.create_automaton()
+
+
+    def test__wrong_type_of_chunk_container(self):
+
+        self.count = 9
+        self.raw   = () # this shuld be a list
+        self.kind  = ahocorasick.TRIE
+        self.values = None
+        self.word_count = 5
+
+        with self.assertRaisesRegex(TypeError, "Expected list"):
+            A = self.create_automaton(USE_EXACT_RAW)
+
+
+    def test__wrong_type_of_chunk(self):
+
+        self.count = 9
+        self.raw   = [42] # list items must be strings/bytes
+        self.kind  = ahocorasick.TRIE
+        self.values = None
+        self.word_count = 5
+
+        with self.assertRaisesRegex(ValueError, "Item #0 on the bytes list is not a bytes object"):
+            A = self.create_automaton(USE_EXACT_RAW)
+
+
+    def test__wrong_count_of_nodes_in_chunk__case1(self):
+
+        self.count = 9
+        self.raw   = [
+            self.create_raw_count(0) # count must be greater than 0
+        ]
+        self.kind  = ahocorasick.TRIE
+        self.values = None
+        self.word_count = 5
+
+        with self.assertRaisesRegex(ValueError, r"Nodes count for item #0 on the bytes list is not positive \(0\)"):
+            A = self.create_automaton(USE_EXACT_RAW)
+
+
+    def test__wrong_count_of_nodes_in_chunk__case2(self):
+
+        self.count = 9
+        self.raw   = [
+            self.create_raw_count(-12 & 0xffffffffffffffff) # count must be greater than 0
+        ]
+        self.kind  = ahocorasick.TRIE
+        self.values = None
+        self.word_count = 5
+
+        with self.assertRaisesRegex(ValueError, r"Nodes count for item #0 on the bytes list is not positive \(-12\)"):
+            A = self.create_automaton(USE_EXACT_RAW)
 
 
 

@@ -1,6 +1,6 @@
 /*
 	This is part of pyahocorasick Python module.
-	
+
 	Automaton class methods
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
@@ -73,9 +73,7 @@ typedef struct Automaton {
 static bool
 automaton_unpickle(
 	Automaton* automaton,
-	const size_t count,
-	uint8_t* data,
-	const size_t size,
+	PyObject* bytes_list,
 	PyObject* values
 );
 

@@ -3,9 +3,10 @@
 import ahocorasick
 import unittest
 import struct
+import sys
 
 
-class TreeNodeBuilder(object):
+class TreeNodeBuilderBase(object):
     def __init__(self):
         self.integer = 0
         self.fail    = 0
@@ -16,19 +17,6 @@ class TreeNodeBuilder(object):
 
 
     def dump(self):
-        """
-        On Debian 64-bit, GCC 7.2 it is:
-
-        integer   : size 8, offset 0
-        fail      : size 8, offset 8
-        n         : size 4, offset 16
-        eow       : size 1, offset 20
-        padding   : size 3
-        letter    : size 4, offset 24
-        padding   : size 4
-        next      : size 8, offset 32 -- omitted in dump
-
-        """
 
         assert self.n == len(self.next)
 
@@ -36,19 +24,91 @@ class TreeNodeBuilder(object):
         for node in self.next:
             next += struct.pack('Q', node)
 
-        node = struct.pack('QQIBBBBII',
-            self.integer,
-            self.fail,
-            self.n,
-            self.eow, 0, 0, 0,
-            self.letter, 0)
+        return self.dump_node() + next
 
-        assert len(node) == 32
+if sys.version_info.major == 3:
 
-        return node + next
+    class TreeNodeBuilderPy3(TreeNodeBuilderBase):
+        def dump_node(self):
+            """
+            On Debian 64-bit, GCC 7.3
+
+            python3:
+
+                integer   : size 8, offset 0
+                fail      : size 8, offset 8
+                n         : size 4, offset 16
+                eow       : size 1, offset 20
+                padding   : size 3
+                letter    : size 4, offset 24
+                padding   : size 4
+                next      : size 8, offset 32 -- omitted in dump
+
+            python2:
+
+                integer   : size 8, offset 0
+                fail      : size 8, offset 8
+                n         : size 4, offset 16
+                eow       : size 1, offset 20
+                padding   : size 1
+                letter    : size 2, offset 22
+                next      : size 8, offset 24 -- omitted in dump
+            """
+            node = struct.pack('QQIBBBBII',
+                self.integer,
+                self.fail,
+                self.n,
+                self.eow, 0, 0, 0,
+                self.letter, 0)
+
+            assert len(node) == 32
+
+            return node
+
+
+    TreeNodeBuilder = TreeNodeBuilderPy3
+
+elif sys.version_info.major == 2:
+
+    class TreeNodeBuilderPy2(TreeNodeBuilderBase):
+        def dump_node(self):
+            """
+            On Debian 64-bit, GCC 7.3
+
+            python2:
+
+                integer   : size 8, offset 0
+                fail      : size 8, offset 8
+                n         : size 4, offset 16
+                eow       : size 1, offset 20
+                padding   : size 1
+                letter    : size 2, offset 22
+                next      : size 8, offset 24 -- omitted in dump
+            """
+            node = struct.pack('QQIBBH',
+                self.integer,
+                self.fail,
+                self.n,
+                self.eow, 0,
+                self.letter)
+
+            assert len(node) == 24
+
+            return node
+
+
+    TreeNodeBuilder = TreeNodeBuilderPy2
 
 
 class TestUnpickleRaw(unittest.TestCase):
+
+    def __init__(self, *args):
+        super(TestUnpickleRaw, self).__init__(*args)
+
+        if not hasattr(self, 'assertRaisesRegex'):
+            # fixup for Py2
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
 
     # raw constructor get 7-tuple (see Automaton.c):
     # 1. count of nodes

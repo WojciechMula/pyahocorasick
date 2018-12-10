@@ -65,6 +65,8 @@ module = Extension(
         'src/pickle/pickle.h',
         'src/pickle/pickle_data.h',
         'src/pickle/pickle_data.c',
+        'src/pycallfault/pycallfault.h',
+        'src/pycallfault/pycallfault.c',
     ],
 )
 

@@ -18,11 +18,15 @@ int check_and_set_error(void);
 
 #define PyTuple_GetItem_custom(...) (check_and_set_error() ? NULL : PyTuple_GetItem(__VA_ARGS__))
 
+#define PyList_New_custom(arg) (check_and_set_error() ? NULL : PyList_New(arg))
+
 #define PyList_GetItem_custom(...) (check_and_set_error() ? NULL : PyList_GetItem(__VA_ARGS__))
 
-#define PyNumber_AsSsize_t_custom(...) (check_and_set_error() ? -1 : PyNumber_AsSsize_t(__VA_ARGS__))
+#define PyList_SetItem_custom(...) (check_and_set_error() ? -1 : PyList_SetItem(__VA_ARGS__))
 
-#define PyList_New_custom(arg) (check_and_set_error() ? NULL : PyList_New(arg))
+#define PyList_Append_custom(...) (check_and_set_error() ? -1 : PyList_Append(__VA_ARGS__))
+
+#define PyNumber_AsSsize_t_custom(...) (check_and_set_error() ? -1 : PyNumber_AsSsize_t(__VA_ARGS__))
 
 #define Py_BuildValue_custom(...) (check_and_set_error() ? NULL : Py_BuildValue(__VA_ARGS__))
 
@@ -31,6 +35,8 @@ int check_and_set_error(void);
 #define PyUnicode_Check_custom(arg) (check() ? 0 : PyUnicode_Check(arg))
 
 #define PyBytes_Check_custom(arg) (check() ? 0 : PyBytes_Check(arg))
+
+#define PyBytes_CheckExact_custom(arg) (check() ? 0 : PyBytes_CheckExact(arg))
 
 #define PyCallable_Check_custom(arg) (check() ? 0 : PyCallable_Check(arg))
 
@@ -45,5 +51,7 @@ int check_and_set_error(void);
 #define PyNumber_Index_custom(arg) (check_and_set_error() ? NULL : PyNumber_Index(arg))
 
 #define PyUnicode_FromKindAndData_custom(...) (check_and_set_error() ? NULL : PyUnicode_FromKindAndData(__VA_ARGS__))
+
+#define PyBytes_FromStringAndSize_custom(...) (check_and_set_error() ? NULL : PyBytes_FromStringAndSize(__VA_ARGS__))
 
 #endif // PYCALLFAULT_H_

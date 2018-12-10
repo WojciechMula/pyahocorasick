@@ -175,7 +175,7 @@ function handle_pycallfaults
     force_rebuild
 
     local MINID=0
-    local MAXID=2096 # obtained manually
+    local MAXID=2115 # obtained manually
 
     # simulate failures of all call to Python C-API
     for ID in `seq 0 ${MAXID}`

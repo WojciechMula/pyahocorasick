@@ -30,6 +30,7 @@ static bool
 pickle_data__add_next_buffer(PickleData* data) {
 
 	PyObject* bytes;
+	void* raw;
 
 	ASSERT(data != NULL);
 
@@ -43,7 +44,7 @@ pickle_data__add_next_buffer(PickleData* data) {
 		return false;
 	}
 
-	void* raw = PyBytes_AS_STRING(bytes);
+	raw = PyBytes_AS_STRING(bytes);
 
 	data->count 	= (Py_ssize_t*)raw;
 	(*data->count)	= 0;

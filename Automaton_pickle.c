@@ -212,7 +212,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 
 	// 0. for an empty automaton do nothing
     if (automaton->count == 0) {
-        // the class constructor feeded with an empty argument build an empty automaton
+        // the class constructor feed with an empty argument build an empty automaton
         return F(Py_BuildValue)("O()", Py_TYPE(self));
     }
 

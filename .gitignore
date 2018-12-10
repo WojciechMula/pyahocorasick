@@ -1,5 +1,4 @@
-build/
-dist/
+# patterns
 *.pyc
 *.pyd
 *.dot
@@ -7,10 +6,14 @@ dist/
 *.so
 *.sh
 *.o
+
+# files
 MANIFEST
-memory.dump
-valgrind.log
-pickle_stresstest.pickle
 !runtest.sh
+tags
+
+# dirs
+build/
+dist/
 /pyahocorasick.egg-info/
 /tmp/

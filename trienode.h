@@ -26,7 +26,7 @@ typedef struct TrieNode {
 #else
 	uint32_t			n;		///< length of next
 #endif
-	uint8_t  			eow:1;	    ///< end of word marker
+	uint8_t  			eow;	///< end of word marker
 	TRIE_LETTER_TYPE	letter;	///< incoming edge label
 
 	struct TrieNode**	next;	///< table of pointers

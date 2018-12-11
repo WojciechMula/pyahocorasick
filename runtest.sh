@@ -44,7 +44,7 @@ then
     print_help
     exit 1
 fi
- 
+
 ACTION=
 REBUILD=1
 arg=$1
@@ -83,6 +83,9 @@ function force_rebuild
 
 function handle_unit
 {
+    export CFLAGS=""
+    force_rebuild
+
     ${PYTHON} unittests.py
     if [[ $? != 0 ]]
     then
@@ -93,6 +96,9 @@ function handle_unit
 
 function handle_unpickle
 {
+    export CFLAGS=""
+    force_rebuild
+
     ${PYTHON} unpickle_test.py
     if [[ $? != 0 ]]
     then

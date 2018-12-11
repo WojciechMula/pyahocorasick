@@ -6,6 +6,7 @@ graft docs
 graft regression
 graft stamp
 graft unresolved_bugs
+graft src
 include README.rst
 include LICENSE
 include *.py

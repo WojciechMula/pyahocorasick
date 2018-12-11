@@ -29,7 +29,35 @@ else:
         conv = lambda x: x
 
 
-class TestTrieStorePyObjectsBase(unittest.TestCase):
+class TestCase(unittest.TestCase):
+    def __init__(self, *args):
+        super(TestCase, self).__init__(*args)
+
+        if not hasattr(self, 'assertRaisesRegex'):
+            # fixup for Py2
+            self.assertRaisesRegex = self.assertRaisesRegexp
+
+
+    def assertEmpty(self, collection):
+        self.assertEqual(0, len(collection))
+
+
+    def assertNotEmpty(self, collection):
+        self.assertGreater(len(collection), 0)
+
+
+class TestConstructor(TestCase):
+    def test_constructor_wrong_store(self):
+        with self.assertRaisesRegex(ValueError, "store value must be one of.*"):
+            ahocorasick.Automaton(-42)
+
+
+    def test_constructor_wrong_key_type(self):
+        with self.assertRaisesRegex(ValueError, "key_type must have value.*"):
+            ahocorasick.Automaton(ahocorasick.STORE_ANY, -42)
+
+
+class TestTrieStorePyObjectsBase(TestCase):
     def setUp(self):
         self.A = ahocorasick.Automaton();
         self.words = "word python aho corasick \x00\x00\x00".split()
@@ -153,6 +181,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
             with self.assertRaises(KeyError):
                 A.get(conv(w))
 
+
     def test_get_from_an_empty_automaton(self):
         A = ahocorasick.Automaton()
 
@@ -211,6 +240,7 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 class TestTrieIterators(TestTrieStorePyObjectsBase):
     "Test iterators walking over trie"
 
+
     def test_iter(self):
         A = self.A
         for i, w in enumerate(self.words):
@@ -254,7 +284,6 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         L = [x for x in A.items()]
         self.assertEqual(len(L), len(I))
         self.assertEqual(set(L), set(I))
-
 
 
     def test_items_with_prefix_valid(self):
@@ -311,6 +340,16 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         self.assertEqual(set(I), set(L))
 
 
+    def test_items_wrong_wildcrard(self):
+        with self.assertRaisesRegex(ValueError, "Wildcard must be a single character.*"):
+            self.A.keys(conv("anything"), conv("??"))
+
+
+    def test_items_wrong_match_enum(self):
+        with self.assertRaisesRegex(ValueError, "The optional how third argument must be one of"):
+            self.A.keys(conv("anything"), conv("?"), -42)
+
+
 class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
     "Test invalidating iterator when trie is changed"
 
@@ -344,7 +383,7 @@ class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):
         self.helper(self.A.items)
 
 
-class TestAutomatonBase(unittest.TestCase):
+class TestAutomatonBase(TestCase):
     def setUp(self):
         self.A = ahocorasick.Automaton();
         self.words = "he her hers she".split()
@@ -456,6 +495,65 @@ class TestAutomatonSearch(TestAutomatonBase):
         self.assertEqual(L, C)
 
 
+    def test_find_all__not_a_callable_object(self):
+        A = self.add_words_and_make_automaton()
+
+        with self.assertRaisesRegex(TypeError, "The callback argument must be a callable such as a function."):
+            A.find_all(conv(self.string), None)
+
+
+    def test_find_all__wrong_range__case_1(self):
+        A = self.add_words_and_make_automaton()
+
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        with self.assertRaisesRegex(IndexError, "end index not in range 0..12"):
+            A.find_all(conv(self.string), callback, 0, len(self.string) + 5)
+
+
+    def test_find_all__wrong_range__case_2(self):
+        A = self.add_words_and_make_automaton()
+
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        with self.assertRaisesRegex(IndexError, "start index not in range 0..12"):
+            A.find_all(conv(self.string), callback, -len(self.string) - 1, 3)
+
+
+    def test_find_all__end_index_not_given(self):
+        A = self.add_words_and_make_automaton()
+
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        A.find_all(conv(self.string), callback, 0)
+
+
+    def test_find_all__start_is_negative(self):
+        A = self.add_words_and_make_automaton()
+
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        A.find_all(conv(self.string), callback, -3, 4)
+
+
+    def test_find_all__end_is_negative(self):
+        A = self.add_words_and_make_automaton()
+
+        L = []
+        def callback(index, word):
+            L.append((index, word))
+
+        A.find_all(conv(self.string), callback, 0, -1)
+
+
 class TestAutomatonIterSearch(TestAutomatonBase):
     "Test searching using constructed automaton (iterator)"
 
@@ -503,13 +601,46 @@ class TestAutomatonIterSearch(TestAutomatonBase):
         A = self.add_words_and_make_automaton()
         parts = "_sh erhe rshe _".split()
 
+        expected = {
+            '_sh'   : [],
+            'erhe'  : [(3, 'she'),
+                       (3, 'he'),
+                       (4, 'her'),
+                       (6, 'he')],
+            'rshe'  : [(7, 'her'),
+                       (8, 'hers'),
+                       (10, 'she'),
+                       (10, 'he')],
+             '_'    : []
+        }
+
         it = A.iter(conv(""))
-        print()
+        result = {}
         for part in parts:
             it.set(conv(part))
-            print(part, ":")
+            result[part] = []
             for item in it:
-                print(item)
+                result[part].append(item)
+
+        self.assertEqual(expected, result)
+
+    def test_iter_set__with_reset(self):
+        A = self.add_words_and_make_automaton()
+
+        expected = {
+            'he'    : [(1, 'he')],
+            'she'   : [(2, 'she'), (2, 'he')],
+        }
+
+        it = A.iter(conv(""))
+        result = {}
+        for part in ["he", "she"]:
+            it.set(conv(part), True)
+            result[part] = []
+            for item in it:
+                result[part].append(item)
+
+        self.assertEqual(expected, result)
 
 
     def test_iter_compare_with_find_all(self):
@@ -528,6 +659,13 @@ class TestAutomatonIterSearch(TestAutomatonBase):
             C.append((index, word))
 
         self.assertEqual(L, C)
+
+
+    def test_iter_wrong_argument_type(self):
+        A = self.add_words_and_make_automaton()
+
+        with self.assertRaisesRegex(TypeError, "string required"):
+            A.iter(None)
 
 
 class TestAutomatonIterSearchWithIgnoreWhiteSpace(TestAutomatonBase):
@@ -684,7 +822,7 @@ class TestPickle(TestAutomatonBase):
             self.assertEqual(AV, BV)
 
 
-class TestPickleStoreInts(unittest.TestCase):
+class TestPickleStoreInts(TestCase):
     "Test pickling/unpickling for automaton of kind STORE_INTS/STORE_LEN"
 
 
@@ -723,7 +861,7 @@ class TestPickleStoreInts(unittest.TestCase):
             self.assertEqual(AV, BV)
 
 
-class TestTrieStoreInts(unittest.TestCase):
+class TestTrieStoreInts(TestCase):
     "Test storing plain ints as values (instead of python objects)"
 
     def setUp(self):
@@ -798,7 +936,7 @@ class TestTrieStoreInts(unittest.TestCase):
         self.assertEqual(C, L)
 
 
-class TestTrieStoreLengths(unittest.TestCase):
+class TestTrieStoreLengths(TestCase):
     """Test storing plain ints -- length of words --- as values
     (instead of python objects)"""
 
@@ -818,7 +956,7 @@ class TestTrieStoreLengths(unittest.TestCase):
             self.assertEqual(len(key), value)
 
 
-class TestSizeOf(unittest.TestCase):
+class TestSizeOf(TestCase):
     def setUp(self):
         self.A = ahocorasick.Automaton();
         words = "word python aho corasick tree bark branch root".split()
@@ -860,7 +998,7 @@ class TestBugAutomatonSearch(TestAutomatonBase):
         self.assertEqual([(15, 'GT-C3303')], res)
 
 
-class TestIntSequenceBase(unittest.TestCase):
+class TestIntSequenceBase(TestCase):
     def setUp(self):
         self.A = ahocorasick.Automaton(ahocorasick.STORE_ANY, ahocorasick.KEY_SEQUENCE);
 
@@ -1012,7 +1150,41 @@ class TestIntSequence__TrieMethods(TestIntSequenceBase):
         ])
 
 
-class TestIssue53(unittest.TestCase):
+    def test_iter_wrong_argument_type(self):
+        A = self.A
+        A.add_word((89, 100), (89, 100))
+        A.make_automaton()
+
+        with self.assertRaisesRegex(TypeError, "tuple required"):
+            self.A.iter(None)
+
+
+class TestDump(TestAutomatonBase):
+    def test_dump_empty(self):
+        self.assertIsNone(self.A.dump())
+
+
+    def test_dump_trie(self):
+        self.add_words()
+        ret = self.A.dump()
+
+        self.assertEqual(3, len(ret))
+        self.assertNotEmpty(ret[0])     # list of nodes
+        self.assertNotEmpty(ret[1])     # list of edges
+        self.assertEmpty(ret[2])        # list of fail links -- empty, if not an automaton
+
+
+    def test_dump_automaton(self):
+        self.add_words_and_make_automaton()
+        ret = self.A.dump()
+
+        self.assertEqual(3, len(ret))
+        self.assertNotEmpty(ret[0])     # list of nodes
+        self.assertNotEmpty(ret[1])     # list of edges
+        self.assertNotEmpty(ret[2])     # list of fail links
+
+
+class TestIssue53(TestCase):
     """
     Problems with handling of UCS-2 encoding
     """
@@ -1047,7 +1219,7 @@ class TestIssue53(unittest.TestCase):
             pass
 
 
-class TestIssue68(unittest.TestCase):
+class TestIssue68(TestCase):
     """
     Test problems with pickling
     """

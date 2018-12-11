@@ -781,7 +781,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 				default:
 					PyErr_SetString(PyExc_ValueError,
-						"The optional how third argument must beone of:\n"
+						"The optional how third argument must be one of: "
 						"MATCH_EXACT_LENGTH, MATCH_AT_LEAST_PREFIX or MATCH_AT_LEAST_PREFIX"
 					);
 					goto error;

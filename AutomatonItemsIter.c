@@ -222,7 +222,7 @@ automaton_items_iter_next(PyObject* self) {
 #endif
 
 				case ITER_VALUES:
-                    val = iter->state->output.object;
+                    val = iter->state->output;
                     Py_INCREF(val);
 					return val;
 
@@ -237,7 +237,7 @@ automaton_items_iter_next(PyObject* self) {
 #else
                             "(s#O)", /*key*/ iter->char_buffer + 1, depth,
 #endif
-							/*val*/ iter->state->output.object
+							/*val*/ iter->state->output
 					);
 			} // switch
 		}

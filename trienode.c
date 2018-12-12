@@ -14,14 +14,13 @@ static TrieNode*
 trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
 	TrieNode* node = (TrieNode*)memory_alloc(sizeof(TrieNode));
 	if (node) {
-		node->output.integer = 0;
-		node->output.object = NULL;
+		node->output	= NULL;
 		node->fail		= NULL;
 
-		node->n		= 0;
+		node->n			= 0;
 		node->letter	= letter;
 		node->eow	    = eow;
-		node->next	= NULL;
+		node->next		= NULL;
 	}
 
 	return node;

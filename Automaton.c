@@ -198,10 +198,10 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	if (node) {
 		if (not new_word and node->eow)
 			// replace
-			Py_DECREF(node->output.object);
+			Py_DECREF(node->output);
 
 		Py_INCREF(py_value);
-		node->output.object = py_value;
+		node->output = py_value;
 
 		if (new_word) {
 			automaton->version += 1; // change version only when new word appeared
@@ -229,8 +229,7 @@ clear_aux(TrieNode* node) {
 	unsigned i;
 
 	if (node) {
-		if (node->output.object)
-			Py_DECREF(node->output.object);
+		Py_XDECREF(node->output);
 
 		for (i=0; i < node->n; i++) {
 			TrieNode* child = node->next[i];
@@ -381,8 +380,8 @@ automaton_get(PyObject* self, PyObject* args) {
 	destroy_input(&input);
 
 	if (node and node->eow) {
-		Py_INCREF(node->output.object);
-		return node->output.object;
+		Py_INCREF(node->output);
+		return node->output;
 	}
 	else {
 		py_def = F(PyTuple_GetItem)(args, 1);
@@ -560,7 +559,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		// return output
 		while (tmp) {
 			if (tmp->eow) {
-				callback_ret = F(PyObject_CallFunction)(callback, "iO", i, tmp->output.object);
+				callback_ret = F(PyObject_CallFunction)(callback, "iO", i, tmp->output);
 
 				if (callback_ret == NULL) {
 					destroy_input(&input);

@@ -182,7 +182,7 @@ automaton_build_output(PyObject* self, PyObject** result) {
 #else
 		idx = iter->index + iter->shift;
 #endif
-		*result = F(Py_BuildValue)("iO", idx, node->output.object);
+		*result = F(Py_BuildValue)("iO", idx, node->output);
 		return OutputValue;
 	}
 

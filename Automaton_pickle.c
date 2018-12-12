@@ -158,14 +158,14 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 
 	// append the python object to the list
 	if (node->eow) {
-		if (PyList_Append(self->values, node->output.object) == -1) {
+		if (PyList_Append(self->values, node->output) == -1) {
 			self->error = true;
 			return 0;
 		}
 	}
 
 	// save node data
-	dump->output.integer = 0;
+	dump->output	= NULL;
 	dump->n			= node->n;
 	dump->eow		= node->eow;
 	dump->letter	= node->letter;
@@ -425,7 +425,7 @@ automaton_unpickle(
 			value = F(PyList_GetItem)(values, object_idx);
 			if (value) {
 				Py_INCREF(value);
-				node->output.object = value;
+				node->output = value;
 				object_idx += 1;
 			}
 			else

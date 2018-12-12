@@ -336,7 +336,11 @@ automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
 	*value = trie_remove_word(automaton, input.word, input.wordlen);
 	destroy_input(&input);
 
-	return (*value != NULL) ? TRUE : FALSE;
+	if (UNLIKELY(PyErr_Occurred())) {
+		return MEMORY_ERROR;
+	} else {
+		return (*value != NULL) ? TRUE : FALSE;
+	}
 }
 
 

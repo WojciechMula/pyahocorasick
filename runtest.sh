@@ -127,7 +127,7 @@ function mallocfault
     export ALLOC_FAIL=$1
 
     local LOG=${TMPDIR}/mallocfault${ID}.log
-    ${PYTHON} unittests.py -q > ${LOG} 2>&1
+    ${PYTHON} unittests.py ${UNITTEST} -q > ${LOG} 2>&1
     ${PYTHON} tests/unittestlog_check.py ${LOG}
     if [[ $? != 0 ]]
     then
@@ -141,7 +141,7 @@ function handle_mallocfaults
     force_rebuild
 
     # obtain max allocation number
-    ${PYTHON} unittests.py
+    ${PYTHON} unittests.py ${UNITTEST}
     if [[ $? != 0 ]]
     then
         echo "Unit tests failed!"
@@ -152,7 +152,7 @@ function handle_mallocfaults
     local MAXID=$(${PYTHON} tests/memdump_maxalloc.py)
 
     # simulate failures of all allocations
-    for ID in `seq 0 ${MAXID}`
+    for ID in `seq ${MINID} ${MAXID}`
     do
         echo "Checking memalloc fail ${ID} of ${MAXID}"
         mallocfault ${ID}
@@ -173,7 +173,7 @@ function handle_pycallfaults
         echo -n "Checking Python C-API fail ${ID} of ${MAXID}"
         local LOG=${TMPDIR}/pycallfaults${ID}.log
         export PYCALL_FAIL=${ID}
-        ${PYTHON} unittests.py > ${LOG} 2>&1
+        ${PYTHON} unittests.py ${UNITTEST} > ${LOG} 2>&1
         echo " return code $?"
         ${PYTHON} tests/pyfault_check.py ${LOG}
     done

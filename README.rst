@@ -231,9 +231,6 @@ Module constants
 
  - ``ahocorasick.unicode`` --- see `Unicode and bytes`_
 
- - ``ahocorasick.STORE_ANY``, ``ahocorasick.STORE_INTS``,
-   ``ahocorasick.STORE_LENGTH`` --- see `Automaton class`_
-
  - ``ahocorasick.KEY_STRING`` ``ahocorasick.KEY_SEQUENCE``
    --- see `Automaton class`_
 
@@ -253,14 +250,11 @@ and re-load it later to reuse it over and over as a persistent multi-string sear
 Internally, Automaton implements the ``__reduce__() magic method``.
 
 
-``Automaton([value_type], [key_type])``
+``Automaton([key_type=ahocorasick.KEY_STRING])``
 
     Create a new empty Automaton optionally passing a `value_type` to indicate
-    what is the type of associated values (default to any Python object type).
-    It can be one of ``ahocorasick.STORE_ANY``, ``ahocorasick.STORE_INTS`` or
-    ``ahocorasick.STORE_LENGTH``. In the last case the length of the key will
-    be stored in the automaton. The optional argument `key_type` can be
-    ``ahocorasick.KEY_STRING`` or ``ahocorasick.KEY_SEQUENCE``. In the latter
+    what is the type of associated values. The optional argument `key_type` can
+    be ``ahocorasick.KEY_STRING`` or ``ahocorasick.KEY_SEQUENCE``. In the latter
     case keys will be tuples of integers. The size of integer depends on the
     version and platform Python is running on, but for versions of Python >=
     3.3, it is guaranteed to be 32-bits.
@@ -270,7 +264,7 @@ Automaton Trie methods
 
 The Automaton class has the following main trie-like methods:
 
-``add_word(key, [value]) => bool``
+``add_word(key, value) => bool``
     Add a ``key`` string to the dict-like trie and associate this key with a ``value``.
 
 ``exists(key) => bool`` or ``key in ...``

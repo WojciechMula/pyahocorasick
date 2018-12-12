@@ -21,13 +21,6 @@ typedef enum {
 
 
 typedef enum {
-	STORE_INTS   = 10,
-	STORE_LENGTH = 20,
-	STORE_ANY    = 30
-} KeysStore;
-
-
-typedef enum {
 	KEY_STRING   = 100,
     KEY_SEQUENCE = 200
 } KeyType;
@@ -57,7 +50,6 @@ typedef struct Automaton {
 	PyObject_HEAD
 
 	AutomatonKind	kind;	///< current kind of automaton
-	KeysStore		store;	///< type of values: copy of string, bare integer, python  object
     KeyType         key_type;    ///< type of keys: strings or integer sequences
 	int				count;	///< number of distinct words
 	int				longest_word;	///< length of the longest word

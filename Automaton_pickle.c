@@ -157,7 +157,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	arr = (TrieNode**)(self->data + self->top + PICKLE_TRIENODE_SIZE);
 
 	// append the python object to the list
-	if (node->eow and self->values) {
+	if (node->eow) {
 		if (PyList_Append(self->values, node->output.object) == -1) {
 			self->error = true;
 			return 0;
@@ -165,11 +165,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 	}
 
 	// save node data
-	if (self->values)
-		dump->output.integer = 0;
-	else
-		dump->output.integer = node->output.integer;
-
+	dump->output.integer = 0;
 	dump->n			= node->n;
 	dump->eow		= node->eow;
 	dump->letter	= node->letter;
@@ -232,7 +228,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	}
 
 	// 2. gather data
-	if (!pickle_data__init(&data, automaton->store, state.total_size, array_size))
+	if (!pickle_data__init(&data, state.total_size, array_size))
 		goto exception;
 
 	trie_traverse(automaton->root, pickle_dump_save, &data);
@@ -242,11 +238,6 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 
 	if (UNLIKELY(!pickle_data__shrink_last_buffer(&data))) {
 		goto exception;
-	}
-
-	if (automaton->store != STORE_ANY) { // always pickle a Python object
-		data.values = Py_None;
-		Py_INCREF(data.values);
 	}
 
 	/* 3: save tuple:
@@ -260,20 +251,15 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	*/
 
 	tuple = F(Py_BuildValue)(
-        "O(OiiiiiO)",
+        "O(OiiiiO)",
 		Py_TYPE(self),
 		data.bytes_list,
 		automaton->kind,
-		automaton->store,
 		automaton->key_type,
 		automaton->count,
 		automaton->longest_word,
 		data.values
 	);
-
-    if (data.values == Py_None) {
-        data.values = NULL;
-    }
 
 	if (UNLIKELY(tuple == NULL)) {
 		goto exception;
@@ -495,10 +481,8 @@ exception:
 
 	// If there is value list and some of its items were already
 	// referenced, release them
-	if (values) {
-		for (i=0; i < object_idx; i++) {
-			Py_XDECREF(F(PyList_GetItem)(values, i));
-		}
+	for (i=0; i < object_idx; i++) {
+		Py_XDECREF(F(PyList_GetItem)(values, i));
 	}
 
 	return 0;

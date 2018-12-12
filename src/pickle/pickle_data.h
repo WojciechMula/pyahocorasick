@@ -28,5 +28,5 @@ static bool
 pickle_data__shrink_last_buffer(PickleData* data);
 
 static int
-pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t max_array_size);
+pickle_data__init(PickleData* data, size_t total_size, size_t max_array_size);
 

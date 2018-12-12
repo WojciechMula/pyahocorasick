@@ -114,10 +114,6 @@ init_function(void) {
 	add_enum_const(AHOCORASICK);
 	add_enum_const(EMPTY);
 
-	add_enum_const(STORE_LENGTH);
-	add_enum_const(STORE_INTS);
-	add_enum_const(STORE_ANY);
-
 	add_enum_const(KEY_STRING);
 	add_enum_const(KEY_SEQUENCE);
 

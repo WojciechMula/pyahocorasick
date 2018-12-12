@@ -15,37 +15,13 @@
 static PyTypeObject automaton_type;
 
 #define automaton_doc \
-	"Automaton(value_type=ahocorasick.STORE_ANY, [key_type])\n\n" \
-	"Create a new empty Automaton. Both value_type and key_type are optional.\n\n" \
-	"value_type is one of these constants:\n" \
-	" - ahocorasick.STORE_ANY : The associated value can be any Python object (default).\n" \
-	" - ahocorasick.STORE_LENGTH : The length of an added string key is automatically\n" \
-	"   used as the associated value stored in the trie for that key.\n" \
-	" - ahocorasick.STORE_INTS : The associated value must be a 32-bit integer.\n\n" \
-	"key_type defines the type of data that can be stored in an automaton; it is one of\n" \
-	"these constants and defines type of data might be stored:\n" \
+	"Automaton([key_type=automaton.KEY_STRING])\n\n" \
+	"Create a new empty Automaton. An optional argument key_type defines the type\n" \
+	"of data that can be stored in an automaton; it is one of\n" \
 	" - ahocorasick.KEY_STRING [default] : string\n" \
 	" - ahocorasick.KEY_SEQUENCE : sequences of integers; The size of integer depends\n" \
 	"   the version and platform Python, but for versions of Python >= 3.3, it is\n" \
 	"   guaranteed to be 32-bits."
-
-
-static bool
-check_store(const int store) {
-	switch (store) {
-		case STORE_LENGTH:
-		case STORE_INTS:
-		case STORE_ANY:
-			return true;
-
-		default:
-			PyErr_SetString(
-				PyExc_ValueError,
-				"store value must be one of ahocorasick.STORE_LENGTH, STORE_INTS or STORE_ANY"
-			);
-			return false;
-	} // switch
-}
 
 
 static bool
@@ -87,7 +63,6 @@ static PyObject*
 automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	Automaton* automaton = NULL;
 	int key_type;
-	int store;
 
 	automaton = (Automaton*)F(PyObject_New)(Automaton, &automaton_type);
 	if (UNLIKELY(automaton == NULL))
@@ -101,24 +76,21 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 7)) {
+	if (UNLIKELY(PyTuple_Size(args) == 6)) {
 
 		int				word_count;
 		int				longest_word;
 		AutomatonKind	kind;
-		KeysStore		store;
 		KeyType			key_type;
 		PyObject*		bytes_list = NULL;
 		PyObject*		values = NULL;
 
-        const char* fmt = "OiiiiiO";
-
-		if (!F(PyArg_ParseTuple)(args, fmt, &bytes_list, &kind, &store, &key_type, &word_count, &longest_word, &values)) {
+		if (!F(PyArg_ParseTuple)(args, "OiiiiO", &bytes_list, &kind, &key_type, &word_count, &longest_word, &values)) {
 			PyErr_SetString(PyExc_ValueError, "Unable to load from pickle.");
 			goto error;
 		}
 
-		if (!check_store(store) || !check_kind(kind) || !check_key_type(key_type)) {
+		if (!check_kind(kind) || !check_key_type(key_type)) {
 			goto error;
 		}
 
@@ -128,14 +100,8 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		}
 
 		if (kind != EMPTY) {
-			if (values == Py_None) {
-				Py_XDECREF(values);
-				values = NULL;
-			}
-
 			if (automaton_unpickle(automaton, bytes_list, values)) {
 				automaton->kind		= kind;
-				automaton->store	= store;
 				automaton->key_type	= key_type;
 				automaton->count    = word_count;
 				automaton->longest_word	= longest_word;
@@ -145,27 +111,16 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		}
 	}
 	else {
-		store    = STORE_ANY;
 		key_type = KEY_STRING;
 
 		// construct new object
-		if (F(PyArg_ParseTuple)(args, "ii", &store, &key_type)) {
-			if (not check_store(store)) {
-				goto error;
-			}
-
+		if (F(PyArg_ParseTuple)(args, "i", &key_type)) {
 			if (not check_key_type(key_type)) {
-				goto error;
-			}
-		}
-		else if (F(PyArg_ParseTuple)(args, "i", &store)) {
-			if (not check_store(store)) {
 				goto error;
 			}
 		}
 
 		PyErr_Clear();
-		automaton->store    = store;
 		automaton->key_type = key_type;
 	}
 
@@ -199,22 +154,10 @@ automaton_len(PyObject* self) {
 
 
 #define automaton_add_word_doc \
-	"add_word(key, [value])\n\n" \
+	"add_word(key, value)\n\n" \
 	"Add a key string to the dict-like trie and associate this key with a value.\n" \
-	"value is optional or mandatory depending how the Automaton instance was created.\n" \
 	"Return True if the word key is inserted and did not exists in the trie or False\n" \
 	"otherwise.\n\n" \
-	"The value is either mandatory or optional:\n" \
-	" - If the Automaton was created without argument (the default) as Automaton() or\n" \
-	"   with Automaton(ahocorasik.STORE_ANY) then the value is required and can be any\n" \
-	"   Python object.\n\n" \
-	" - If the Automaton was created with Automaton(ahocorasik.STORE_LENGTH) then\n" \
-	"   associating a value is not allowed --- len(word) is saved automatically as a\n" \
-	"   value instead.\n\n" \
-	" - If the Automaton was created with Automaton(ahocorasik.STORE_INTS) then the\n" \
-	"   value is optional. If provided it must be an integer, otherwise it defaults to\n" \
-	"   len(automaton) which is therefore the order index in which keys are added to the\n" \
-	"   trie.\n\n" \
 	"Calling add_word() invalidates all iterators only if the new key did not exist\n" \
 	"in the trie so far (i.e. the method returned True)."
 
@@ -225,7 +168,6 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	PyObject* py_value = NULL;
 	struct Input input;
 
-	Py_ssize_t integer = 0;
 	TrieNode* node;
 	bool new_word;
 
@@ -233,42 +175,10 @@ automaton_add_word(PyObject* self, PyObject* args) {
 		return NULL;
 	}
 
-	switch (automaton->store) {
-		case STORE_ANY:
-			py_value = F(PyTuple_GetItem)(args, 1);
-			if (not py_value) {
-				PyErr_SetString(PyExc_ValueError, "A value object is required as second argument.");
-				goto py_exception;
-			}
-			break;
-
-		case STORE_INTS:
-			py_value = F(PyTuple_GetItem)(args, 1);
-			if (py_value) {
-				if (F(PyNumber_Check)(py_value)) {
-					integer = F(PyNumber_AsSsize_t)(py_value, PyExc_ValueError);
-					if (integer == -1 and PyErr_Occurred())
-						goto py_exception;
-				}
-				else {
-					PyErr_SetString(PyExc_TypeError, "An integer value is required as second argument.");
-					goto py_exception;
-				}
-			}
-			else {
-				// default
-				PyErr_Clear();
-				integer = automaton->count + 1;
-			}
-			break;
-
-		case STORE_LENGTH:
-			integer = input.wordlen;
-			break;
-
-		default:
-			PyErr_SetString(PyExc_SystemError, "Invalid value for this key: see documentation for supported values.");
-			goto py_exception;
+	py_value = F(PyTuple_GetItem)(args, 1);
+	if (not py_value) {
+		PyErr_SetString(PyExc_ValueError, "A value object is required as second argument.");
+		goto py_exception;
 	}
 
 	node = NULL;
@@ -286,19 +196,12 @@ automaton_add_word(PyObject* self, PyObject* args) {
 	destroy_input(&input);
 
 	if (node) {
-		switch (automaton->store) {
-			case STORE_ANY:
-				if (not new_word and node->eow)
-					// replace
-					Py_DECREF(node->output.object);
+		if (not new_word and node->eow)
+			// replace
+			Py_DECREF(node->output.object);
 
-				Py_INCREF(py_value);
-				node->output.object = py_value;
-				break;
-
-			default:
-				node->output.integer = integer;
-		} // switch
+		Py_INCREF(py_value);
+		node->output.object = py_value;
 
 		if (new_word) {
 			automaton->version += 1; // change version only when new word appeared
@@ -321,27 +224,18 @@ py_exception:
 
 
 static void
-clear_aux(TrieNode* node, KeysStore store) {
+clear_aux(TrieNode* node) {
 
 	unsigned i;
 
 	if (node) {
-		switch (store) {
-			case STORE_INTS:
-			case STORE_LENGTH:
-				// nop
-				break;
-
-			case STORE_ANY:
-				if (node->output.object)
-					Py_DECREF(node->output.object);
-				break;
-		}
+		if (node->output.object)
+			Py_DECREF(node->output.object);
 
 		for (i=0; i < node->n; i++) {
 			TrieNode* child = node->next[i];
 			if (child != node) // avoid self-loops!
-				clear_aux(child, store);
+				clear_aux(child);
 		}
 
 		xfree(node->next);
@@ -357,7 +251,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 static PyObject*
 automaton_clear(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-	clear_aux(automaton->root, automaton->store);
+	clear_aux(automaton->root);
 	automaton->count = 0;
 	automaton->longest_word = 0;
 	automaton->kind = EMPTY;
@@ -487,19 +381,8 @@ automaton_get(PyObject* self, PyObject* args) {
 	destroy_input(&input);
 
 	if (node and node->eow) {
-		switch (automaton->store) {
-			case STORE_INTS:
-			case STORE_LENGTH:
-				return F(Py_BuildValue)("i", node->output.integer);
-
-			case STORE_ANY:
-				Py_INCREF(node->output.object);
-				return node->output.object;
-
-			default:
-				PyErr_SetNone(PyExc_ValueError);
-				return NULL;
-		}
+		Py_INCREF(node->output.object);
+		return node->output.object;
 	}
 	else {
 		py_def = F(PyTuple_GetItem)(args, 1);
@@ -677,10 +560,7 @@ automaton_find_all(PyObject* self, PyObject* args) {
 		// return output
 		while (tmp) {
 			if (tmp->eow) {
-				if (automaton->store == STORE_ANY)
-					callback_ret = F(PyObject_CallFunction)(callback, "iO", i, tmp->output.object);
-				else
-					callback_ret = F(PyObject_CallFunction)(callback, "ii", i, tmp->output.integer);
+				callback_ret = F(PyObject_CallFunction)(callback, "iO", i, tmp->output.object);
 
 				if (callback_ret == NULL) {
 					destroy_input(&input);
@@ -1146,8 +1026,7 @@ error:
 
 #define automaton___sizeof___doc \
 	"Return the approximate size in bytes occupied by the Automaton instance in\n" \
-	"memory excluding the size of associated objects when the Automaton is created\n" \
-	"with Automaton() or Automaton(ahocorasick.STORE_ANY)."
+	"memory excluding the size of associated Python objects."
 
 static PyObject*
 automaton___sizeof__(PyObject* self, PyObject* args) {
@@ -1207,14 +1086,6 @@ PyMemberDef automaton_members[] = {
 		offsetof(Automaton, kind),
 		READONLY,
 		"Read-only attribute maintained automatically.\nKind for this Automaton instance.\nOne of ahocorasick.EMPTY, TRIE or AHOCORASICK."
-	},
-
-	{
-		"store",
-		T_INT,
-		offsetof(Automaton, store),
-		READONLY,
-		"Read-only attribute set when creating an Automaton().\nType of values accepted by this Automaton.\nOne of ahocorasick.STORE_ANY, STORE_INTS or STORE_LEN."
 	},
 
 	{NULL}

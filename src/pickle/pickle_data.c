@@ -93,7 +93,7 @@ pickle_data__shrink_last_buffer(PickleData* data) {
 
 
 static int
-pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t max_array_size) {
+pickle_data__init(PickleData* data, size_t total_size, size_t max_array_size) {
 
 	pickle_data__init_default(data);
 
@@ -105,12 +105,10 @@ pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t m
 		return false;
 	}
 
-	if (store == STORE_ANY) {
-		data->values = F(PyList_New)(0);
-		if (UNLIKELY(data->values == NULL)) {
-			Py_DECREF(data->bytes_list);
-			return false;
-		}
+	data->values = F(PyList_New)(0);
+	if (UNLIKELY(data->values == NULL)) {
+		Py_DECREF(data->bytes_list);
+		return false;
 	}
 
 	if (total_size <= max_array_size) {

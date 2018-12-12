@@ -113,20 +113,18 @@ class TestUnpickleRaw(unittest.TestCase):
             self.assertRaisesRegex = self.assertRaisesRegexp
 
 
-    # raw constructor get 7-tuple (see Automaton.c):
+    # raw constructor get 6-tuple (see Automaton.c):
     # 1. serialized nodes (as list of bytes or strings)
     # 2. kind
-    # 3. store
-    # 4. key type
-    # 5. word count
-    # 6. length of the longest word
-    # 7. python values saved in a trie (if store == ahocorasick.STORE_ANY)
+    # 3. key type
+    # 4. word count
+    # 5. length of the longest word
+    # 6. python values saved in a trie
 
     def setUp(self):
         self.count       = 0
         self.raw         = b''
         self.kind        = ahocorasick.EMPTY
-        self.store       = ahocorasick.STORE_ANY
         self.key_type    = ahocorasick.KEY_STRING
         self.word_count  = 0
         self.longest     = 0
@@ -140,7 +138,7 @@ class TestUnpickleRaw(unittest.TestCase):
         else:
             raw = [self.create_raw_count(self.count) + self.raw]
 
-        args = (raw, self.kind, self.store, self.key_type,
+        args = (raw, self.kind, self.key_type,
                 self.word_count, self.longest, self.values);
 
         return ahocorasick.Automaton(*args)
@@ -261,14 +259,6 @@ class TestUnpickleRaw(unittest.TestCase):
         self.kind = 10000
 
         with self.assertRaisesRegex(ValueError, "kind value.*"):
-            self.create_automaton()
-
-
-    def test__construct_wrong_store(self):
-
-        self.store = 10000
-
-        with self.assertRaisesRegex(ValueError, "store value.*"):
             self.create_automaton()
 
 

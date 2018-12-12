@@ -222,59 +222,24 @@ automaton_items_iter_next(PyObject* self) {
 #endif
 
 				case ITER_VALUES:
-					switch (iter->automaton->store) {
-						case STORE_ANY:
-							val = iter->state->output.object;
-							Py_INCREF(val);
-							break;
-
-						case STORE_LENGTH:
-						case STORE_INTS:
-							return F(Py_BuildValue)("i", iter->state->output.integer);
-
-						default:
-							PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
-							return NULL;
-					}
-
+                    val = iter->state->output.object;
+                    Py_INCREF(val);
 					return val;
 
 				case ITER_ITEMS:
-					switch (iter->automaton->store) {
-						case STORE_ANY:
-							return F(Py_BuildValue)(
+					return F(Py_BuildValue)(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-								"(u#O)", /*key*/ iter->buffer + 1, depth,
+							"(u#O)", /*key*/ iter->buffer + 1, depth,
     #else
-								"(y#O)", /*key*/ iter->buffer + 1, depth,
+						    "(y#O)", /*key*/ iter->buffer + 1, depth,
     #endif
 #else
-                                "(s#O)", /*key*/ iter->char_buffer + 1, depth,
+                            "(s#O)", /*key*/ iter->char_buffer + 1, depth,
 #endif
-								/*val*/ iter->state->output.object
-							);
-
-						case STORE_LENGTH:
-						case STORE_INTS:
-							return F(Py_BuildValue)(
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
-								"(u#i)", /*key*/ iter->buffer + 1, depth,
-    #else
-								"(y#i)", /*key*/ iter->buffer + 1, depth,
-    #endif
-#else
-                                "(s#i)", /*key*/ iter->char_buffer + 1, depth,
-#endif
-								/*val*/ iter->state->output.integer
-							);
-						
-						default:
-							PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
-							return NULL;
-					} // switch
-			}
+							/*val*/ iter->state->output.object
+					);
+			} // switch
 		}
 	}
 }

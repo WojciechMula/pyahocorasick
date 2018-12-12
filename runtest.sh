@@ -164,8 +164,14 @@ function handle_pycallfaults
     export CFLAGS="-DPYCALLS_INJECT_FAULTS"
     force_rebuild
 
+    local TMP=${TMPDIR}/pycallfaults
+    ${PYTHON} unittests.py ${UNITTEST} > ${TMP}
+
     local MINID=0
-    local MAXID=2115 # obtained manually
+    local MAXID=$(awk '
+                        /^Fail ID: / {if ($3 > max) max=$3}
+                        END {print max}
+    ' ${TMP})
 
     # simulate failures of all call to Python C-API
     for ID in `seq 0 ${MAXID}`

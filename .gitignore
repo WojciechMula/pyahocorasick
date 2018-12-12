@@ -17,3 +17,4 @@ build/
 dist/
 /pyahocorasick.egg-info/
 /tmp/
+coverage/

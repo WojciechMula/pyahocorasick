@@ -14,7 +14,9 @@ function print_help
     echo "Define variable PYTHON to point custom executable (if needed);"
     echo "by default standard python command is invoked."
     echo
-    echo "Python interpreter is currently set to: '${PYTHON}'"
+    echo "Current settings:"
+    echo "- Python interpreter: '${PYTHON}'"
+    echo "- CFLAGS:             '${CFLAGS}'"
     echo
     usage
 }
@@ -33,11 +35,12 @@ function usage
     echo "                then run unnitests injecting malloc faults"
     echo "pycallfaults  - recompile module with flag MEMORY_DEBUG,"
     echo "                then run unnitests injecting faults in python C-API calls"
+    echo "coverage      - create coverage report in 'coverage' subdir"
 }
 
 ######################################################################
 
-ACTIONS="unit unpickle leaks valgrind mallocfaults pycallfaults"
+ACTIONS="unit unpickle leaks valgrind mallocfaults pycallfaults coverage"
 
 if [[ $# != 1 || $1 == '-h' || $1 == '--help' ]]
 then
@@ -47,22 +50,6 @@ fi
 
 ACTION=
 REBUILD=1
-arg=$1
-for action in ${ACTIONS}
-do
-    if [[ ${arg} == ${action} ]]
-    then
-        ACTION=${arg}
-        break
-    fi
-done
-
-if [[ ${ACTION} == "" ]]
-then
-    echo "Unknown action '${arg}'"
-    usage
-    exit 2
-fi
 
 ######################################################################
 
@@ -83,7 +70,6 @@ function force_rebuild
 
 function handle_unit
 {
-    export CFLAGS=""
     force_rebuild
 
     ${PYTHON} unittests.py
@@ -96,7 +82,6 @@ function handle_unit
 
 function handle_unpickle
 {
-    export CFLAGS=""
     force_rebuild
 
     ${PYTHON} unpickle_test.py
@@ -109,7 +94,7 @@ function handle_unpickle
 
 function handle_leaks
 {
-    export CFLAGS="-DMEMORY_DEBUG"
+    export CFLAGS="${CFLAGS} -DMEMORY_DEBUG"
     force_rebuild
 
     ${PYTHON} unittests.py > /dev/null
@@ -128,7 +113,6 @@ function handle_leaks
 
 function handle_valgrind
 {
-    export CFLAGS=""
     force_rebuild
 
     local LOGFILE=${TMPDIR}/valgrind.log
@@ -195,6 +179,19 @@ function handle_pycallfaults
     done
 }
 
+function handle_coverage
+{
+    local DIR=coverage
+    local INDEX=pyahocorasick.html
+
+    mkdir ${DIR} 2> /dev/null
+    gcovr --html-details -o ${DIR}/${INDEX}
+    echo "Navigate to ${DIR}/${INDEX}"
+}
+
+###################################################
+
+arg=$1
 case "${arg}"
 in
     unit)
@@ -219,5 +216,15 @@ in
 
     pycallfaults)
         handle_pycallfaults
+        ;;
+
+    coverage)
+        handle_coverage
+        ;;
+
+    *)
+        echo "Unknown action '${arg}'"
+        usage
+        exit 2
         ;;
 esac

@@ -63,6 +63,8 @@ RED='\033[31m'
 GREEN='\033[32m'
 RESET='\033[0m'
 
+MEMORY_DEBUG_PATH="${TMPDIR}/memory.dump"
+MEMORY_DEBUG="-DMEMORY_DEBUG -DMEMORY_DUMP_PATH='\"${MEMORY_DEBUG_PATH}\"'"
 
 function rebuild
 {
@@ -117,7 +119,7 @@ function handle_unpickle
 
 function run_leaktest
 {
-    ${PYTHON} tests/memdump_check.py
+    ${PYTHON} tests/memdump_check.py ${MEMORY_DEBUG_PATH}
     if [[ $? != 0 ]]
     then
         echo -e "${RED}Memory leaks detected${RESET}"
@@ -127,7 +129,7 @@ function run_leaktest
 
 function handle_leaks
 {
-    export CFLAGS="${CFLAGS} -DMEMORY_DEBUG"
+    export CFLAGS="${CFLAGS} ${MEMORY_DEBUG}"
     force_rebuild
 
     run_unittests
@@ -150,10 +152,11 @@ function run_mallocfaults
     run_unittests
 
     local MINID=0
-    local MAXID=$(${PYTHON} tests/memdump_maxalloc.py)
+    echo ${MEMORY_DEBUG_PATH}
+    local MAXID=$(${PYTHON} tests/memdump_maxalloc.py ${MEMORY_DEBUG_PATH})
 
     # simulate failures of all allocations
-    for ID in `seq 0 ${MAXID}`
+    for ID in `seq ${MINID} ${MAXID}`
     do
         echo "Checking memalloc fail ${ID} of ${MAXID}"
         mallocfault ${ID}
@@ -167,7 +170,7 @@ function mallocfault
 
     local LOG=${TMPDIR}/mallocfault${ID}.log
     ${PYTHON} unittests.py ${UNITTEST} -q > ${LOG} 2>&1
-    if [[ $1 == 139 ]]
+    if [[ $? == 139 ]]
     then
         echo -e "${RED}SEGFAULT${RESET}"
         exit 1
@@ -183,7 +186,7 @@ function mallocfault
 
 function handle_mallocfaults
 {
-    export CFLAGS="-DMEMORY_DEBUG"
+    export CFLAGS=${MEMORY_DEBUG}
     force_rebuild
 
     run_mallocfaults

@@ -166,7 +166,7 @@ function mallocfault
     export ALLOC_FAIL=$1
 
     local LOG=${TMPDIR}/mallocfault${ID}.log
-    ${PYTHON} unittests.py -q > ${LOG} 2>&1
+    ${PYTHON} unittests.py ${UNITTEST} -q > ${LOG} 2>&1
     if [[ $1 == 139 ]]
     then
         echo -e "${RED}SEGFAULT${RESET}"
@@ -194,8 +194,14 @@ function handle_pycallfaults
     export CFLAGS="-DPYCALLS_INJECT_FAULTS"
     force_rebuild
 
+    local TMP=${TMPDIR}/pycallfaults
+    ${PYTHON} unittests.py ${UNITTEST} > ${TMP}
+
     local MINID=0
-    local MAXID=2115 # obtained manually
+    local MAXID=$(awk '
+                        /^Fail ID: / {if ($3 > max) max=$3}
+                        END {print max}
+    ' ${TMP})
 
     # simulate failures of all call to Python C-API
     for ID in `seq 0 ${MAXID}`
@@ -203,7 +209,7 @@ function handle_pycallfaults
         echo -n "Checking Python C-API fail ${ID} of ${MAXID}"
         local LOG=${TMPDIR}/pycallfaults${ID}.log
         export PYCALL_FAIL=${ID}
-        ${PYTHON} unittests.py > ${LOG} 2>&1
+        ${PYTHON} unittests.py ${UNITTEST} > ${LOG} 2>&1
         echo " return code $?"
         ${PYTHON} tests/pyfault_check.py ${LOG}
     done
@@ -221,10 +227,13 @@ function handle_coverage
 
 function handle_release
 {
+    unset ALLOC_FAIL
+    unset UNITTEST
+    unset CFLAGS
+
     # 1. build with default settings and run unit tests and unpickle tests
     if true
     then
-        unset CFLAGS
         force_rebuild > /dev/null 2>&1
 
         run_unittests

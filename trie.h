@@ -19,6 +19,10 @@
 static TrieNode*
 trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen, bool* new_word);
 
+/* remove word from a trie, returns associated object if was any */
+static PyObject*
+trie_remove_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen);
+
 /* returns last node on a path for given word */
 static TrieNode* PURE
 trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen);

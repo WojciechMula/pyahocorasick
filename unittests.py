@@ -237,6 +237,182 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
                 self.assertEqual(s[key], 0)
 
 
+class TestTrieRemoveWord(TestTrieStorePyObjectsBase):
+
+    def test_remove_word_from_empty_trie(self):
+        self.assertFalse(self.A.remove_word("test"))
+
+
+    def test_remove_existing_word(self):
+        A = self.A
+
+        words = ["he", "her", "hi", "him", "his"]
+        for w in words:
+            A.add_word(conv(w), w)
+
+        expected_len = len(A)
+        for w in words:
+            self.assertTrue(self.A.remove_word(w))
+            self.assertFalse(self.A.exists(w))
+            expected_len -= 1
+            self.assertEqual(expected_len, len(A))
+
+
+    def test_remove_inexisting_word(self):
+        A = self.A
+
+        words = ["he", "her", "hi", "him", "his"]
+        for w in words:
+            A.add_word(conv(w), w)
+
+        expected_len = len(A)
+        for w in ["cat", "dog", "tree"]:
+            self.assertFalse(self.A.exists(w))
+            self.assertFalse(self.A.remove_word(w))
+            self.assertEqual(expected_len, len(A))
+
+
+    def test_remove__case1(self):
+        words = ["k", "ki", "kit", "kitt", "kitte", "kitten"
+                                 , "kitc", "kitch", "kitche", "kitchen"]
+
+        A = self.A
+        for w in words:
+            A.add_word(conv(w), w)
+
+        expected_set = set(words)
+        for w in words:
+            self.assertTrue(self.A.remove_word(w))
+            expected_set.discard(w)
+            current_set = set(A.keys())
+            self.assertEqual(expected_set, current_set)
+            self.assertEqual(len(expected_set), len(A))
+
+
+    def test_remove__case2(self):
+        words = ["k", "ki", "kit", "kitt", "kitte", "kitten"
+                                 , "kitc", "kitch", "kitche", "kitchen"]
+
+        A = self.A
+        for w in words:
+            A.add_word(conv(w), w)
+        
+        expected_set = set(words)
+        for w in reversed(words):
+            self.assertTrue(self.A.remove_word(w))
+            expected_set.discard(w)
+            current_set = set(A.keys())
+            self.assertEqual(expected_set, current_set)
+            self.assertEqual(len(expected_set), len(A))
+
+
+    def test_remove_word_changes_type_of_automaton(self):
+        A = self.A
+
+        words = ["he", "her", "hi", "him", "his"]
+        for w in words:
+            A.add_word(conv(w), w)
+
+        A.make_automaton()
+        self.assertEqual(ahocorasick.AHOCORASICK, A.kind)
+
+        self.assertFalse(A.remove_word("inexisting"))
+        self.assertEqual(ahocorasick.AHOCORASICK, A.kind)
+
+        self.assertTrue(A.remove_word("hi"))
+        self.assertEqual(ahocorasick.TRIE, A.kind)
+
+
+class TestTriePop(TestTrieStorePyObjectsBase):
+
+    def test_pop_from_empty_trie(self):
+        with self.assertRaises(KeyError):
+            self.A.pop("test")
+
+
+    def test_pop_existing_word(self):
+        A = self.A
+
+        words = ["he", "her", "hi", "him", "his"]
+        for w in words:
+            A.add_word(conv(w), w)
+
+        expected_len = len(A)
+        for w in words:
+            self.assertEqual(w, self.A.pop(w))
+            self.assertFalse(self.A.exists(w))
+            expected_len -= 1
+            self.assertEqual(expected_len, len(A))
+
+
+    def test_pop_inexisting_word(self):
+        A = self.A
+
+        words = ["he", "her", "hi", "him", "his"]
+        for w in words:
+            A.add_word(conv(w), w)
+
+        expected_len = len(A)
+        for w in ["cat", "dog", "tree"]:
+            with self.assertRaises(KeyError):
+                self.A.pop(w)
+
+            self.assertEqual(expected_len, len(A))
+
+
+    def test_pop__case1(self):
+        words = ["k", "ki", "kit", "kitt", "kitte", "kitten"
+                                 , "kitc", "kitch", "kitche", "kitchen"]
+
+        A = self.A
+        for w in words:
+            A.add_word(conv(w), w)
+
+        expected_set = set(words)
+        for w in words:
+            self.assertEqual(w, self.A.pop(w))
+            expected_set.discard(w)
+            current_set = set(A.keys())
+            self.assertEqual(expected_set, current_set)
+            self.assertEqual(len(expected_set), len(A))
+
+
+    def test_pop__case2(self):
+        words = ["k", "ki", "kit", "kitt", "kitte", "kitten"
+                                 , "kitc", "kitch", "kitche", "kitchen"]
+
+        A = self.A
+        for w in words:
+            A.add_word(conv(w), w)
+        
+        expected_set = set(words)
+        for w in reversed(words):
+            self.assertEqual(w, self.A.pop(w))
+            expected_set.discard(w)
+            current_set = set(A.keys())
+            self.assertEqual(expected_set, current_set)
+            self.assertEqual(len(expected_set), len(A))
+
+
+    def test_pop_changes_type_of_automaton(self):
+        A = self.A
+
+        words = ["he", "her", "hi", "him", "his"]
+        for w in words:
+            A.add_word(conv(w), w)
+
+        A.make_automaton()
+        self.assertEqual(ahocorasick.AHOCORASICK, A.kind)
+
+        with self.assertRaises(KeyError):
+            A.pop("inexisting")
+
+        self.assertEqual(ahocorasick.AHOCORASICK, A.kind)
+
+        self.assertEqual("hi", A.pop("hi"))
+        self.assertEqual(ahocorasick.TRIE, A.kind)
+
+
 class TestTrieIterators(TestTrieStorePyObjectsBase):
     "Test iterators walking over trie"
 

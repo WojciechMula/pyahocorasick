@@ -33,20 +33,42 @@ typedef struct TrieNode {
 } TrieNode;
 
 
+typedef enum {
+	MEMORY_ERROR,
+	TRUE,
+	FALSE
+} TristateResult;
+
+
 /* allocate new node */
 static TrieNode*
 trienode_new(const TRIE_LETTER_TYPE letter, const char eow);
 
-/* returns child node linked by edge labeled with letter */
+/* free node */
+static void
+trienode_free(TrieNode* node);
+
+/* returns child node linked by edge labelled with letter */
 static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter);
 
-/* link with child node by edge labeled with letter */
+/* link with child node by edge labelled with letter */
 static TrieNode*
 trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child);
 
+/* remove link to given children */
+static TristateResult
+trienode_unset_next_pointer(TrieNode* node, TrieNode* child);
+
 static TrieNode* PURE
 trienode_get_ith_unsafe(TrieNode* node, size_t letter);
+
+#define trienode_is_leaf(node) ((node)->n == 0)
+
+static void
+trienode_dump_to_file(TrieNode* node, FILE* f);
+
+#define trienode_dump(node) trienode_dump_to_file(node, stdout)
 
 #ifdef DEBUG_LAYOUT
 void trienode_dump_layout();

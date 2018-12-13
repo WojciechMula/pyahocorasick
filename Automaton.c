@@ -319,6 +319,93 @@ py_exception:
 	return NULL;
 }
 
+static TristateResult
+automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
+#define automaton ((Automaton*)self)
+	struct Input input;
+
+	if (!prepare_input_from_tuple(self, args, 0, &input)) {
+		return MEMORY_ERROR;
+	}
+
+	if (input.wordlen == 0) {
+		destroy_input(&input);
+		return FALSE;
+	}
+
+	*value = trie_remove_word(automaton, input.word, input.wordlen);
+	destroy_input(&input);
+
+	if (UNLIKELY(PyErr_Occurred())) {
+		return MEMORY_ERROR;
+	} else {
+		return (*value != NULL) ? TRUE : FALSE;
+	}
+}
+
+
+#define automaton_remove_word_doc \
+	"remove_word(key)\n\n" \
+	"Remove a key string from the dict-like trie. Return True if key was present\n"\
+	"or False otherwise.\n\n" \
+	"Calling remove_word() invalidates all iterators only if the key did exist\n" \
+	"in the trie (i.e. the method returned True)."
+
+
+static PyObject*
+automaton_remove_word(PyObject* self, PyObject* args) {
+	PyObject* value;
+
+	switch (automaton_remove_word_aux(self, args, &value)) {
+		case FALSE:
+			Py_RETURN_FALSE;
+			break;
+
+		case TRUE:
+			if (automaton->store == STORE_ANY) {
+				// value is meaningful
+				Py_DECREF(value);
+			}
+
+			automaton->version += 1;
+			automaton->count   -= 1;
+			Py_RETURN_TRUE;
+			break;
+
+		case MEMORY_ERROR:
+		default:
+			return NULL;
+	}
+}
+
+
+#define automaton_pop_doc \
+	"pop(key)\n\n" \
+	"Remove a key string from the dict-like trie and return the associated value.\n" \
+	"Raise KeyError if the key was not found.\n\n" \
+	"Calling pop() invalidates all iterators only if the key was removed.\n"
+
+
+static PyObject*
+automaton_pop(PyObject* self, PyObject* args) {
+	PyObject* value;
+
+	switch (automaton_remove_word_aux(self, args, &value)) {
+		case FALSE:
+			PyErr_SetNone(PyExc_KeyError);
+			return NULL;
+
+		case TRUE:
+			automaton->version += 1;
+			automaton->count   -= 1;
+			return value; // there's no need to increase refcount, the value was removed
+
+		case MEMORY_ERROR:
+		default:
+			return NULL;
+	}
+}
+
 
 static void
 clear_aux(TrieNode* node, KeysStore store) {
@@ -333,7 +420,7 @@ clear_aux(TrieNode* node, KeysStore store) {
 				break;
 
 			case STORE_ANY:
-				if (node->output.object)
+				if (node->eow && node->output.object)
 					Py_DECREF(node->output.object);
 				break;
 		}
@@ -1174,6 +1261,8 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
 static
 PyMethodDef automaton_methods[] = {
 	method(add_word,		METH_VARARGS),
+	method(remove_word,		METH_VARARGS),
+	method(pop,				METH_VARARGS),
 	method(clear,			METH_NOARGS),
 	method(exists,			METH_VARARGS),
 	method(match,			METH_VARARGS),

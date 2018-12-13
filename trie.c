@@ -60,6 +60,79 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
 }
 
 
+static PyObject*
+trie_remove_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
+
+	PyObject* object;
+	TrieNode* node;
+	TrieNode* tmp;
+	TrieNode* last_multiway;
+	unsigned last_multiway_index;
+	unsigned i;
+
+	if (automaton->root == NULL) {
+		return NULL;
+	}
+
+	node = automaton->root;
+
+	last_multiway = node;
+	last_multiway_index = 0;
+	for (i=0; i < wordlen; i++) {
+		const TRIE_LETTER_TYPE letter = word[i];
+
+		node = trienode_get_next(node, letter);
+		if (node == NULL) {
+			return NULL;
+		}
+
+		// Save the last node along path which has more children
+		// or is a terminating node.
+		if (node->n > 1 || (node->n == 1 && node->eow)) {
+			last_multiway = node;
+			last_multiway_index = i + 1;
+		}
+	}
+
+	if (node->eow != true) {
+		return NULL;
+	}
+
+	object = node->output.object;
+
+	if (trienode_is_leaf(node)) {
+		// Remove a linear list that starts at the last_multiway node
+		// and ends at the last [found] one.
+
+		// 1. Unlink the tail from the trie
+		node = trienode_get_next(last_multiway, word[last_multiway_index]);
+		ASSERT(node != NULL);
+
+		if (UNLIKELY(trienode_unset_next_pointer(last_multiway, node) == MEMORY_ERROR)) {
+			PyErr_NoMemory();
+			return NULL;
+		}
+
+		// 2. Free the tail (reference to value from the last element was already saved)
+		for (i = last_multiway_index + 1; i < wordlen; i++) {
+			tmp = trienode_get_next(node, word[i]);
+			ASSERT(tmp->n <= 1);
+			trienode_free(node);
+			node = tmp;
+		}
+
+		trienode_free(node);
+
+	} else {
+		// just unmark the terminating node
+		node->eow = false;
+	}
+
+	automaton->kind = TRIE;
+	return object;
+}
+
+
 static TrieNode* PURE
 trie_find(TrieNode* root, const TRIE_LETTER_TYPE* word, const size_t wordlen) {
 	TrieNode* node;

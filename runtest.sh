@@ -15,8 +15,11 @@ function print_help
     echo "by default standard python command is invoked."
     echo
     echo "Current settings:"
-    echo "- Python interpreter: '${PYTHON}'"
-    echo "- CFLAGS:             '${CFLAGS}'"
+    echo "- Python interpreter:  '${PYTHON}'"
+    echo "- CFLAGS:              '${CFLAGS}'"
+    echo "- Selected unit tests: '${UNITTEST}' (empty value means 'all')"
+    echo "  This flag is used just for 'mallocfaults' and 'pycallfaults'"
+    echo "  as these tests might be really time consuming"
     echo
     usage
 }
@@ -36,11 +39,14 @@ function usage
     echo "pycallfaults  - recompile module with flag MEMORY_DEBUG,"
     echo "                then run unnitests injecting faults in python C-API calls"
     echo "coverage      - create coverage report in 'coverage' subdir"
+    echo
+    echo "release       - run unit, unpickle, leaks and mallocfaults"
+    echo "                meant to run before relese"
 }
 
 ######################################################################
 
-ACTIONS="unit unpickle leaks valgrind mallocfaults pycallfaults coverage"
+ACTIONS="unit unpickle leaks valgrind mallocfaults pycallfaults coverage release"
 
 if [[ $# != 1 || $1 == '-h' || $1 == '--help' ]]
 then
@@ -53,10 +59,19 @@ REBUILD=1
 
 ######################################################################
 
+RED='\033[31m'
+GREEN='\033[32m'
+RESET='\033[0m'
+
 
 function rebuild
 {
     ${PYTHON} setup.py build_ext --inplace
+    if [[ $? != 0 ]]
+    then
+        echo -e "${RED}Build failed${RESET}"
+        exit 1
+    fi
 }
 
 function force_rebuild
@@ -68,14 +83,28 @@ function force_rebuild
     fi
 }
 
-function handle_unit
+function run_unittests
 {
-    force_rebuild
-
     ${PYTHON} unittests.py
     if [[ $? != 0 ]]
     then
-        echo "Unit tests failed!"
+        echo -e "${RED}Unit tests failed${RESET}"
+        exit 1
+    fi
+}
+
+function handle_unit
+{
+    force_rebuild
+    run_unittests
+}
+
+function run_unpickletests
+{
+    ${PYTHON} unpickle_test.py
+    if [[ $? != 0 ]]
+    then
+        echo -e "${RED}Unpickle tests failed${RESET}"
         exit 1
     fi
 }
@@ -83,11 +112,15 @@ function handle_unit
 function handle_unpickle
 {
     force_rebuild
+    run_unpickletests
+}
 
-    ${PYTHON} unpickle_test.py
+function run_leaktest
+{
+    ${PYTHON} tests/memdump_check.py
     if [[ $? != 0 ]]
     then
-        echo "Unpickle tests failed!"
+        echo -e "${RED}Memory leaks detected${RESET}"
         exit 1
     fi
 }
@@ -97,18 +130,8 @@ function handle_leaks
     export CFLAGS="${CFLAGS} -DMEMORY_DEBUG"
     force_rebuild
 
-    ${PYTHON} unittests.py > /dev/null
-    if [[ $? != 0 ]]
-    then
-        echo "Unit tests failed!"
-        exit 1
-    fi
-
-    ${PYTHON} tests/memdump_check.py
-    if [[ $? == 0 ]]
-    then
-        echo "All OK"
-    fi
+    run_unittests
+    run_leaktest
 }
 
 function handle_valgrind
@@ -121,32 +144,10 @@ function handle_valgrind
     ${PYTHON} tests/valgrind_check.py . ${LOGFILE}
 }
 
-function mallocfault
+function run_mallocfaults
 {
-    export ALLOC_NODUMP=1
-    export ALLOC_FAIL=$1
-
-    local LOG=${TMPDIR}/mallocfault${ID}.log
-    ${PYTHON} unittests.py -q > ${LOG} 2>&1
-    ${PYTHON} tests/unittestlog_check.py ${LOG}
-    if [[ $? != 0 ]]
-    then
-        echo "Inspect ${LOG}, there are errors other than expected MemoryError"
-    fi
-}
-
-function handle_mallocfaults
-{
-    export CFLAGS="-DMEMORY_DEBUG"
-    force_rebuild
-
     # obtain max allocation number
-    ${PYTHON} unittests.py
-    if [[ $? != 0 ]]
-    then
-        echo "Unit tests failed!"
-        exit 1
-    fi
+    run_unittests
 
     local MINID=0
     local MAXID=$(${PYTHON} tests/memdump_maxalloc.py)
@@ -157,6 +158,35 @@ function handle_mallocfaults
         echo "Checking memalloc fail ${ID} of ${MAXID}"
         mallocfault ${ID}
     done
+}
+
+function mallocfault
+{
+    export ALLOC_NODUMP=1
+    export ALLOC_FAIL=$1
+
+    local LOG=${TMPDIR}/mallocfault${ID}.log
+    ${PYTHON} unittests.py -q > ${LOG} 2>&1
+    if [[ $1 == 139 ]]
+    then
+        echo -e "${RED}SEGFAULT${RESET}"
+        exit 1
+    fi
+    ${PYTHON} tests/unittestlog_check.py ${LOG}
+    if [[ $? != 0 ]]
+    then
+        echo -e "${RED}Possible error${RESET}"
+        echo "Inspect ${LOG}, there are errors other than expected MemoryError"
+        exit 1
+    fi
+}
+
+function handle_mallocfaults
+{
+    export CFLAGS="-DMEMORY_DEBUG"
+    force_rebuild
+
+    run_mallocfaults
 }
 
 function handle_pycallfaults
@@ -187,6 +217,45 @@ function handle_coverage
     mkdir ${DIR} 2> /dev/null
     gcovr --html-details -o ${DIR}/${INDEX}
     echo "Navigate to ${DIR}/${INDEX}"
+}
+
+function handle_release
+{
+    # 1. build with default settings and run unit tests and unpickle tests
+    if true
+    then
+        unset CFLAGS
+        force_rebuild > /dev/null 2>&1
+
+        run_unittests
+        run_unpickletests
+    fi
+
+    # 2. build with memory debug and run unit tests and unpickle tests
+    if true
+    then
+        export CFLAGS="-DMEMORY_DEBUG"
+        force_rebuild > /dev/null 2>&1
+
+        rm -f memory.dump
+        run_unittests
+        run_leaktest
+
+        rm -f memory.dump
+        run_unpickletests
+        run_leaktest
+    fi
+
+    # 3. inject malloc faults
+    if true
+    then
+        export CFLAGS="-DMEMORY_DEBUG"
+        force_rebuild > /dev/null 2>&1
+
+        run_mallocfaults
+    fi
+
+    echo -e "${GREEN}All OK${RESET}"
 }
 
 ###################################################
@@ -220,6 +289,10 @@ in
 
     coverage)
         handle_coverage
+        ;;
+
+    release)
+        handle_release
         ;;
 
     *)

@@ -402,6 +402,8 @@ automaton_unpickle(
 
 			ptr += PICKLE_TRIENODE_SIZE;
 
+			id2node[id++] = node;
+
 			if (node->n > 0) {
 				if (UNLIKELY(ptr + node->n * PICKLE_POINTER_SIZE > end)) {
 					PyErr_Format(PyExc_ValueError,
@@ -414,7 +416,6 @@ automaton_unpickle(
 
 				node->next = (TrieNode**)memory_alloc(node->n * sizeof(TrieNode*));
 				if (UNLIKELY(node->next == NULL)) {
-					memory_free(node);
 					goto no_mem;
 				}
 
@@ -425,8 +426,6 @@ automaton_unpickle(
 
 				ptr += node->n * PICKLE_POINTER_SIZE;
 			}
-
-			id2node[id++] = node;
 		}
 	}
 

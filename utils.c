@@ -12,7 +12,7 @@
 //#define MEMORY_DEBUG
 #ifdef MEMORY_DEBUG
 #ifndef MEMORY_DUMP_PATH
-#   define MEMORY_DUMP_PATH "memory.dump";
+#   define MEMORY_DUMP_PATH "memory.dump"
 #endif
 const char* debug_path = MEMORY_DUMP_PATH;
 FILE* debug_file;

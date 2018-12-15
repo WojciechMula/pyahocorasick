@@ -43,9 +43,14 @@ def dump2dot(automaton, file):
 
 		writeln("\t%s %s" % (nodename(nodeid), attr))
 
+	def format_label(label):
+		label = str(label, 'ascii')
+		label = label.replace('"', r'\"')
+		return '"%s"' % label
+
 	# trie edges
 	for nodeid, label, destid in edges:
-		writeln("\t%s -> %s [label=%s]" % (nodename(nodeid), nodename(destid), str(label, 'ascii')))
+		writeln("\t%s -> %s [label=%s]" % (nodename(nodeid), nodename(destid), format_label(label)))
 
 	# fail links
 	for nodeid, failid in fail:

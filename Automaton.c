@@ -101,19 +101,16 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 	automaton->kind  = EMPTY;
 	automaton->root  = NULL;
 
-	if (UNLIKELY(PyTuple_Size(args) == 7)) {
+	if (UNLIKELY(PyTuple_Size(args) == 6)) {
 
 		int				word_count;
 		int				longest_word;
 		AutomatonKind	kind;
 		KeysStore		store;
 		KeyType			key_type;
-		PyObject*		bytes_list = NULL;
-		PyObject*		values = NULL;
+		PyObject*		proxy = NULL;
 
-        const char* fmt = "OiiiiiO";
-
-		if (!F(PyArg_ParseTuple)(args, fmt, &bytes_list, &kind, &store, &key_type, &word_count, &longest_word, &values)) {
+		if (!F(PyArg_ParseTuple)(args, "iiiiiO", &kind, &store, &key_type, &word_count, &longest_word, &proxy)) {
 			PyErr_SetString(PyExc_ValueError, "Unable to load from pickle.");
 			goto error;
 		}
@@ -122,27 +119,18 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 			goto error;
 		}
 
-		if (!PyList_CheckExact(bytes_list)) {
-			PyErr_SetString(PyExc_TypeError, "Expected list");
+		if (UNLIKELY(!PickleProxy_Check(proxy))) {
+			PyErr_SetString(PyExc_TypeError, "Wrong object type");
 			goto error;
 		}
 
-		if (kind != EMPTY) {
-			if (values == Py_None) {
-				Py_XDECREF(values);
-				values = NULL;
-			}
-
-			if (automaton_unpickle(automaton, bytes_list, values)) {
-				automaton->kind		= kind;
-				automaton->store	= store;
-				automaton->key_type	= key_type;
-				automaton->count    = word_count;
-				automaton->longest_word	= longest_word;
-			}
-			else
-				goto error;
-		}
+		automaton->kind				= kind;
+		automaton->store			= store;
+		automaton->key_type			= key_type;
+		automaton->count			= word_count;
+		automaton->longest_word		= longest_word;
+		automaton->root				= ((PickleProxy*)proxy)->root;
+		((PickleProxy*)proxy)->root	= NULL;
 	}
 	else {
 		store    = STORE_ANY;
@@ -336,7 +324,7 @@ automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
 	*value = trie_remove_word(automaton, input.word, input.wordlen);
 	destroy_input(&input);
 
-	if (UNLIKELY(PyErr_Occurred())) {
+	if (UNLIKELY(PyErr_Occurred() != NULL)) {
 		return MEMORY_ERROR;
 	} else {
 		return (*value != NULL) ? TRUE : FALSE;
@@ -1254,7 +1242,70 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
 }
 
 
-#include "Automaton_pickle.c"
+#define automaton___reduce___doc \
+	"Return pickle-able data for this Automaton instance."
+
+static PyObject*
+automaton___reduce__(PyObject* self, PyObject* args) {
+#define automaton ((Automaton*)self)
+
+	PyObject*	proxy;
+	PyObject*	proxy_args;
+	PyObject*	tuple;
+
+	// for an empty automaton do nothing
+	if (automaton->count == 0) {
+		// the class constructor feed with an empty argument builds an empty automaton
+		return F(Py_BuildValue)("O()", Py_TYPE(self));
+	}
+
+	proxy	   = NULL;
+	proxy_args = NULL;
+	tuple	   = NULL;
+
+	proxy_args = F(Py_BuildValue)("(O)", self);
+	if (UNLIKELY(proxy_args == NULL)) {
+		return NULL;
+	}
+
+	proxy = pickle_proxy_new(&pickle_proxy_type, proxy_args, NULL);
+	if (UNLIKELY(proxy == NULL)) {
+		Py_DECREF(args);
+		return NULL;
+	}
+
+	/* save tuple:
+		* automaton->kind
+		* automaton->store
+		* automaton->key_type
+		* automaton->count
+		* automaton->longest_word
+		* pickle proxy object
+	*/
+	tuple = F(Py_BuildValue)(
+		"O(iiiiiO)",
+		Py_TYPE(self),
+		automaton->kind,
+		automaton->store,
+		automaton->key_type,
+		automaton->count,
+		automaton->longest_word,
+		proxy
+	);
+
+	if (UNLIKELY(tuple == NULL)) {
+		goto exception;
+	}
+
+	return tuple;
+
+exception:
+	Py_XDECREF(proxy_args);
+	Py_XDECREF(proxy);
+	Py_XDECREF(tuple);
+	return NULL;
+#undef automaton
+}
 
 
 #define method(name, kind) {#name, (PyCFunction)automaton_##name, kind, automaton_##name##_doc}

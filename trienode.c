@@ -155,7 +155,7 @@ void trienode_dump_layout() {
 #endif
 
 
-static void
+UNUSED static void
 trienode_dump_to_file(TrieNode* node, FILE* f) {
 
     unsigned i;

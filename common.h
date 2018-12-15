@@ -68,11 +68,13 @@
 #	define	UNLIKELY(x)	__builtin_expect(x, 0)
 #	define	ALWAYS_INLINE	__attribute__((always_inline))
 #	define	PURE			__attribute__((pure))
+#	define	UNUSED			__attribute__((unused))
 #else
 #	define	LIKELY(x)	x
 #	define	UNLIKELY(x)	x
 #	define	ALWAYS_INLINE
 #	define	PURE
+#	define	UNUSED
 #endif
 
 #ifdef DEBUG

@@ -54,7 +54,10 @@ class Application(object):
             return
 
         print('There are %d leaks:' % n)
-        for addr, (id, size) in self.memory.items():
+        tmp = [(int(id), addr, size) for addr, (id, size) in self.memory.items()]
+        tmp.sort(key=lambda item: item[0])
+
+        for id, addr, size in tmp:
             print('#%s: %s %d' % (id, addr, size))
 
 

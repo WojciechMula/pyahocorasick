@@ -87,7 +87,7 @@ function force_rebuild
 
 function run_unittests
 {
-    ${PYTHON} unittests.py
+    ${PYTHON} unittests.py ${UNITTEST}
     if [[ $? != 0 ]]
     then
         echo -e "${RED}Unit tests failed${RESET}"

@@ -38,14 +38,14 @@ class TestApplication(object):
             t1 = time.time()
             self.pickle()
             t2 = time.time()
-            print("  time: %0.2fs" % (t2 - t1))
+            print("   time: %0.2fs" % (t2 - t1))
             self.A.clear()
 
         if self.options.load:
             t1 = time.time()
             self.unpickle()
             t2 = time.time()
-            print("  time: %0.2fs" % (t2 - t1))
+            print("   time: %0.2fs" % (t2 - t1))
 
         if self.options.compare:
             self.compare()

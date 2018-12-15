@@ -4,6 +4,7 @@ import random
 import gzip
 import pickle
 import optparse
+import time
 
 import ahocorasick
 
@@ -34,11 +35,17 @@ class TestApplication(object):
 
         if self.options.save:
             self.add_words()
+            t1 = time.time()
             self.pickle()
+            t2 = time.time()
+            print("  time: %0.2fs" % (t2 - t1))
             self.A.clear()
 
         if self.options.load:
+            t1 = time.time()
             self.unpickle()
+            t2 = time.time()
+            print("  time: %0.2fs" % (t2 - t1))
 
         if self.options.compare:
             self.compare()

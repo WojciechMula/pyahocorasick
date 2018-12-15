@@ -130,7 +130,7 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
 		automaton->count			= word_count;
 		automaton->longest_word		= longest_word;
 		automaton->root				= ((PickleProxy*)proxy)->root;
-		((PickleProxy*)proxy)->root	= NULL;
+		Py_DECREF(proxy);
 	}
 	else {
 		store    = STORE_ANY;
@@ -1270,7 +1270,7 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 
 	proxy = pickle_proxy_new(&pickle_proxy_type, proxy_args, NULL);
 	if (UNLIKELY(proxy == NULL)) {
-		Py_DECREF(args);
+		Py_DECREF(proxy_args);
 		return NULL;
 	}
 
@@ -1296,6 +1296,8 @@ automaton___reduce__(PyObject* self, PyObject* args) {
 	if (UNLIKELY(tuple == NULL)) {
 		goto exception;
 	}
+
+	Py_DECREF(proxy_args);
 
 	return tuple;
 

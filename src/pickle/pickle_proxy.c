@@ -54,10 +54,14 @@ address_lookup__cleanup(AddressLookup* lookup, int release_objects);
 static void
 pickle_proxy_del(PyObject* object) {
 
-    PickleProxy* proxy = (PickleProxy*)object;
+    PickleProxy* proxy;
+    
+    proxy = (PickleProxy*)object;
 
-    address_lookup__cleanup(&proxy->lookup, proxy->automaton->store == STORE_ANY);
-    Py_XDECREF(proxy->automaton);
+    if (proxy->automaton) {
+        address_lookup__cleanup(&proxy->lookup, proxy->automaton->store == STORE_ANY);
+        Py_DECREF(proxy->automaton);
+    }
 }
 
 // --------------------------------------------------
@@ -333,22 +337,24 @@ pickle_proxy___reduce__(PyObject* object) {
     PyObject* iter;
     PyObject* tuple;
 
-	iter = (PyObject*)streamnodes_iter_new(proxy->automaton);
-	if (UNLIKELY(iter == NULL)) {
-		goto exception;
-	}
+    iter = (PyObject*)streamnodes_iter_new(proxy->automaton);
+    if (UNLIKELY(iter == NULL)) {
+        goto exception;
+    }
 
-	tuple = F(Py_BuildValue)("O()OO", Py_TYPE(proxy), Py_None, iter);
-	if (UNLIKELY(tuple == NULL)) {
-		goto exception;
-	}
+    tuple = F(Py_BuildValue)("O()OO", Py_TYPE(proxy), Py_None, iter);
+    if (UNLIKELY(tuple == NULL)) {
+        goto exception;
+    }
 
-	return tuple;
+    Py_DECREF(iter);
+
+    return tuple;
 
 exception:
-	Py_XDECREF(iter);
-	Py_XDECREF(tuple);
-	return NULL;
+    Py_XDECREF(iter);
+    Py_XDECREF(tuple);
+    return NULL;
 }
 
 

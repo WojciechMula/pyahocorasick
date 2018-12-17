@@ -23,13 +23,14 @@
 #include "trienode.c"
 #include "trie.c"
 #include "slist.c"
+#include "src/pickle/streamnodes_iter.c"
+#include "src/pickle/pickle_proxy.c"
 #include "Automaton.c"
 #include "AutomatonItemsIter.c"
 #include "AutomatonSearchIter.c"
 #ifdef PYCALLS_INJECT_FAULTS
 #include "src/pycallfault/pycallfault.c"
 #endif
-
 
 #define ahocorasick_doc \
     "pyahocorasick is a fast and memory efficient library for exact or approximate\n" \
@@ -108,6 +109,14 @@ init_function(void) {
 	}
 	else
 		PyModule_AddObject(module, "Automaton", (PyObject*)&automaton_type);
+
+
+	if (PyType_Ready(&pickle_proxy_type) < 0) {
+		Py_DECREF(module);
+		init_return(NULL);
+	}
+	else
+		PyModule_AddObject(module, "_PickleProxy", (PyObject*)&pickle_proxy_type);
 
 #define add_enum_const(name) PyModule_AddIntConstant(module, #name, name)
 	add_enum_const(TRIE);

@@ -70,13 +70,6 @@ typedef struct Automaton {
 
 /*------------------------------------------------------------------------*/
 
-static bool
-automaton_unpickle(
-	Automaton* automaton,
-	PyObject* bytes_list,
-	PyObject* values
-);
-
 /* __init__ */
 static PyObject*
 automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs);

@@ -87,7 +87,7 @@ function force_rebuild
 
 function run_unittests
 {
-    ${PYTHON} unittests.py
+    ${PYTHON} unittests.py ${UNITTEST}
     if [[ $? != 0 ]]
     then
         echo -e "${RED}Unit tests failed${RESET}"
@@ -149,6 +149,7 @@ function handle_valgrind
 function run_mallocfaults
 {
     # obtain max allocation number
+    unset ALLOC_FAIL
     run_unittests
 
     local MINID=0

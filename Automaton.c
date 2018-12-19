@@ -11,6 +11,7 @@
 
 #include "Automaton.h"
 #include "slist.h"
+#include "src/custompickle/save/automaton_save.h"
 
 static PyTypeObject automaton_type;
 
@@ -82,24 +83,40 @@ check_key_type(const int store) {
 	} // switch
 }
 
+static PyObject*
+automaton_create() {
+
+	Automaton* automaton;
+
+	automaton = (Automaton*)F(PyObject_New)(Automaton, &automaton_type);
+	if (UNLIKELY(automaton == NULL)) {
+		return NULL;
+	}
+
+	automaton->kind = EMPTY;
+	automaton->store = STORE_ANY;
+	automaton->key_type = KEY_STRING;
+	automaton->count = 0;
+	automaton->longest_word = 0;
+
+	automaton->version = 0;
+	automaton->stats.version = -1;
+
+	automaton->root = NULL;
+
+	return (PyObject*)automaton;
+}
 
 static PyObject*
 automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
-	Automaton* automaton = NULL;
+	Automaton* automaton;
 	int key_type;
 	int store;
 
-	automaton = (Automaton*)F(PyObject_New)(Automaton, &automaton_type);
+	automaton = (Automaton*)automaton_create();
 	if (UNLIKELY(automaton == NULL))
 		return NULL;
 
-	// commons settings
-	automaton->version = 0;
-	automaton->stats.version = -1;
-	automaton->count = 0;
-	automaton->longest_word = 0;
-	automaton->kind  = EMPTY;
-	automaton->root  = NULL;
 
 	if (UNLIKELY(PyTuple_Size(args) == 7)) {
 
@@ -336,7 +353,7 @@ automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
 	*value = trie_remove_word(automaton, input.word, input.wordlen);
 	destroy_input(&input);
 
-	if (UNLIKELY(PyErr_Occurred())) {
+	if (UNLIKELY(PyErr_Occurred() != NULL)) {
 		return MEMORY_ERROR;
 	} else {
 		return (*value != NULL) ? TRUE : FALSE;
@@ -1278,6 +1295,7 @@ PyMethodDef automaton_methods[] = {
 	method(dump,			METH_NOARGS),
 	method(__reduce__,		METH_VARARGS),
 	method(__sizeof__,		METH_VARARGS),
+	method(save,			METH_VARARGS),
 
 	{NULL, NULL, 0, NULL}
 };

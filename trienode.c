@@ -155,7 +155,7 @@ void trienode_dump_layout() {
 #endif
 
 
-static void
+UNUSED static void
 trienode_dump_to_file(TrieNode* node, FILE* f) {
 
     unsigned i;
@@ -173,10 +173,14 @@ trienode_dump_to_file(TrieNode* node, FILE* f) {
 
     fprintf(f, "- fail: %p\n", node->fail);
     if (node->n > 0) {
-        fprintf(f, "- %d next: [%p", node->n, node->next[0]);
-        for (i=1; i < node->n; i++)
-            fprintf(f, ", %p", node->next[i]);
-        fprintf(f, "]\n");
+        if (node->next == NULL) {
+            fprintf(f, "- %d next: %p\n", node->n, node->next);
+        } else {
+            fprintf(f, "- %d next: [%p", node->n, node->next[0]);
+            for (i=1; i < node->n; i++)
+                fprintf(f, ", %p", node->next[i]);
+            fprintf(f, "]\n");
+        }
     }
 }
 

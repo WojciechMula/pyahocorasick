@@ -20,6 +20,10 @@ typedef enum {
 } AutomatonKind;
 
 
+static bool
+check_kind(const int kind);
+
+
 typedef enum {
 	STORE_INTS   = 10,
 	STORE_LENGTH = 20,
@@ -27,10 +31,18 @@ typedef enum {
 } KeysStore;
 
 
+static bool
+check_store(const int store);
+
+
 typedef enum {
 	KEY_STRING   = 100,
     KEY_SEQUENCE = 200
 } KeyType;
+
+
+static bool
+check_key_type(const int key_type);
 
 
 struct Input {
@@ -76,6 +88,9 @@ automaton_unpickle(
 	PyObject* bytes_list,
 	PyObject* values
 );
+
+static PyObject*
+automaton_create(void);
 
 /* __init__ */
 static PyObject*

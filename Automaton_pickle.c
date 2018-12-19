@@ -23,7 +23,7 @@ Pickling (automaton___reduce__):
    size of pickled data is calculated. If it is small enough
    (less than given threshold), all data is saved in a single
    byte array. Otherwise, data is saved in several byte arrays.
-   
+
    In either case, the format of byte array is the same:
    * 8 first bytes is number of nodes stored in this
      chunk of memory
@@ -61,18 +61,11 @@ typedef struct DumpState {
 } DumpState;
 
 
-// We save all TrieNode's fields except the last one, which is a pointer to array,
-// as we're store that array just after the node
-#define PICKLE_TRIENODE_SIZE (sizeof(TrieNode) - sizeof(TrieNode**))
-#define PICKLE_POINTER_SIZE (sizeof(TrieNode*))
-#define PICKLE_CHUNK_COUNTER_SIZE (sizeof(Py_ssize_t))
-
 static size_t
 get_pickled_size(TrieNode* node) {
 	ASSERT(node != NULL);
 	return PICKLE_TRIENODE_SIZE + node->n * PICKLE_POINTER_SIZE;
 }
-
 
 // replace fail with pairs (fail, id)
 static int

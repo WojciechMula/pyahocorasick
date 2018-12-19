@@ -1422,6 +1422,70 @@ class TestIssue68(TestCase):
             pass
 
 
+class TestLoadSave(TestAutomatonBase):
+    
+    def test_save__invalid_number_of_arguments(self):
+        A = self.add_words_and_make_automaton();
+        with self.assertRaisesRegex(ValueError, "expected exactly two arguments"):
+            A.save()
+
+
+    def test_save__invalid_argument_1(self):
+        A = self.add_words_and_make_automaton();
+        with self.assertRaisesRegex(TypeError, "the first argument must be a string"):
+            A.save(None, None)
+
+
+    def test_save__invalid_argument_2(self):
+        A = self.add_words_and_make_automaton();
+        with self.assertRaisesRegex(TypeError, "the second argument must be a callable object"):
+            A.save("/dev/shm/test.dump", None)
+
+
+    def test_save(self):
+        import pickle
+
+        A = self.add_words_and_make_automaton();
+        def serializer(obj):
+            return pickle.dumps(obj)
+
+        path = "/dev/shm/test.dump"
+        A.save(path, serializer)
+
+
+    def test_save_and_load(self):
+        import pickle
+
+        A = self.add_words_and_make_automaton();
+        def serializer(obj):
+            bytes = pickle.dumps(obj)
+            return bytes
+
+        path = "/dev/shm/test.dump"
+        A.save(path, serializer)
+
+        def deserializer(bytes):
+            return pickle.loads(bytes)
+
+        B = ahocorasick.load(path, deserializer)
+
+        self.compare_automatons(A, B)
+
+
+    def compare_automatons(self, A, B):
+        if print_dumps:
+            print([x for x in B.items()])
+            print([x for x in A.items()])
+
+        self.assertEqual(len(A), len(B))
+
+        for item in zip(A.items(), B.items()):
+            (AK, AV), (BK, BV) = item
+
+            self.assertEqual(AK, BK)
+            self.assertEqual(AV, BV)
+
+
 if __name__ == '__main__':
     unittest.main()
 

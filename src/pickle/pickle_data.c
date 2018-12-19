@@ -75,7 +75,6 @@ pickle_data__shrink_last_buffer(PickleData* data) {
 
 	bytes = F(PyList_GetItem)(data->bytes_list, last_idx);
 	if (UNLIKELY(bytes == NULL)) {
-		puts("HERE?");
 		return false;
 	}
 

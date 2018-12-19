@@ -68,7 +68,7 @@ void* memory_alloc(ssize_t size) {
     if (alloc_dump)
         fprintf(debug_file, "A %d %p %ld\n", alloc_num, res, size);
 #endif
-
+#
     return res;
 }
 
@@ -86,6 +86,9 @@ void xfree(void* ptr) {
 		memory_free(ptr);
 	}
 }
+
+
+#define memory_safefree xfree
 
 
 #if !defined(PY3K) || !defined(AHOCORASICK_UNICODE)

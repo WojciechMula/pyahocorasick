@@ -296,7 +296,7 @@ class TestTrieRemoveWord(TestTrieStorePyObjectsBase):
         A = self.A
         for w in words:
             A.add_word(conv(w), w)
-        
+
         expected_set = set(words)
         for w in reversed(words):
             self.assertTrue(self.A.remove_word(w))
@@ -384,7 +384,7 @@ class TestTriePop(TestTrieStorePyObjectsBase):
         A = self.A
         for w in words:
             A.add_word(conv(w), w)
-        
+
         expected_set = set(words)
         for w in reversed(words):
             self.assertEqual(w, self.A.pop(w))
@@ -579,6 +579,8 @@ class TestAutomatonBase(TestCase):
     def add_words(self):
         for word in self.words:
             self.A.add_word(conv(word), word)
+
+        return self.A
 
 
     def add_words_and_make_automaton(self):
@@ -1423,7 +1425,18 @@ class TestIssue68(TestCase):
 
 
 class TestLoadSave(TestAutomatonBase):
-    
+
+    def __init__(self, *args):
+        super(TestAutomatonBase, self).__init__(*args)
+
+        if os.path.isdir("/dev/shm"):
+            tmp = "/dev/shm"
+        else:
+            tmp = "/tmp"
+
+        self.path = conv(os.path.join(tmp, "test.dat"))
+
+
     def test_save__invalid_number_of_arguments(self):
         A = self.add_words_and_make_automaton();
         with self.assertRaisesRegex(ValueError, "expected exactly two arguments"):
@@ -1439,35 +1452,80 @@ class TestLoadSave(TestAutomatonBase):
     def test_save__invalid_argument_2(self):
         A = self.add_words_and_make_automaton();
         with self.assertRaisesRegex(TypeError, "the second argument must be a callable object"):
-            A.save("/dev/shm/test.dump", None)
+            A.save(self.path, None)
+
+
+    def test_load__invalid_number_of_arguments(self):
+        with self.assertRaisesRegex(ValueError, "expected exactly two arguments"):
+            ahocorasick.load()
+
+
+    def test_load__invalid_argument_1(self):
+        with self.assertRaisesRegex(TypeError, "the first argument must be a string"):
+            ahocorasick.load(None, None)
+
+
+    def test_load__invalid_argument_2(self):
+        with self.assertRaisesRegex(TypeError, "the second argument must be a callable object"):
+            ahocorasick.load("/dev/shm/test.dump", None)
 
 
     def test_save(self):
         import pickle
 
         A = self.add_words_and_make_automaton();
-        def serializer(obj):
-            return pickle.dumps(obj)
 
-        path = "/dev/shm/test.dump"
-        A.save(path, serializer)
+        A.save(self.path, pickle.dumps)
 
 
-    def test_save_and_load(self):
+    def test_save_and_load_empty(self):
+        import pickle
+
+        A = ahocorasick.Automaton()
+
+        A.save(self.path, pickle.dumps)
+        B = ahocorasick.load(self.path, pickle.loads)
+
+        self.compare_automatons(A, B)
+
+
+    def test_save_and_load_trie(self):
+        import pickle
+
+        A = self.add_words()
+
+        A.save(self.path, pickle.dumps)
+        B = ahocorasick.load(self.path, pickle.loads)
+
+        self.compare_automatons(A, B)
+
+
+    def test_save_and_load_automaton(self):
         import pickle
 
         A = self.add_words_and_make_automaton();
-        def serializer(obj):
-            bytes = pickle.dumps(obj)
-            return bytes
 
-        path = "/dev/shm/test.dump"
-        A.save(path, serializer)
+        A.save(self.path, pickle.dumps)
+        B = ahocorasick.load(self.path, pickle.loads)
 
-        def deserializer(bytes):
-            return pickle.loads(bytes)
+        self.compare_automatons(A, B)
 
-        B = ahocorasick.load(path, deserializer)
+
+    def test_save_ints(self):
+        A = ahocorasick.Automaton(ahocorasick.STORE_INTS)
+        with self.assertRaisesRegex(ValueError, "expected exactly one argument"):
+            A.save(self.path, None)
+
+
+    def test_save_and_load_ints(self):
+        import pickle
+
+        A = ahocorasick.Automaton(ahocorasick.STORE_INTS)
+        for i, word in enumerate(conv("he she her cat car carriage zoo")):
+            A.add_word(word, i)
+
+        A.save(self.path)
+        B = ahocorasick.load(self.path, pickle.loads)
 
         self.compare_automatons(A, B)
 
@@ -1479,7 +1537,10 @@ class TestLoadSave(TestAutomatonBase):
 
         self.assertEqual(len(A), len(B))
 
-        for item in zip(A.items(), B.items()):
+        A = list(A.items())
+        B = list(B.items())
+
+        for item in zip(A, B):
             (AK, AV), (BK, BV) = item
 
             self.assertEqual(AK, BK)

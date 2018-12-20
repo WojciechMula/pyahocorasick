@@ -7,7 +7,7 @@
 
 void initialize_pycallfault(void);
 
-// --- python function wrappers ----------------------------------------- 
+// --- python function wrappers -----------------------------------------
 
 int check(void);
 int check_and_set_error(void);
@@ -38,8 +38,6 @@ int check_and_set_error(void);
 
 #define PyBytes_CheckExact_custom(arg) (check() ? 0 : PyBytes_CheckExact(arg))
 
-#define PyCallable_Check_custom(arg) (check() ? 0 : PyCallable_Check(arg))
-
 #define PyNumber_Check_custom(arg) (check() ? 0 : PyNumber_Check(arg))
 
 #define PyTuple_Check_custom(arg) (check() ? 0 : PyTuple_Check(arg))
@@ -51,6 +49,8 @@ int check_and_set_error(void);
 #define PyNumber_Index_custom(arg) (check_and_set_error() ? NULL : PyNumber_Index(arg))
 
 #define PyUnicode_FromKindAndData_custom(...) (check_and_set_error() ? NULL : PyUnicode_FromKindAndData(__VA_ARGS__))
+
+#define PyUnicode_AsUTF8String_custom(...) (check_and_set_error() ? NULL : PyUnicode_AsUTF8String(__VA_ARGS__))
 
 #define PyBytes_FromStringAndSize_custom(...) (check_and_set_error() ? NULL : PyBytes_FromStringAndSize(__VA_ARGS__))
 

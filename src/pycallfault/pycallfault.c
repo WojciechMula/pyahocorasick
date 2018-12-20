@@ -43,7 +43,7 @@ int check_and_set_error(void) {
         PyErr_NoMemory();
         return 1;
     }
-    
+
     return 0;
 }
 

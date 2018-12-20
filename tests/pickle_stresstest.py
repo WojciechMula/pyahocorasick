@@ -30,20 +30,35 @@ class TestApplication(object):
     def run(self):
         self.A = ahocorasick.Automaton()
 
-        if self.options.compare and not self.options.save:
+        if self.options.compare and (not self.options.pickle and not self.options.save):
             self.generate_words()
 
-        if self.options.save:
+        if self.options.pickle or self.options.save:
             self.add_words()
+
+        if self.options.pickle:
             t1 = time.time()
             self.pickle()
             t2 = time.time()
             print("   time: %0.2fs" % (t2 - t1))
             self.A.clear()
 
-        if self.options.load:
+        if self.options.save:
+            t1 = time.time()
+            self.save()
+            t2 = time.time()
+            print("   time: %0.2fs" % (t2 - t1))
+            self.A.clear()
+
+        if self.options.unpickle:
             t1 = time.time()
             self.unpickle()
+            t2 = time.time()
+            print("   time: %0.2fs" % (t2 - t1))
+
+        if self.options.load:
+            t1 = time.time()
+            self.load()
             t2 = time.time()
             print("   time: %0.2fs" % (t2 - t1))
 
@@ -129,7 +144,8 @@ class TestApplication(object):
     def pickle(self):
         path = self.options.picklepath
 
-        print("Saving automaton in %s" % path)
+        print("Pickling automaton in %s" % path)
+
         with open(path, 'wb') as f:
             pickle.dump(self.A, f)
 
@@ -140,9 +156,28 @@ class TestApplication(object):
     def unpickle(self):
         path = self.options.picklepath
 
-        print("Loading automaton from %s" % path)
+        print("Unpickling automaton from %s" % path)
         with open(path, 'rb') as f:
             self.A = pickle.load(f)
+
+
+    def save(self):
+        path = self.options.picklepath
+
+        print("Saving automaton in %s" % path)
+
+        self.A.save(path, pickle.dumps);
+
+        size = os.path.getsize(path)
+        print("   file size is %s" % format_size(size))
+
+
+    def load(self):
+        path = self.options.picklepath
+
+        print("Loading automaton from %s" % path)
+
+        self.A = ahocorasick.load(path, pickle.loads)
 
 
     def compare(self):
@@ -187,14 +222,25 @@ def parse_args():
     )
 
     parser.add_option(
-        "-p", "--pickle", dest='save', action='store_true', default=False,
+        "-p", "--pickle", dest='pickle', action='store_true', default=False,
         help="perform pickle operation on generated/loaded words"
     )
 
     parser.add_option(
-        "-u", "--unpickle", dest='load', action='store_true', default=False,
+        "-u", "--unpickle", dest='unpickle', action='store_true', default=False,
         help="perform unpickle operation on previously pickled data"
     )
+
+    parser.add_option(
+        "-s", "--save", dest='save', action='store_true', default=False,
+        help="perform save operation on generated/loaded words"
+    )
+
+    parser.add_option(
+        "-l", "--load", dest='load', action='store_true', default=False,
+        help="perform load operation on previously saved data"
+    )
+
 
     parser.add_option(
         "-c", "--compare", action='store_true', default=False,
@@ -230,6 +276,9 @@ def parse_args():
 
     if not (options.file_gz or options.random):
         raise parser.error("pass --random or --file-gz option")
+
+    if (options.pickle or options.unpickle) and (options.save or options.load):
+        raise parser.error("use separately --pickle/--unpickle and --save/--load")
 
     return options
 

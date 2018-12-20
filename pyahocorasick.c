@@ -17,6 +17,7 @@
 #include "Automaton.h"
 #include "AutomatonSearchIter.h"
 #include "AutomatonItemsIter.h"
+#include "src/custompickle/load/module_automaton_load.h"
 
 /* code */
 #include "utils.c"
@@ -29,6 +30,7 @@
 #ifdef PYCALLS_INJECT_FAULTS
 #include "src/pycallfault/pycallfault.c"
 #endif
+#include "allsources.c"
 
 
 #define ahocorasick_doc \
@@ -40,6 +42,8 @@
 static
 PyMethodDef
 ahocorasick_module_methods[] = {
+    {"load", module_automaton_load, METH_VARARGS, module_automaton_load_doc},
+
 	{NULL, NULL, 0, NULL}
 };
 

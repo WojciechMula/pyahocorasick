@@ -149,6 +149,7 @@ function handle_valgrind
 function run_mallocfaults
 {
     # obtain max allocation number
+    unset ALLOC_FAIL
     run_unittests
 
     local MINID=0

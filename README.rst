@@ -378,6 +378,81 @@ The Automaton class has the following attributes:
 ``store`` [readonly]
     Return the type of values stored in the Automaton as specified at creation.
 
+
+Saving and loading automaton
+----------------------------
+
+There is support for two method of saving and loading an automaton:
+
+* the standard ``pickle`` protocol,
+* custom ``save`` and ``load`` methods.
+
+While pickling is more convenient to use, it has quite high memory
+requirements. The ``save``/``load`` method try to overcome this
+problem.
+
+.. warning::
+
+    Neither format of pickle nor save are safe. Although there are
+    a few sanity checks, they are not sufficient to detect all
+    possible input errors.
+
+
+Pickle
+======
+
+.. code:: python
+
+    import ahocorasick
+    import pickle
+    
+    # build automaton
+
+    A = ahocorasick.Automaton()
+    # ... A.add_data, A.make_automaton
+
+    # save current state
+    with open(path, 'wb') as f:
+        pickle.dump(A, f)
+
+    # load saved state
+    with open(path, 'rb') as f:
+        B = pickle.load(f)
+
+
+Save/load methods
+=================
+
+.. code:: python
+
+    import ahocorasick
+    import pickle
+    
+    # build automaton
+
+    A = ahocorasick.Automaton()
+    # ... A.add_data, A.make_automaton
+
+    # save current state
+    A.save(path, pickle.dumps)
+
+    # load saved state
+    B = ahocorasick.load(path, pickle.loads)
+
+
+Automaton method ``save`` requires ``path`` to the file which will store data.
+If the automaton type is ``STORE_ANY``, i.e. values associated with words are
+any python objects, then ``save`` requires also another argument, a callable.
+The callable serializes python object into bytes; in the example above we 
+use standard pickle ``dumps`` function.
+
+Module method ``load`` also requires ``path`` to file that has data previously
+saved. Because at the moment of loading data we don't know what is the store
+attribute of automaton, the second argument - a callable - is required.  The
+callable must convert back given bytes object into python value, that will be
+stored in automaton. Similarly, standard ``pickle.loads`` function can be passed.
+
+
 Other Automaton methods
 -----------------------
 

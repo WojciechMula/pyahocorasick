@@ -396,7 +396,7 @@ clear_aux(TrieNode* node, KeysStore store) {
                 clear_aux(child, store);
         }
 
-        xfree(node->next);
+        memory_safefree(node->next);
         memory_free(node);
     }
 #undef automaton

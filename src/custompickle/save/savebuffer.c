@@ -106,7 +106,7 @@ savebuffer_finalize(SaveBuffer* output) {
         savebuffer_flush(output);
     }
 
-    xfree(output->buffer);
+    memory_safefree(output->buffer);
 
     if (output->file != NULL) {
         fclose(output->file);

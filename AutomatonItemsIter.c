@@ -101,10 +101,10 @@ no_memory:
 
 static void
 automaton_items_iter_del(PyObject* self) {
-    xfree(iter->buffer);
-    xfree(iter->pattern);
+    memory_safefree(iter->buffer);
+    memory_safefree(iter->pattern);
 #ifndef AHOCORASICK_UNICODE
-    xfree(iter->char_buffer);
+    memory_safefree(iter->char_buffer);
 #endif
 
     list_delete(&iter->stack);

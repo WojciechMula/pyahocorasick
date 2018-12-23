@@ -118,15 +118,11 @@ void memory_free(void* ptr) {
 }
 
 
-void xfree(void* ptr) {
+void memory_safefree(void* ptr) {
     if (ptr != NULL) {
         memory_free(ptr);
     }
 }
-
-
-
-#define memory_safefree xfree
 
 
 #if !defined(PY3K) || !defined(AHOCORASICK_UNICODE)

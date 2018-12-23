@@ -1,6 +1,6 @@
 /*
     This is part of pyahocorasick Python module.
-    
+
     Windows declarations
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
@@ -13,6 +13,6 @@
 
 #include "msinttypes/stdint.h"
 
-#define PY_OBJECT_HEAD_INIT	PyVarObject_HEAD_INIT(NULL, 0)
+#define PY_OBJECT_HEAD_INIT PyVarObject_HEAD_INIT(NULL, 0)
 
 #endif

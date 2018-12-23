@@ -1,7 +1,7 @@
 /*
-	This is part of pyahocorasick Python module.
-	
-	Trie node declarations
+    This is part of pyahocorasick Python module.
+
+    Trie node declarations
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl
@@ -15,28 +15,28 @@
 
 /* links to children nodes are stored in dynamic table */
 typedef struct TrieNode {
-	union {
-		PyObject*	object;		///< valid when kind = STORE_ANY
-		Py_uintptr_t integer;	///< valid when kind in [STORE_LENGTH, STORE_INTS]
-	} output; ///< output function, valid when eow is true
-	struct TrieNode*	fail;	///< fail node
+    union {
+        PyObject*   object;     ///< valid when kind = STORE_ANY
+        Py_uintptr_t integer;   ///< valid when kind in [STORE_LENGTH, STORE_INTS]
+    } output; ///< output function, valid when eow is true
+    struct TrieNode*    fail;   ///< fail node
 
 #if TRIE_LETTER_SIZE == 1
-	uint16_t			n;		///< length of next
+    uint16_t            n;      ///< length of next
 #else
-	uint32_t			n;		///< length of next
+    uint32_t            n;      ///< length of next
 #endif
-	uint8_t  			eow;	///< end of word marker
-	TRIE_LETTER_TYPE	letter;	///< incoming edge label
+    uint8_t             eow;    ///< end of word marker
+    TRIE_LETTER_TYPE    letter; ///< incoming edge label
 
-	struct TrieNode**	next;	///< table of pointers
+    struct TrieNode**   next;   ///< table of pointers
 } TrieNode;
 
 
 typedef enum {
-	MEMORY_ERROR,
-	TRUE,
-	FALSE
+    MEMORY_ERROR,
+    TRUE,
+    FALSE
 } TristateResult;
 
 

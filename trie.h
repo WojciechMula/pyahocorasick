@@ -1,7 +1,7 @@
 /*
-	This is part of pyahocorasick Python module.
-	
-	Trie declarations
+    This is part of pyahocorasick Python module.
+
+    Trie declarations
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl
@@ -38,9 +38,9 @@ typedef int (*trie_traverse_callback)(TrieNode* node, const int depth, void* ext
    if callback returns false, then traversing stop */
 static void
 trie_traverse(
-	TrieNode* root,
-	trie_traverse_callback callback,
-	void *extra
+    TrieNode* root,
+    trie_traverse_callback callback,
+    void *extra
 );
 
 /* returns total size of node and it's internal structures */

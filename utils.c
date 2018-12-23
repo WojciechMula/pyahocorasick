@@ -1,12 +1,12 @@
 /*
-	This is part of pyahocorasick Python module.
+    This is part of pyahocorasick Python module.
 
-	Helpers functions.
-	This file is included directly.
+    Helpers functions.
+    This file is included directly.
 
-	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl
-	License   : public domain
+    License   : public domain
 */
 
 //#define MEMORY_DEBUG
@@ -82,9 +82,9 @@ void memory_free(void* ptr) {
 
 
 void xfree(void* ptr) {
-	if (ptr != NULL) {
-		memory_free(ptr);
-	}
+    if (ptr != NULL) {
+        memory_free(ptr);
+    }
 }
 
 
@@ -112,31 +112,31 @@ static PyObject*
 pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool* is_copy) {
 
 #ifdef INPUT_KEEPS_COPY
-	ssize_t i;
-	char* bytes;
+    ssize_t i;
+    char* bytes;
 #endif
 
 #if defined PEP393_UNICODE
     if (F(PyUnicode_Check)(obj)) {
-	PyUnicode_READY(obj);
-	if (PyUnicode_KIND(obj) == PyUnicode_4BYTE_KIND) {
+    PyUnicode_READY(obj);
+    if (PyUnicode_KIND(obj) == PyUnicode_4BYTE_KIND) {
             *word = (TRIE_LETTER_TYPE*)(PyUnicode_4BYTE_DATA(obj));
             *wordlen = PyUnicode_GET_LENGTH(obj);
-	        *is_copy = false;
+            *is_copy = false;
             Py_INCREF(obj);
 
-	    return obj;
-	} else {
-	    *word = PyUnicode_AsUCS4Copy(obj);
+        return obj;
+    } else {
+        *word = PyUnicode_AsUCS4Copy(obj);
         *wordlen = PyUnicode_GET_LENGTH(obj);
-	    *is_copy = true;
-	    // No INCREF - we have our copy
-	    return obj;
-	}
+        *is_copy = true;
+        // No INCREF - we have our copy
+        return obj;
+    }
     }
     else {
-	PyErr_SetString(PyExc_TypeError, "string expected");
-	return NULL;
+    PyErr_SetString(PyExc_TypeError, "string expected");
+    return NULL;
     }
 #elif defined PY3K
 #   ifdef AHOCORASICK_UNICODE
@@ -156,17 +156,17 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 #       endif
         if (F(PyBytes_Check)(obj)) {
             *wordlen = PyBytes_GET_SIZE(obj);
-			*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
+            *word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
             if (*word == NULL) {
                 PyErr_NoMemory();
                 return NULL;
             }
 
-			bytes = PyBytes_AS_STRING(obj);
-			for (i=0; i < *wordlen; i++) {
-				(*word)[i] = bytes[i];
-			}
-			// Note: there is no INCREF
+            bytes = PyBytes_AS_STRING(obj);
+            for (i=0; i < *wordlen; i++) {
+                (*word)[i] = bytes[i];
+            }
+            // Note: there is no INCREF
             return obj;
         }
         else {
@@ -178,48 +178,48 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 #       ifndef INPUT_KEEPS_COPY
 #           error "defines inconsistency"
 #       endif
-	if (F(PyString_Check)(obj)) {
+    if (F(PyString_Check)(obj)) {
         *wordlen = PyString_GET_SIZE(obj);
-		*word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
+        *word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
         if (*word == NULL) {
-		    PyErr_NoMemory();
+            PyErr_NoMemory();
             return NULL;
         }
 
 
-		bytes = PyString_AS_STRING(obj);
-		for (i=0; i < *wordlen; i++) {
-			(*word)[i] = bytes[i];
-		};
+        bytes = PyString_AS_STRING(obj);
+        for (i=0; i < *wordlen; i++) {
+            (*word)[i] = bytes[i];
+        };
 
         Py_INCREF(obj);
-		return obj;
+        return obj;
     } else {
-		PyErr_SetString(PyExc_TypeError, "string required");
-		return NULL;
-	}
+        PyErr_SetString(PyExc_TypeError, "string required");
+        return NULL;
+    }
 #endif
 }
 
 static bool
 __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-	Py_ssize_t i;
-	Py_ssize_t size = PyTuple_GET_SIZE(obj);
-	TRIE_LETTER_TYPE* tmpword;
+    Py_ssize_t i;
+    Py_ssize_t size = PyTuple_GET_SIZE(obj);
+    TRIE_LETTER_TYPE* tmpword;
 
-	tmpword = (TRIE_LETTER_TYPE*)memory_alloc(size * TRIE_LETTER_SIZE);
-	if (UNLIKELY(tmpword == NULL)) {
-		PyErr_NoMemory();
-		return false;
-	}
+    tmpword = (TRIE_LETTER_TYPE*)memory_alloc(size * TRIE_LETTER_SIZE);
+    if (UNLIKELY(tmpword == NULL)) {
+        PyErr_NoMemory();
+        return false;
+    }
 
-	for (i=0; i < size; i++) {
-		Py_ssize_t value = F(PyNumber_AsSsize_t)(F(PyTuple_GetItem)(obj, i), PyExc_ValueError);
-		if (value == -1 && PyErr_Occurred()) {
-			PyErr_Format(PyExc_ValueError, "item #%zd is not a number", i);
-			memory_free(tmpword);
-			return false;
-		}
+    for (i=0; i < size; i++) {
+        Py_ssize_t value = F(PyNumber_AsSsize_t)(F(PyTuple_GetItem)(obj, i), PyExc_ValueError);
+        if (value == -1 && PyErr_Occurred()) {
+            PyErr_Format(PyExc_ValueError, "item #%zd is not a number", i);
+            memory_free(tmpword);
+            return false;
+        }
 
 
         // TODO: both min and max values should be configured
@@ -228,97 +228,97 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 #else
     #define MAX_VAL 65535ul
 #endif
-		if (value < 0 || value > MAX_VAL) {
-			PyErr_Format(PyExc_ValueError, "item #%zd: value %zd outside range [%d..%lu]", i, value, 0, MAX_VAL);
-			memory_free(tmpword);
-			return false;
-		}
+        if (value < 0 || value > MAX_VAL) {
+            PyErr_Format(PyExc_ValueError, "item #%zd: value %zd outside range [%d..%lu]", i, value, 0, MAX_VAL);
+            memory_free(tmpword);
+            return false;
+        }
 
-		tmpword[i] = (TRIE_LETTER_TYPE)value;
-	}
+        tmpword[i] = (TRIE_LETTER_TYPE)value;
+    }
 
-	*word = tmpword;
-	*wordlen = size;
+    *word = tmpword;
+    *wordlen = size;
 
-	return true;
+    return true;
 }
 
 
 static bool
 pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
-	if (LIKELY(F(PyTuple_Check)(obj))) {
-		return __read_sequence__from_tuple(obj, word, wordlen);
-	} else {
-		PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");
-		return false;
-	}
+    if (LIKELY(F(PyTuple_Check)(obj))) {
+        return __read_sequence__from_tuple(obj, word, wordlen);
+    } else {
+        PyErr_Format(PyExc_TypeError, "argument is not a supported sequence type");
+        return false;
+    }
 }
 
 
 /* parse optional indexes used in few functions [start, [end]] */
 static int
 pymod_parse_start_end(
-	PyObject* args,
-	int idx_start, int idx_end,
-	const ssize_t min, const ssize_t max,
-	ssize_t* Start, ssize_t* End
+    PyObject* args,
+    int idx_start, int idx_end,
+    const ssize_t min, const ssize_t max,
+    ssize_t* Start, ssize_t* End
 ) {
-	PyObject* obj;
+    PyObject* obj;
 #define start (*Start)
 #define end (*End)
 
-	start	= min;
-	end		= max;
+    start   = min;
+    end     = max;
 
-	// first argument
-	obj = F(PyTuple_GetItem)(args, idx_start);
-	if (obj == NULL) {
-		PyErr_Clear();
-		return 0;
-	}
+    // first argument
+    obj = F(PyTuple_GetItem)(args, idx_start);
+    if (obj == NULL) {
+        PyErr_Clear();
+        return 0;
+    }
 
-	obj = F(PyNumber_Index)(obj);
-	if (obj == NULL)
-		return -1;
+    obj = F(PyNumber_Index)(obj);
+    if (obj == NULL)
+        return -1;
 
-	start = F(PyNumber_AsSsize_t)(obj, PyExc_IndexError);
+    start = F(PyNumber_AsSsize_t)(obj, PyExc_IndexError);
     Py_DECREF(obj);
-	if (start == -1 and PyErr_Occurred())
-		return -1;
+    if (start == -1 and PyErr_Occurred())
+        return -1;
 
-	if (start < 0)
-		start = max + start;
+    if (start < 0)
+        start = max + start;
 
-	if (start < min or start >= max) {
-		PyErr_Format(PyExc_IndexError, "start index not in range %zd..%zd", min, max);
-		return -1;
-	}
+    if (start < min or start >= max) {
+        PyErr_Format(PyExc_IndexError, "start index not in range %zd..%zd", min, max);
+        return -1;
+    }
 
-	// second argument
-	obj = F(PyTuple_GetItem)(args, idx_end);
-	if (obj == NULL) {
-		PyErr_Clear();
-		return 0;
-	}
+    // second argument
+    obj = F(PyTuple_GetItem)(args, idx_end);
+    if (obj == NULL) {
+        PyErr_Clear();
+        return 0;
+    }
 
-	obj = F(PyNumber_Index)(obj);
-	if (obj == NULL)
-		return -1;
+    obj = F(PyNumber_Index)(obj);
+    if (obj == NULL)
+        return -1;
 
-	end = F(PyNumber_AsSsize_t)(obj, PyExc_IndexError);
+    end = F(PyNumber_AsSsize_t)(obj, PyExc_IndexError);
     Py_DECREF(obj);
-	if (end == -1 and PyErr_Occurred())
-		return -1;
+    if (end == -1 and PyErr_Occurred())
+        return -1;
 
-	if (end < 0)
-		end = max - 1 + end;
+    if (end < 0)
+        end = max - 1 + end;
 
-	if (end < min or end > max) {
-		PyErr_Format(PyExc_IndexError, "end index not in range %zd..%zd", min, max);
-		return -1;
-	}
+    if (end < min or end > max) {
+        PyErr_Format(PyExc_IndexError, "end index not in range %zd..%zd", min, max);
+        return -1;
+    }
 
-	return 0;
+    return 0;
 
 #undef start
 #undef end
@@ -326,50 +326,50 @@ pymod_parse_start_end(
 
 
 void init_input(struct Input* input) {
-	input->word = NULL;
-	input->py_word = NULL;
+    input->word = NULL;
+    input->py_word = NULL;
 }
 
 
 bool prepare_input(PyObject* self, PyObject* tuple, struct Input* input) {
 #define automaton ((Automaton*)self)
-	if (automaton->key_type == KEY_STRING) {
-		input->py_word = pymod_get_string(tuple, &input->word, &input->wordlen, &input->is_copy);
-		if (not input->py_word)
-			return false;
-	} else {
-		input->is_copy = true; // we always create a copy of sequence
-		input->py_word = NULL;
-		if (not pymod_get_sequence(tuple, &input->word, &input->wordlen)) {
-			return false;
-		}
-	}
+    if (automaton->key_type == KEY_STRING) {
+        input->py_word = pymod_get_string(tuple, &input->word, &input->wordlen, &input->is_copy);
+        if (not input->py_word)
+            return false;
+    } else {
+        input->is_copy = true; // we always create a copy of sequence
+        input->py_word = NULL;
+        if (not pymod_get_sequence(tuple, &input->word, &input->wordlen)) {
+            return false;
+        }
+    }
 #undef automaton
 
-	return true;
+    return true;
 }
 
 
 bool prepare_input_from_tuple(PyObject* self, PyObject* args, int index, struct Input* input) {
-	PyObject* tuple;
+    PyObject* tuple;
 
-	tuple = F(PyTuple_GetItem)(args, index);
-	if (tuple)
-		return prepare_input(self, tuple, input);
-	else
-		return false;
+    tuple = F(PyTuple_GetItem)(args, index);
+    if (tuple)
+        return prepare_input(self, tuple, input);
+    else
+        return false;
 }
 
 
 void destroy_input(struct Input* input) {
-	maybe_decref(input->is_copy, input->py_word)
-	maybe_free(input->is_copy, input->word)
+    maybe_decref(input->is_copy, input->py_word)
+    maybe_free(input->is_copy, input->word)
 }
 
 
 void assign_input(struct Input* dst, struct Input* src) {
 
-	dst->wordlen	= src->wordlen;
-	dst->word		= src->word;
-	dst->py_word	= src->py_word; // Note: there is no INCREF
+    dst->wordlen    = src->wordlen;
+    dst->word       = src->word;
+    dst->py_word    = src->py_word; // Note: there is no INCREF
 }

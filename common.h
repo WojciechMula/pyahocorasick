@@ -1,18 +1,18 @@
 /*
-	This is part of pyahocorasick Python module.
-	
-	common definitions and includes
+    This is part of pyahocorasick Python module.
 
-	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    common definitions and includes
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl
-	License   : public domain
+    License   : public domain
 */
 
 #ifndef ahocorasick_common_h_included__
 #define ahocorasick_common_h_included__
 
 #include <Python.h>
-#include <structmember.h>	// PyMemberDef
+#include <structmember.h>   // PyMemberDef
 
 #include <iso646.h>
 
@@ -21,16 +21,16 @@
 #if defined(_MSC_VER)       // Visual Studio compiler
 #   include "windows.h"
 #else
-#	include "posix.h"
+#   include "posix.h"
 #endif
 
 #if PY_MAJOR_VERSION >= 3
     #define PY3K
     #if PY_MINOR_VERSION >= 3 || PY_MAJOR_VERSION > 3
-	#define PEP393
-	#ifdef AHOCORASICK_UNICODE
-	    #define PEP393_UNICODE
-	#endif
+    #define PEP393
+    #ifdef AHOCORASICK_UNICODE
+        #define PEP393_UNICODE
+    #endif
     #endif
 #else
     #ifdef AHOCORASICK_UNICODE
@@ -42,46 +42,46 @@
 // setup supported character set
 #ifdef AHOCORASICK_UNICODE
 #       if defined PEP393_UNICODE || defined Py_UNICODE_WIDE
-		// Either Python uses UCS-4 or we don't know what Python uses,
-		// but we use UCS-4
-#		define TRIE_LETTER_TYPE	uint32_t
-#		define TRIE_LETTER_SIZE 4
-#	else
-		// Python use UCS-2
-#		define TRIE_LETTER_TYPE	uint16_t
-#		define TRIE_LETTER_SIZE 2
+        // Either Python uses UCS-4 or we don't know what Python uses,
+        // but we use UCS-4
+#       define TRIE_LETTER_TYPE uint32_t
+#       define TRIE_LETTER_SIZE 4
+#   else
+        // Python use UCS-2
+#       define TRIE_LETTER_TYPE uint16_t
+#       define TRIE_LETTER_SIZE 2
 #       define VARIABLE_LEN_CHARCODES 1
-#	endif
+#   endif
 #else
-	// only bytes are supported
-#	define TRIE_LETTER_TYPE	uint16_t
-#	define TRIE_LETTER_SIZE 2
+    // only bytes are supported
+#   define TRIE_LETTER_TYPE uint16_t
+#   define TRIE_LETTER_SIZE 2
 #endif
 
 
-#define memalloc	PyMem_Malloc
-#define memfree		PyMem_Free
-#define memrealloc	PyMem_Realloc
+#define memalloc    PyMem_Malloc
+#define memfree     PyMem_Free
+#define memrealloc  PyMem_Realloc
 
 #ifdef __GNUC__
-#	define	LIKELY(x)	__builtin_expect(x, 1)
-#	define	UNLIKELY(x)	__builtin_expect(x, 0)
-#	define	ALWAYS_INLINE	__attribute__((always_inline))
-#	define	PURE			__attribute__((pure))
-#	define	UNUSED			__attribute__((unused))
+#   define  LIKELY(x)   __builtin_expect(x, 1)
+#   define  UNLIKELY(x) __builtin_expect(x, 0)
+#   define  ALWAYS_INLINE   __attribute__((always_inline))
+#   define  PURE            __attribute__((pure))
+#   define  UNUSED          __attribute__((unused))
 #else
-#	define	LIKELY(x)	x
-#	define	UNLIKELY(x)	x
-#	define	ALWAYS_INLINE
-#	define	PURE
-#	define	UNUSED
+#   define  LIKELY(x)   x
+#   define  UNLIKELY(x) x
+#   define  ALWAYS_INLINE
+#   define  PURE
+#   define  UNUSED
 #endif
 
 #ifdef DEBUG
-#	include <assert.h>
-#	define	ASSERT(expr)	do {if (!(expr)) {fprintf(stderr, "%s:%s:%d - %s failed!\n", __FILE__, __FUNCTION__, __LINE__, #expr); fflush(stderr); exit(1);} }while(0)
+#   include <assert.h>
+#   define  ASSERT(expr)    do {if (!(expr)) {fprintf(stderr, "%s:%s:%d - %s failed!\n", __FILE__, __FUNCTION__, __LINE__, #expr); fflush(stderr); exit(1);} }while(0)
 #else
-#	define	ASSERT(expr)
+#   define  ASSERT(expr)
 #endif
 
 #if defined(PYCALLS_INJECT_FAULTS) && defined(PY3K)
@@ -90,7 +90,7 @@
 #   define F(name) name
 #endif
 
-typedef char	bool;
+typedef char    bool;
 #define true 1
 #define false 0
 

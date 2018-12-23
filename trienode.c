@@ -1,7 +1,7 @@
 /*
-	This is part of pyahocorasick Python module.
+    This is part of pyahocorasick Python module.
 
-	Trie implementation
+    Trie implementation
 
     Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl
@@ -12,93 +12,93 @@
 
 static TrieNode*
 trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
-	TrieNode* node = (TrieNode*)memory_alloc(sizeof(TrieNode));
-	if (node) {
-		node->output.integer = 0;
-		node->output.object = NULL;
-		node->fail		= NULL;
+    TrieNode* node = (TrieNode*)memory_alloc(sizeof(TrieNode));
+    if (node) {
+        node->output.integer = 0;
+        node->output.object = NULL;
+        node->fail      = NULL;
 
-		node->n		= 0;
-		node->letter	= letter;
-		node->eow	    = eow;
-		node->next	= NULL;
-	}
+        node->n     = 0;
+        node->letter    = letter;
+        node->eow       = eow;
+        node->next  = NULL;
+    }
 
-	return node;
+    return node;
 }
 
 static void
 trienode_free(TrieNode* node) {
 
-	ASSERT(node);
+    ASSERT(node);
 
-	if (node->n > 0) {
-		memory_free(node->next);
-	}
+    if (node->n > 0) {
+        memory_free(node->next);
+    }
 
-	memory_free(node);
+    memory_free(node);
 }
 
 
 static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter) {
 
-	unsigned i;
+    unsigned i;
 
-	ASSERT(node);
-	for (i=0; i < node->n; i++)
-		if ((node)->next[i]->letter == letter)
-			return node->next[i];
+    ASSERT(node);
+    for (i=0; i < node->n; i++)
+        if ((node)->next[i]->letter == letter)
+            return node->next[i];
 
-	return NULL;
+    return NULL;
 }
 
 
 static TristateResult
 trienode_unset_next_pointer(TrieNode* node, TrieNode* child) {
 
-	unsigned i;
-	unsigned index;
-	TrieNode** next;
+    unsigned i;
+    unsigned index;
+    TrieNode** next;
 
-	ASSERT(node);
-	for (i=0; i < node->n; i++) {
-		if (node->next[i] == child) {
-			index = i;
-			goto found;
-		}
-	}
+    ASSERT(node);
+    for (i=0; i < node->n; i++) {
+        if (node->next[i] == child) {
+            index = i;
+            goto found;
+        }
+    }
 
-	return FALSE;
+    return FALSE;
 
 found:
-	if (node->n == 1) {
-		// there is just one node
-		node->n = 0;
-		memory_free(node->next);
-		node->next = NULL;
-		return TRUE;
-	}
+    if (node->n == 1) {
+        // there is just one node
+        node->n = 0;
+        memory_free(node->next);
+        node->next = NULL;
+        return TRUE;
+    }
 
-	// there are more nodes, reallocation is needed
+    // there are more nodes, reallocation is needed
 
-	next = (TrieNode**)memory_alloc((node->n - 1) * sizeof(TrieNode*));
-	if (UNLIKELY(next == NULL)) {
-		return MEMORY_ERROR;
-	}
+    next = (TrieNode**)memory_alloc((node->n - 1) * sizeof(TrieNode*));
+    if (UNLIKELY(next == NULL)) {
+        return MEMORY_ERROR;
+    }
 
-	for (i=0; i < index; i++) {
-		next[i] = node->next[i];
-	}
+    for (i=0; i < index; i++) {
+        next[i] = node->next[i];
+    }
 
-	for (i=index + 1; i < node->n; i++) {
-		next[i - 1] = node->next[i];
-	}
+    for (i=index + 1; i < node->n; i++) {
+        next[i - 1] = node->next[i];
+    }
 
-	memory_free(node->next);
-	node->next = next;
-	node->n -= 1;
-	return TRUE;
+    memory_free(node->next);
+    node->next = next;
+    node->n -= 1;
+    return TRUE;
 }
 
 
@@ -113,24 +113,24 @@ trienode_get_ith_unsafe(TrieNode* node, size_t index) {
 static TrieNode*
 trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child) {
 
-	int n;
-	TrieNode** next;
+    int n;
+    TrieNode** next;
 
-	ASSERT(node);
-	ASSERT(child);
-	ASSERT(trienode_get_next(node, letter) == NULL);
+    ASSERT(node);
+    ASSERT(child);
+    ASSERT(trienode_get_next(node, letter) == NULL);
 
-	n = node->n;
-	next = (TrieNode**)memrealloc(node->next, (n + 1) * sizeof(TrieNode*));
-	if (next) {
-		node->next = next;
-		node->next[n] = child;
-		node->n += 1;
+    n = node->n;
+    next = (TrieNode**)memrealloc(node->next, (n + 1) * sizeof(TrieNode*));
+    if (next) {
+        node->next = next;
+        node->next[n] = child;
+        node->n += 1;
 
-		return child;
-	}
-	else
-		return NULL;
+        return child;
+    }
+    else
+        return NULL;
 }
 
 

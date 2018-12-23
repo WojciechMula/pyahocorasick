@@ -1,17 +1,17 @@
 /*
-	This is part of pyahocorasick Python module.
-	
-	Linked list declarations.
+    This is part of pyahocorasick Python module.
 
-	Const time of:
-	* append
-	* prepend
-	* pop first
-	* get first/last
+    Linked list declarations.
 
-	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    Const time of:
+    * append
+    * prepend
+    * pop first
+    * get first/last
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
     WWW       : http://0x80.pl
-	License   : public domain
+    License   : public domain
 */
 #ifndef ahocorasick_slist_h_included
 #define ahocorasick_slist_h_included
@@ -23,7 +23,7 @@
 
 /** list item node */
 typedef struct ListItem {
-	LISTITEM_data;
+    LISTITEM_data;
 } ListItem;
 
 /** Create new item */
@@ -43,8 +43,8 @@ void list_item_delete(ListItem* item);
 
 */
 typedef struct {
-	ListItem*	head;	///< first node
-	ListItem*	last;	///< last node
+    ListItem*   head;   ///< first node
+    ListItem*   last;   ///< last node
 } List;
 
 

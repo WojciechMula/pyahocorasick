@@ -391,13 +391,12 @@ clear_aux(TrieNode* node, KeysStore store) {
         }
 
         for (i=0; i < node->n; i++) {
-            TrieNode* child = node->next[i];
+            TrieNode* child = trienode_get_ith_unsafe(node, i);
             if (child != node) // avoid self-loops!
                 clear_aux(child, store);
         }
 
-        memory_safefree(node->next);
-        memory_free(node);
+        trienode_free(node);
     }
 #undef automaton
 }
@@ -606,7 +605,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
         }
 
         for (i=0; i < node->n; i++) {
-            child = node->next[i];
+            child = trienode_get_ith_unsafe(node, i);
             ASSERT(child);
 
             item = (AutomatonQueueItem*)list_item_new(sizeof(AutomatonQueueItem));
@@ -979,7 +978,7 @@ get_stats_aux(TrieNode* node, AutomatonStatistics* stats, int depth) {
         stats->longest_word = depth;
 
     for (i=0; i < node->n; i++)
-        get_stats_aux(node->next[i], stats, depth + 1);
+        get_stats_aux(trienode_get_ith_unsafe(node, i), stats, depth + 1);
 }
 
 static void
@@ -1052,7 +1051,7 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 
     // 2.
     for (i=0; i < node->n; i++) {
-        child = node->next[i];
+        child = trienode_get_ith_unsafe(node, i);
         tuple = F(Py_BuildValue)("ici", node, child->letter, child);
         append_tuple(Dump->edges)
     }

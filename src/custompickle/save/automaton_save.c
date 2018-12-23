@@ -101,7 +101,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
     ASSERT(buffer != NULL); // XXX: may fail if node->n is huge
     dump = (TrieNode*)(buffer);
 
-    // we do not save the last pointer in array
+    // we do not save the last pointer in trie structure
     arr = (TrieNode**)(buffer + PICKLE_TRIENODE_SIZE);
 
     if (output->store != STORE_ANY)

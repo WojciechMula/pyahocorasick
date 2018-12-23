@@ -175,7 +175,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 
     // save array of pointers
     for (i=0; i < node->n; i++) {
-        TrieNode* child = node->next[i];
+        TrieNode* child = trienode_get_ith_unsafe(node, i);
         ASSERT(child);
         arr[i] = (TrieNode*)(NODEID(child)->id);    // save id of child node
     }
@@ -473,11 +473,7 @@ exception:
     // free memory
     if (id2node) {
         for (i=1; i < id; i++) {
-            TrieNode* tmp = id2node[i];
-            if (tmp->n > 0)
-                memory_free(tmp->next);
-
-            memory_free(tmp);
+            trienode_free(id2node[i]);
         }
 
         memory_free(id2node);

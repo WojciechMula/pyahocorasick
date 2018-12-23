@@ -206,9 +206,7 @@ trie_traverse_aux(
         return 0;
 
     for (i=0; i < node->n; i++) {
-        TrieNode* child = node->next[i];
-        ASSERT(child);
-        if (trie_traverse_aux(child, depth + 1, callback, extra) == 0)
+        if (trie_traverse_aux(trienode_get_ith_unsafe(node, i), depth + 1, callback, extra) == 0)
             return 0;
     }
 

@@ -180,7 +180,7 @@ automaton_items_iter_next(PyObject* self) {
                     return NULL;
                 }
 
-                new_item->node  = iter->state->next[i];
+                new_item->node  = trienode_get_ith_unsafe(iter->state, i);
                 new_item->depth = depth + 1;
                 list_push_front(&iter->stack, (ListItem*)new_item);
             }

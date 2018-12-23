@@ -504,7 +504,15 @@ automaton_get(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 	struct Input input;
 	PyObject* py_def;
+	Py_ssize_t k;
 	TrieNode* node;
+
+	k = PyTuple_GET_SIZE(args);
+
+	if (k < 1 || k > 2) {
+		PyErr_Format(PyExc_TypeError, "get() takes one or two arguments (%ld given)", k);
+		return NULL;
+	}
 
 	if (!prepare_input_from_tuple(self, args, 0, &input)) {
 		return NULL;

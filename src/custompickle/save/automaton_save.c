@@ -86,9 +86,6 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
 
     SaveBuffer* output;
     TrieNode* dump;
-    TrieNode** arr;
-    unsigned i;
-    char* buffer;
     PyObject* bytes;
 
     output = (SaveBuffer*)extra;
@@ -97,12 +94,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
     savebuffer_store_pointer(output, (void*)node);
 
     // 2. obtain buffer
-    buffer = savebuffer_acquire(output, get_pickled_size(node));
-    ASSERT(buffer != NULL); // XXX: may fail if node->n is huge
-    dump = (TrieNode*)(buffer);
-
-    // we do not save the last pointer in trie structure
-    arr = (TrieNode**)(buffer + PICKLE_TRIENODE_SIZE);
+    dump = (TrieNode*)savebuffer_acquire(output, PICKLE_TRIENODE_SIZE);
 
     if (output->store != STORE_ANY)
         dump->output.integer = node->output.integer;
@@ -112,12 +104,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
     dump->letter    = node->letter;
     dump->fail      = node->fail;
 
-    // 4. save array of pointers
-    for (i=0; i < node->n; i++) {
-        arr[i] = node->next[i];
-    }
-
-    // 5. pickle python value associated with word
+    // 3. pickle python value associated with word
     if (node->eow && output->store == STORE_ANY) {
         bytes = F(PyObject_CallFunction)(output->serializer, "O", node->output.object);
         if (UNLIKELY(bytes == NULL)) {
@@ -129,12 +116,20 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
             return 0;
         }
 
-        // 1. save the size of buffer
+        // store the size of buffer in trie node [which is not saved yet in a file]
         *(size_t*)(&dump->output.integer) = PyBytes_GET_SIZE(bytes);
+    } else {
+        bytes = NULL;
+    }
 
-        // 2. save the content of buffer
+    // 4. save array of pointers
+    if (node->n > 0) {
+        savebuffer_store(output, (const char*)node->next, node->n * sizeof(PICKLE_POINTER_SIZE));
+    }
+
+    // 5. save pickled data, if any
+    if (bytes) {
         savebuffer_store(output, PyBytes_AS_STRING(bytes), PyBytes_GET_SIZE(bytes));
-
         Py_DECREF(bytes);
     }
 

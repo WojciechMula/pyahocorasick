@@ -13,11 +13,6 @@
 
 static PyTypeObject automaton_search_iter_type;
 
-#define automaton_search_iter_doc \
-	"This class is not available directly but instances of AutomatonSearchIter\n" \
-	"are returned by the iter() method of an Automaton. This iterator can be\n" \
-	"manipulated through its set() method."
-
 
 #ifdef VARIABLE_LEN_CHARCODES
 static int
@@ -304,13 +299,6 @@ return_output:
 	return NULL;	// StopIteration
 }
 
-
-#define automaton_search_iter_set_doc \
-	"set(string, reset=False)\n\n" \
-	"Set a new string to search. When the reset argument is False (default) \n" \
-	"then the Aho-Corasick procedure is continued and the internal state of the \n" \
-	"Automaton and end index of the string being searched are not reset. This allow \n" \
-	"to search for large strings in multiple smaller chunks." 
 
 static PyObject*
 automaton_search_iter_set(PyObject* self, PyObject* args) {

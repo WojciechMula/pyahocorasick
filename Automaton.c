@@ -11,24 +11,10 @@
 
 #include "Automaton.h"
 #include "slist.h"
+#include "src/inline_doc.h"
 #include "src/custompickle/save/automaton_save.h"
 
 static PyTypeObject automaton_type;
-
-#define automaton_doc \
-	"Automaton(value_type=ahocorasick.STORE_ANY, [key_type])\n\n" \
-	"Create a new empty Automaton. Both value_type and key_type are optional.\n\n" \
-	"value_type is one of these constants:\n" \
-	" - ahocorasick.STORE_ANY : The associated value can be any Python object (default).\n" \
-	" - ahocorasick.STORE_LENGTH : The length of an added string key is automatically\n" \
-	"   used as the associated value stored in the trie for that key.\n" \
-	" - ahocorasick.STORE_INTS : The associated value must be a 32-bit integer.\n\n" \
-	"key_type defines the type of data that can be stored in an automaton; it is one of\n" \
-	"these constants and defines type of data might be stored:\n" \
-	" - ahocorasick.KEY_STRING [default] : string\n" \
-	" - ahocorasick.KEY_SEQUENCE : sequences of integers; The size of integer depends\n" \
-	"   the version and platform Python, but for versions of Python >= 3.3, it is\n" \
-	"   guaranteed to be 32-bits."
 
 
 static bool
@@ -204,9 +190,6 @@ automaton_del(PyObject* self) {
 }
 
 
-#define automaton_len_doc \
-	"Return the number of distinct keys added to the trie."
-
 static ssize_t
 automaton_len(PyObject* self) {
 #define automaton ((Automaton*)self)
@@ -214,26 +197,6 @@ automaton_len(PyObject* self) {
 #undef automaton
 }
 
-
-#define automaton_add_word_doc \
-	"add_word(key, [value])\n\n" \
-	"Add a key string to the dict-like trie and associate this key with a value.\n" \
-	"value is optional or mandatory depending how the Automaton instance was created.\n" \
-	"Return True if the word key is inserted and did not exists in the trie or False\n" \
-	"otherwise.\n\n" \
-	"The value is either mandatory or optional:\n" \
-	" - If the Automaton was created without argument (the default) as Automaton() or\n" \
-	"   with Automaton(ahocorasik.STORE_ANY) then the value is required and can be any\n" \
-	"   Python object.\n\n" \
-	" - If the Automaton was created with Automaton(ahocorasik.STORE_LENGTH) then\n" \
-	"   associating a value is not allowed --- len(word) is saved automatically as a\n" \
-	"   value instead.\n\n" \
-	" - If the Automaton was created with Automaton(ahocorasik.STORE_INTS) then the\n" \
-	"   value is optional. If provided it must be an integer, otherwise it defaults to\n" \
-	"   len(automaton) which is therefore the order index in which keys are added to the\n" \
-	"   trie.\n\n" \
-	"Calling add_word() invalidates all iterators only if the new key did not exist\n" \
-	"in the trie so far (i.e. the method returned True)."
 
 static PyObject*
 automaton_add_word(PyObject* self, PyObject* args) {
@@ -361,14 +324,6 @@ automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
 }
 
 
-#define automaton_remove_word_doc \
-	"remove_word(key)\n\n" \
-	"Remove a key string from the dict-like trie. Return True if key was present\n"\
-	"or False otherwise.\n\n" \
-	"Calling remove_word() invalidates all iterators only if the key did exist\n" \
-	"in the trie (i.e. the method returned True)."
-
-
 static PyObject*
 automaton_remove_word(PyObject* self, PyObject* args) {
 	PyObject* value;
@@ -394,13 +349,6 @@ automaton_remove_word(PyObject* self, PyObject* args) {
 			return NULL;
 	}
 }
-
-
-#define automaton_pop_doc \
-	"pop(key)\n\n" \
-	"Remove a key string from the dict-like trie and return the associated value.\n" \
-	"Raise KeyError if the key was not found.\n\n" \
-	"Calling pop() invalidates all iterators only if the key was removed.\n"
 
 
 static PyObject*
@@ -455,9 +403,6 @@ clear_aux(TrieNode* node, KeysStore store) {
 }
 
 
-#define automaton_clear_doc\
-	"Remove all keys from the trie. This method invalidates all iterators."
-
 static PyObject*
 automaton_clear(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
@@ -492,10 +437,6 @@ automaton_contains(PyObject* self, PyObject* args) {
 }
 
 
-#define automaton_exists_doc \
-	"exists(key)\n\n" \
-	"Return True if the key is present in the trie. Same as using the 'in' keyword."
-
 static PyObject*
 automaton_exists(PyObject* self, PyObject* args) {
 	PyObject* word;
@@ -516,13 +457,6 @@ automaton_exists(PyObject* self, PyObject* args) {
 		return NULL;
 }
 
-
-#define automaton_match_doc \
-	"match(key)\n\n" \
-	"Return True if there is a prefix (or key) equal to key present in the trie.\n\n" \
-	"For example if the key 'example' has been added to the trie, then calls to\n" \
-	"match('e'), match('ex'), ..., match('exampl') or match('example') all return\n" \
-	"True. But exists() is True only when calling exists('example')"
 
 static PyObject*
 automaton_match(PyObject* self, PyObject* args) {
@@ -546,10 +480,6 @@ automaton_match(PyObject* self, PyObject* args) {
 }
 
 
-#define automaton_longest_prefix_doc \
-	"longest_prefix(string)\n\n" \
-	"Return the length of the longest prefix of string that exists in the trie."
-
 static PyObject*
 automaton_longest_prefix(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
@@ -568,12 +498,6 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
 #undef automaton
 }
 
-
-#define automaton_get_doc \
-	"get(key[, default])\n\n" \
-	"Return the value associated with the key string.\n" \
-	"Raise a KeyError exception if the key is not in the trie and no default is provided.\n" \
-	"Return the optional default value if provided and the key is not in the trie."
 
 static PyObject*
 automaton_get(PyObject* self, PyObject* args) {
@@ -625,11 +549,6 @@ typedef struct AutomatonQueueItem {
 	TrieNode*	node;
 } AutomatonQueueItem;
 
-
-#define automaton_make_automaton_doc \
-	"Finalize and create the Aho-Corasick automaton based on the keys already added\n" \
-	"to the trie. This does not require additional memory. After successful creation\n" \
-	"the Automaton.kind attribute is set to ahocorasick.AHOCORASICK."
 
 static PyObject*
 automaton_make_automaton(PyObject* self, PyObject* args) {
@@ -720,18 +639,6 @@ no_mem:
 	return NULL;
 }
 
-
-#define automaton_find_all_doc \
-	"find_all(string, callback, [start, [end]])\n\n" \
-	"Perform the Aho-Corasick search procedure using the provided input string and\n" \
-	"iterate over the matching tuples (end_index, value) for keys found in string.\n" \
-	"Invoke the callback callable for each matching tuple.\n\n" \
-	"The callback callable must accept two positional arguments:\n" \
-	" - end_index is the end index in the input string where a trie key string was found.\n" \
-	" - value is the value associated with the found key string.\n\n" \
-	"The start and end optional arguments can be used to limit the search to an\n" \
-	"input string slice as in string[start:end].\n\n" \
-	"Equivalent to a loop on iter() calling a callable at each iteration."
 
 static PyObject*
 automaton_find_all(PyObject* self, PyObject* args) {
@@ -932,21 +839,6 @@ error:
 }
 
 
-#define automaton_keys_doc \
-	"keys([prefix, [wildcard, [how]]])\n\n" \
-	"Return an iterator on keys.\n" \
-	"If the optional prefix string is provided, only yield keys starting with this prefix.\n" \
-	"If the optional wildcard is provided as a single character string, then the\n" \
-	"prefix is treated as a simple pattern using this character as a wildcard.\n\n" \
-	"The optional how argument is used to control how strings are matched using one\n" \
-	"of these possible values:\n\n" \
-	" - ahocorasick.MATCH_EXACT_LENGTH (default)\n" \
-	"   Yield matches that have the same exact length as the prefix length.\n" \
-	" - ahocorasick.MATCH_AT_LEAST_PREFIX\n" \
-	"   Yield matches that have a length greater or equal to the prefix length.\n" \
-	" - ahocorasick.MATCH_AT_MOST_PREFIX\n" \
-	"   Yield matches that have a length lesser or equal to the prefix length."
-
 static PyObject*
 automaton_keys(PyObject* self, PyObject* args) {
 	return automaton_items_create(self, args, ITER_KEYS);
@@ -959,40 +851,17 @@ automaton_iterate(PyObject* self) {
 }
 
 
-#define automaton_values_doc \
-	"values([prefix, [wildcard, [how]]])\n\n" \
-	"Return an iterator on values associated with each keys.\n" \
-	"Keys are matched optionally to the prefix using the same logic and\n" \
-	"arguments as in the keys() method."
-
 static PyObject*
 automaton_values(PyObject* self, PyObject* args) {
 	return automaton_items_create(self, args, ITER_VALUES);
 }
 
 
-#define automaton_items_doc \
-	"items([prefix, [wildcard, [how]]])\n\n" \
-	"Return an iterator on tuples of (key, value).\n" \
-	"Keys are matched optionally to the prefix using the same logic and\n" \
-	"arguments as in the keys() method."
-
 static PyObject*
 automaton_items(PyObject* self, PyObject* args) {
 	return automaton_items_create(self, args, ITER_ITEMS);
 }
 
-
-#define automaton_iter_doc \
-	"iter(string, [start, [end]], ignore_white_space=False)\n\n" \
-	"Perform the Aho-Corasick search procedure using the provided input string.\n" \
-	"Return an iterator of tuples (end_index, value) for keys found in string where:\n\n" \
-	"- end_index is the end index in the input string where a trie key string was found.\n" \
-	"- value is the value associated with the found key string.\n\n" \
-	"The start and end optional arguments can be used to limit the search to an\n" \
-	"input string slice as in string[start:end].\n\n" \
-	"The ignore_white_space optional arguments can be used to ignore white spaces\n" \
-	"from input string."
 
 static PyObject*
 automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
@@ -1121,17 +990,6 @@ get_stats(Automaton* automaton) {
 }
 
 
-#define automaton_get_stats_doc \
-	"get_stats()\n\n" \
-	"Return a dictionary containing Automaton statistics.\n" \
-	" - nodes_count   --- total number of nodes\n" \
-	" - words_count   --- same as len(automaton)\n" \
-	" - longest_word  --- length of the longest word\n" \
-	" - links_count   --- number of edges\n" \
-	" - sizeof_node   --- size of single node in bytes\n" \
-	" - total_size    --- total size of trie in bytes (about\n" \
-	"   nodes_count * size_of node + links_count * size of pointer)."
-
 static PyObject*
 automaton_get_stats(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
@@ -1203,16 +1061,6 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 }
 
 
-#define automaton_dump_doc \
-	"dump()\n\n" \
-	"Return a three-tuple of lists describing the Automaton as a graph of " \
-	"(nodes, edges, failure links).\n" \
-	" - nodes: each item is a pair (node id, end of word marker)\n" \
-	" - edges: each item is a triple (node id, label char, child node id)\n" \
-	" - failure links: each item is a pair (source node id, node if connected by fail node)\n" \
-	"\n" \
-	"For each of these, the node id is a unique number and a label is a single byte."
-
 static PyObject*
 automaton_dump(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
@@ -1247,11 +1095,6 @@ error:
 #undef automaton
 }
 
-
-#define automaton___sizeof___doc \
-	"Return the approximate size in bytes occupied by the Automaton instance in\n" \
-	"memory excluding the size of associated objects when the Automaton is created\n" \
-	"with Automaton() or Automaton(ahocorasick.STORE_ANY)."
 
 static PyObject*
 automaton___sizeof__(PyObject* self, PyObject* args) {
@@ -1348,7 +1191,7 @@ static PyTypeObject automaton_type = {
 	0,                                          /* tp_setattro */
 	0,                                          /* tp_as_buffer */
 	Py_TPFLAGS_DEFAULT,                         /* tp_flags */
-	automaton_doc,                              /* tp_doc */
+	automaton_constructor_doc,                  /* tp_doc */
 	0,                                          /* tp_traverse */
 	0,                                          /* tp_clear */
 	0,                                          /* tp_richcompare */

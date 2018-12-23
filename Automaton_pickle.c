@@ -188,8 +188,6 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 #undef self
 }
 
-#define automaton___reduce___doc \
-	"Return pickle-able data for this Automaton instance."
 
 static PyObject*
 automaton___reduce__(PyObject* self, PyObject* args) {

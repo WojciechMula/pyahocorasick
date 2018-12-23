@@ -62,6 +62,7 @@ module = Extension(
         'trienode.c',
         'trienode.h',
         'msinttypes/stdint.h',
+        'src/inline_doc.h',
         'src/pickle/pickle.h',
         'src/pickle/pickle_data.h',
         'src/pickle/pickle_data.c',

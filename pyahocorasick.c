@@ -17,6 +17,7 @@
 #include "Automaton.h"
 #include "AutomatonSearchIter.h"
 #include "AutomatonItemsIter.h"
+#include "src/inline_doc.h"
 #include "src/custompickle/load/module_automaton_load.h"
 
 /* code */
@@ -33,16 +34,10 @@
 #include "allsources.c"
 
 
-#define ahocorasick_doc \
-    "pyahocorasick is a fast and memory efficient library for exact or approximate\n" \
-	"multi-pattern string search meaning that you can find multiple key strings\n" \
-	"occurrences at once in some input text."
-
-
 static
 PyMethodDef
 ahocorasick_module_methods[] = {
-    {"load", module_automaton_load, METH_VARARGS, module_automaton_load_doc},
+    {"load", module_automaton_load, METH_VARARGS, module_load_doc},
 
 	{NULL, NULL, 0, NULL}
 };
@@ -53,7 +48,7 @@ static
 PyModuleDef ahocorasick_module = {
 	PyModuleDef_HEAD_INIT,
 	"ahocorasick",
-	"ahocorasick module",
+	module_doc,
 	-1,
 	ahocorasick_module_methods
 };
@@ -100,7 +95,7 @@ init_function(void) {
 #ifdef PY3K
 	module = PyModule_Create(&ahocorasick_module);
 #else
-    module = Py_InitModule3("ahocorasick", ahocorasick_module_methods, ahocorasick_doc);
+    module = Py_InitModule3("ahocorasick", ahocorasick_module_methods, module_doc);
 #endif
 	if (module == NULL)
 		init_return(NULL);

@@ -16,30 +16,41 @@
 #endif
 const char* debug_path = MEMORY_DUMP_PATH;
 FILE* debug_file;
-int alloc_num   = 0;            // id of allocation
-int alloc_dump  = 1;            // dump to file
-int alloc_fail  = -1;           // id of allocation that will fail
-int alloc_trap_on_fail = 0;     // rather failing, execute trap (for gdb use)
+int memory_dump          = 1;   // dump to file
+int alloc_num            = 0;   // id of allocation
+int alloc_fail           = -1;  // id of allocation that will fail
+int alloc_trap_on_fail   = 0;   // rather failing, execute trap (for gdb use)
+int realloc_num          = 0;   // id of allocation
+int realloc_fail         = -1;  // id of allocation that will fail
+int realloc_trap_on_fail = 0;   // rather failing, execute trap (for gdb use)
+
+static int
+env_getint(const char* name, int def) {
+    const char* val = getenv(name);
+    if (val != NULL)
+        return atoi(val);
+    else
+        return def;
+}
+
+static int
+env_exists(const char* name) {
+    return (getenv(name) != NULL);
+}
 
 static
 void initialize_memory_debug(void) {
-    const char* nodump = getenv("ALLOC_NODUMP");
-    const char* fail   = getenv("ALLOC_FAIL");
-    const char* trap   = getenv("ALLOC_TRAP");
-
-    if (nodump != NULL) {
-        alloc_dump = 0;
+    if (env_exists("ALLOC_NODUMP")) {
+        memory_dump = 0;
     }
 
-    if (fail != NULL) {
-        alloc_fail = atoi(fail);
-    }
+    alloc_fail = env_getint("ALLOC_FAIL", alloc_fail);
+    realloc_fail = env_getint("REALLOC_FAIL", realloc_fail);
 
-    if (trap != NULL) {
-        alloc_trap_on_fail = 1;
-    }
+    alloc_trap_on_fail = env_exists("ALLOC_TRAP");
+    realloc_trap_on_fail = env_exists("REALLOC_TRAP");
 
-    if (alloc_dump) {
+    if (memory_dump) {
         debug_file = fopen(debug_path, "wt");
         if (debug_file == NULL) {
             PyErr_WarnEx(PyExc_RuntimeWarning, "Cannot open file, logging on stderr", 1);
@@ -61,23 +72,49 @@ void* memory_alloc(ssize_t size) {
         return NULL;
     }
 #endif
-    void* res = memalloc(size);
+    void* res = PyMem_Malloc(size);
 
 #ifdef MEMORY_DEBUG
     alloc_num += 1;
-    if (alloc_dump)
+    if (memory_dump)
         fprintf(debug_file, "A %d %p %ld\n", alloc_num, res, size);
 #endif
-#
+
     return res;
 }
 
+
+void* memory_realloc(void* ptr, size_t size) {
+#ifdef MEMORY_DEBUG
+    if (realloc_num == realloc_fail) {
+        if (realloc_trap_on_fail) {
+            __builtin_trap();
+        }
+
+        printf("DEBUG: reallocation #%d failed\n", realloc_num);
+        realloc_num += 1;
+        return NULL;
+    }
+#endif
+    void* res = PyMem_Realloc(ptr, size);
+
+#ifdef MEMORY_DEBUG
+    realloc_num += 1;
+    if (memory_dump) {
+        fprintf(debug_file, "R %d %p %p %ld\n", realloc_num, ptr, res, size);
+    }
+#endif
+
+    return res;
+}
+
+
 void memory_free(void* ptr) {
 #ifdef MEMORY_DEBUG
-    if (alloc_dump)
+    if (memory_dump)
         fprintf(debug_file, "F %p\n", ptr);
 #endif
-    memfree(ptr);
+    PyMem_Free(ptr);
 }
 
 
@@ -86,6 +123,7 @@ void xfree(void* ptr) {
         memory_free(ptr);
     }
 }
+
 
 
 #define memory_safefree xfree

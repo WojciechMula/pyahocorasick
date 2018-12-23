@@ -36,17 +36,19 @@ function usage
     echo "                any leaks from pyahocorasick"
     echo "mallocfaults  - recompile module with flag MEMORY_DEBUG,"
     echo "                then run unnitests injecting malloc faults"
+    echo "reallocfaults - recompile module with flag MEMORY_DEBUG,"
+    echo "                then run unnitests injecting realloc faults"
     echo "pycallfaults  - recompile module with flag MEMORY_DEBUG,"
     echo "                then run unnitests injecting faults in python C-API calls"
     echo "coverage      - create coverage report in 'coverage' subdir"
     echo
-    echo "release       - run unit, unpickle, leaks and mallocfaults"
+    echo "release       - run unit, unpickle, leaks, mallocfaults and reallocfaults"
     echo "                meant to run before relese"
 }
 
 ######################################################################
 
-ACTIONS="unit unpickle leaks valgrind mallocfaults pycallfaults coverage release"
+ACTIONS="unit unpickle leaks valgrind mallocfaults reallocfaults pycallfaults coverage release"
 
 if [[ $# != 1 || $1 == '-h' || $1 == '--help' ]]
 then
@@ -150,6 +152,7 @@ function run_mallocfaults
 {
     # obtain max allocation number
     unset ALLOC_FAIL
+    unset REALLOC_FAIL
     run_unittests
 
     local MINID=0
@@ -191,6 +194,54 @@ function handle_mallocfaults
     force_rebuild
 
     run_mallocfaults
+}
+
+function run_reallocfaults
+{
+    # obtain max allocation number
+    unset ALLOC_FAIL
+    unset REALLOC_FAIL
+    run_unittests
+
+    local MINID=0
+    echo ${MEMORY_DEBUG_PATH}
+    local MAXID=$(${PYTHON} tests/memdump_maxrealloc.py ${MEMORY_DEBUG_PATH})
+
+    # simulate failures of all allocations
+    for ID in `seq ${MINID} ${MAXID}`
+    do
+        echo "Checking realloc fail ${ID} of ${MAXID}"
+        reallocfault ${ID}
+    done
+}
+
+function reallocfault
+{
+    export ALLOC_NODUMP=1
+    export REALLOC_FAIL=$1
+
+    local LOG=${TMPDIR}/reallocfault${ID}.log
+    ${PYTHON} unittests.py ${UNITTEST} -q > ${LOG} 2>&1
+    if [[ $? == 139 ]]
+    then
+        echo -e "${RED}SEGFAULT${RESET}"
+        exit 1
+    fi
+    ${PYTHON} tests/unittestlog_check.py ${LOG}
+    if [[ $? != 0 ]]
+    then
+        echo -e "${RED}Possible error${RESET}"
+        echo "Inspect ${LOG}, there are errors other than expected MemoryError"
+        exit 1
+    fi
+}
+
+function handle_reallocfaults
+{
+    export CFLAGS=${MEMORY_DEBUG}
+    force_rebuild
+
+    run_reallocfaults
 }
 
 function handle_pycallfaults
@@ -294,6 +345,10 @@ in
 
     mallocfaults)
         handle_mallocfaults
+        ;;
+
+    reallocfaults)
+        handle_reallocfaults
         ;;
 
     pycallfaults)

@@ -33,7 +33,8 @@ class Application(object):
 
         for i, line in enumerate(file):
             fields = line.split()
-            if fields[0] == 'A':
+            action = fields[0]
+            if action == 'A':
                 id   = fields[1]
                 addr = fields[2]
                 size = int(fields[3])
@@ -41,10 +42,26 @@ class Application(object):
                 assert addr not in self.memory
                 self.memory[addr] = (id, size)
 
-            elif fields[0] == 'F':
+            elif action == 'R':
+
+                id      = fields[1]
+                oldaddr = fields[2]
+                newaddr = fields[3]
+                size    = int(fields[4])
+
+                try:
+                    key = int(oldaddr, 16)
+                    del self.memory[oldaddr]
+                except ValueError:
+                    pass
+
+                assert newaddr not in self.memory
+                self.memory[newaddr] = (id, size)
+
+            elif action == 'F':
 
                 addr = fields[1]
-                if addr in self.memory: # at the moment we don't intercept realloc
+                if addr in self.memory:
                     del self.memory[addr]
 
 

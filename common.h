@@ -58,11 +58,6 @@
 #   define TRIE_LETTER_SIZE 2
 #endif
 
-
-#define memalloc    PyMem_Malloc
-#define memfree     PyMem_Free
-#define memrealloc  PyMem_Realloc
-
 #ifdef __GNUC__
 #   define  LIKELY(x)   __builtin_expect(x, 1)
 #   define  UNLIKELY(x) __builtin_expect(x, 0)

@@ -121,7 +121,7 @@ trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child
     ASSERT(trienode_get_next(node, letter) == NULL);
 
     n = node->n;
-    next = (TrieNode**)memrealloc(node->next, (n + 1) * sizeof(TrieNode*));
+    next = (TrieNode**)memory_realloc(node->next, (n + 1) * sizeof(TrieNode*));
     if (next) {
         node->next = next;
         node->next[n] = child;

@@ -1008,7 +1008,7 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 		get_stats(automaton);
 
 	dict = F(Py_BuildValue)(
-		"{s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:k,s:k,s:k,s:k,s:i,s:k}",
 		"nodes_count",  automaton->stats.nodes_count,
 		"words_count",  automaton->stats.words_count,
 		"longest_word", automaton->stats.longest_word,

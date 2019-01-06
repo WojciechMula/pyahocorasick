@@ -65,7 +65,7 @@ The Automaton class has the following main trie-like methods:
     Remove a ``key`` string from the dict-like trie and return the associated ``value``.
 
 ``exists(key) => bool`` or ``key in ...``
-    Return True if the key is present in the trie. 
+    Return True if the key is present in the trie.
 
 ``match(key) => bool``
     Return True if there is a prefix (or key) equal to ``key`` present in the trie.
@@ -92,8 +92,8 @@ implements a subset of dict-like methods. Some of them are:
 Wildcard search
 ~~~~~~~~~~~~~~~
 
-The methods ``keys``, ``values`` and ``items`` can be called with an optional 
-**wildcard**. A wildcard character is equivalent to a question mark used in glob 
+The methods ``keys``, ``values`` and ``items`` can be called with an optional
+**wildcard**. A wildcard character is equivalent to a question mark used in glob
 patterns (?) or a dot (.) in regular expressions. You can use any character you
 like as a wildcard.
 
@@ -119,7 +119,7 @@ The Automaton class has the following main Aho-Corasick methods:
 AutomatonSearchIter class
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Instances of this class are returned by the ``iter`` method of an ``Automaton``. 
+Instances of this class are returned by the ``iter`` method of an ``Automaton``.
 This iterator can be manipulated through its `set()` method.
 
 ``set(string, [reset]) => None``
@@ -158,7 +158,7 @@ Automaton Attributes
 The Automaton class has the following attributes:
 
 ``kind`` [readonly]
-    Return the state of the ``Automaton`` instance. 
+    Return the state of the ``Automaton`` instance.
 
 ``store`` [readonly]
     Return the type of values stored in the Automaton as specified at creation.
@@ -184,13 +184,13 @@ problem.
 
 
 Pickle
-======
+~~~~~~
 
 .. code:: python
 
     import ahocorasick
     import pickle
-    
+
     # build automaton
 
     A = ahocorasick.Automaton()
@@ -206,13 +206,13 @@ Pickle
 
 
 Save/load methods
-=================
+~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
     import ahocorasick
     import pickle
-    
+
     # build automaton
 
     A = ahocorasick.Automaton()
@@ -228,7 +228,7 @@ Save/load methods
 Automaton method ``save`` requires ``path`` to the file which will store data.
 If the automaton type is ``STORE_ANY``, i.e. values associated with words are
 any python objects, then ``save`` requires also another argument, a callable.
-The callable serializes python object into bytes; in the example above we 
+The callable serializes python object into bytes; in the example above we
 use standard pickle ``dumps`` function.
 
 Module method ``load`` also requires ``path`` to file that has data previously

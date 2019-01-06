@@ -88,7 +88,7 @@ order::
     ...     start_index = end_index - len(original_value) + 1
     ...     print((start_index, end_index, (insert_order, original_value)))
     ...     assert haystack[start_index:start_index + len(original_value)] == original_value
-    ... 
+    ...
     (1, 2, (0, 'he'))
     (1, 3, (1, 'her'))
     (1, 4, (2, 'hers'))
@@ -108,12 +108,6 @@ file instead::
 
 See also:
     - FAQ and Who is using pyahocorasick? https://github.com/WojciechMula/pyahocorasick/wiki/FAQ#who-is-using-pyahocorasick
-    - `API overview`_ for more options and the API documentation.
-    - `Examples <_examples>`_ for more examples.
-    - `Build and install`_ for more details on installation.
-    - `Tests`_ to run unit tests.
-    - `Support`_ for help and bugs.
-    - and `Authors`_ and `License`_ .
 
 
 Documentation
@@ -123,10 +117,10 @@ The full documentation including the API overview and reference is published on
 `readthedocs <http://pyahocorasick.readthedocs.io/>`_.
 
 
-Introduction
-============
+Overview
+========
 
-With an `Aho-Corasick automaton <http://en.wikipedia.org/wiki/Aho-Corasick%20algorithm>`_ 
+With an `Aho-Corasick automaton <http://en.wikipedia.org/wiki/Aho-Corasick%20algorithm>`_
 you can efficiently search all occurrences of multiple strings (the needles) in an
 input string (the haystack) making a single pass over the input string. With
 pyahocorasick you can eventually build large automatons and pickle them to reuse
@@ -171,48 +165,28 @@ pyahocorasick is available in two flavors:
   has a slightly different API.
 
 
-Other Aho-Corasick implementations for Python you can consider
-==============================================================
+Unicode and bytes
+-----------------
 
-While **pyahocorasick** tries to be the finest and fastest Aho Corasick library
-for Python you may consider these other libraries:
+The type of strings accepted and returned by ``Automaton`` methods are either
+**unicode** or **bytes**, depending on a compile time settings (preprocessor
+definition of ``AHOCORASICK_UNICODE`` as set in `setup.py`).
 
-
-* `py_aho_corasick <https://github.com/JanFan/py-aho-corasick>`_ by Jan
-
- * Written in pure Python.
- * Poor performance.
-
-* `ahocorapy <https://github.com/abusix/ahocorapy>`_ by abusix
-
- * Written in pure Python.
- * Better performance than py-aho-corasick.
- * Using pypy, ahocorapy's search performance is only slightly worse than pyahocorasick's.
- * Performs additional suffix shortcutting (more setup overhead, less search overhead for suffix lookups).
- * Includes visualization tool for resulting automaton (using pygraphviz).
- * MIT-licensed, 100% test coverage, tested on all major python versions (+ pypy)
-
-* `noaho <https://github.com/JDonner/NoAho>`_ by Jeff Donner
-
- * Written in C. Does not return overlapping matches.
- * Does not compile on Windows (July 2016).
- * No support for the pickle protocol.
-
-* `acora <https://github.com/scoder/acora>`_ by Stefan Behnel
-
- * Written in Cython. 
- * Large automaton may take a long time to build (July 2016)
- * No support for a dict-like protocol to associate a value to a string key.
-
-* `ahocorasick <https://hkn.eecs.berkeley.edu/~dyoo/python/ahocorasick/>`_ by Danny Yoo
-
- * Written in C.
- * seems unmaintained (last update in 2005).
- * GPL-licensed.
+The ``Automaton.unicode`` attributes can tell you how the library was built.
+On Python 3, unicode is the default. On Python 2, bytes is the default and only value.
 
 
-Build and install
-=================
+.. warning::
+
+    When the library is built with unicode support on Python 3, an Automaton will
+    store 2 or 4 bytes per letter, depending on your Python installation. When built
+    for bytes, only one byte per letter is needed.
+
+    Unicode is **NOT supported** on Python 2 for now.
+
+
+Build and install from PyPi
+===========================
 
 To install for common operating systems, use pip. Pre-built wheels should be
 available on Pypi at some point in the future::
@@ -236,35 +210,7 @@ course!)::
 
     pip install .
 
-If compilation succeeds, the module is ready to use. 
-
-
-Unicode and bytes
------------------
-
-The type of strings accepted and returned by ``Automaton`` methods are either
-**unicode** or **bytes**, depending on a compile time settings (preprocessor
-definition of ``AHOCORASICK_UNICODE`` as set in `setup.py`).
-
-The ``Automaton.unicode`` attributes can tell you how the library was built.
-On Python 3, unicode is the default. On Python 2, bytes is the default and only value.
-
-
-.. warning::
-
-    When the library is built with unicode support on Python 3, an Automaton will
-    store 2 or 4 bytes per letter, depending on your Python installation. When built
-    for bytes, only one byte per letter is needed. 
-    
-    Unicode is **NOT supported** on Python 2 for now.
-
-
-Tests
-=====
-
-The source repository contains several tests. To run them use::
-
-    make test
+If compilation succeeds, the module is ready to use.
 
 
 Support
@@ -310,4 +256,42 @@ code.
 Full text of license is available in LICENSE file.
 
 
-.. contents::
+Other Aho-Corasick implementations for Python you can consider
+==============================================================
+
+While **pyahocorasick** tries to be the finest and fastest Aho Corasick library
+for Python you may consider these other libraries:
+
+
+* `py_aho_corasick <https://github.com/JanFan/py-aho-corasick>`_ by Jan
+
+ * Written in pure Python.
+ * Poor performance.
+
+* `ahocorapy <https://github.com/abusix/ahocorapy>`_ by abusix
+
+ * Written in pure Python.
+ * Better performance than py-aho-corasick.
+ * Using pypy, ahocorapy's search performance is only slightly worse than pyahocorasick's.
+ * Performs additional suffix shortcutting (more setup overhead, less search overhead for suffix lookups).
+ * Includes visualization tool for resulting automaton (using pygraphviz).
+ * MIT-licensed, 100% test coverage, tested on all major python versions (+ pypy)
+
+* `noaho <https://github.com/JDonner/NoAho>`_ by Jeff Donner
+
+ * Written in C. Does not return overlapping matches.
+ * Does not compile on Windows (July 2016).
+ * No support for the pickle protocol.
+
+* `acora <https://github.com/scoder/acora>`_ by Stefan Behnel
+
+ * Written in Cython.
+ * Large automaton may take a long time to build (July 2016)
+ * No support for a dict-like protocol to associate a value to a string key.
+
+* `ahocorasick <https://hkn.eecs.berkeley.edu/~dyoo/python/ahocorasick/>`_ by Danny Yoo
+
+ * Written in C.
+ * seems unmaintained (last update in 2005).
+ * GPL-licensed.
+

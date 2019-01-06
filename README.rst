@@ -112,7 +112,7 @@ file instead::
 See also:
     - FAQ and Who is using pyahocorasick? https://github.com/WojciechMula/pyahocorasick/wiki/FAQ#who-is-using-pyahocorasick
     - `API overview`_ for more options and the API documentation.
-    - `Examples`_ for more examples.
+    - `Examples <_examples>`_ for more examples.
     - `Build and install`_ for more details on installation.
     - `Tests`_ to run unit tests.
     - `Support`_ for help and bugs.

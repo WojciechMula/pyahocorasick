@@ -1,16 +1,8 @@
 
-..
-    .. toctree::
-        :maxdepth: 2
-
-..
-    .. include:: ../README.rst
-
+.. include:: ../README.rst
 
 API Reference
 =============
-
-.. contents::
 
 .. include:: automaton_constructor.rst
 .. include:: automaton_add_word.rst
@@ -35,19 +27,4 @@ API Reference
 .. include:: automaton_get_stats.rst
 .. include:: automaton_dump.rst
 .. include:: automaton_search_iter_set.rst
-
-..
-    .. automodule:: ahocorasick
-        :members:
-        :undoc-members:
-        :special-members:
-
-
-Indices and tables
-==================
-
-..
-    * :ref:`genindex`
-    * :ref:`modindex`
-    * :ref:`search`
 

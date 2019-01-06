@@ -167,13 +167,6 @@ pyahocorasick is available in two flavors:
   has a slightly different API.
 
 
-Some background about pyahocorasick internals
-=============================================
-
-I wrote this article about `different trie representations <http://0x80.pl/articles/trie-representation.html>`_.
-These are experiments I made while creating this module.
-
-
 Other Aho-Corasick implementations for Python you can consider
 ==============================================================
 

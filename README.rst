@@ -234,7 +234,24 @@ Authors
 The initial author and maintainer is Wojciech Muła. `Philippe Ombredanne
 <https://github.com/pombredanne>`_, the current co-owner, rewrote
 documentation, setup CI servers and did a whole lot of work to make this module
-better accesible to end users.
+better accessible to end users.
+
+Alphabetic list of authors:
+
+* **Andrew Grigorev**
+* **Bogdan**
+* **David Woakes**
+* **Edward Betts**
+* **Frankie Robertson**
+* **Frederik Petersen**
+* **gladtosee**
+* **INADA Naoki**
+* **Jan Fan**
+* **Pastafarianist**
+* **Philippe Ombredanne**
+* **Renat Nasyrov**
+* **Sylvain Zimmer**
+* **Xiaopeng Xu**
 
 This library would not be possible without help of many people, who contributed in
 various ways.

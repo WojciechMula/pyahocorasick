@@ -12,7 +12,7 @@ savebuffer_init(SaveBuffer* output, PyObject* serializer, KeysStore store, const
     output->nodes_count = 0;
 
     if (PICKLE_SIZE_T_SIZE < sizeof(PyObject*)) {
-        // XXX: this must be reworked, likely to module level
+        // XXX: this must be reworked, likely moved to module level
         PyErr_SetString(PyExc_SystemError, "unable to save data due to technical reasons");
         return false;
     }

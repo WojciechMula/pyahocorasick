@@ -101,7 +101,6 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
 
     dump->n         = node->n;
     dump->eow       = node->eow;
-    dump->letter    = node->letter;
     dump->fail      = node->fail;
 
     // 3. pickle python value associated with word
@@ -116,7 +115,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
             return 0;
         }
 
-        // store the size of buffer in trie node [which is not saved yet in a file]
+        // store the size of buffer in trie node [which is not saved yet in the file]
         *(size_t*)(&dump->output.integer) = PyBytes_GET_SIZE(bytes);
     } else {
         bytes = NULL;
@@ -124,7 +123,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
 
     // 4. save array of pointers
     if (node->n > 0) {
-        savebuffer_store(output, (const char*)node->next, node->n * sizeof(PICKLE_POINTER_SIZE));
+        savebuffer_store(output, (const char*)node->next, node->n * sizeof(Pair));
     }
 
     // 5. save pickled data, if any

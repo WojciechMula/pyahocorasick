@@ -568,6 +568,7 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
     TrieNode* node;
     TrieNode* child;
     TrieNode* state;
+    TRIE_LETTER_TYPE letter;
 
 
     if (automaton->kind != TRIE)
@@ -605,7 +606,8 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
         }
 
         for (i=0; i < node->n; i++) {
-            child = trienode_get_ith_unsafe(node, i);
+            child  = trienode_get_ith_unsafe(node, i);
+            letter = trieletter_get_ith_unsafe(node, i);
             ASSERT(child);
 
             item = (AutomatonQueueItem*)list_item_new(sizeof(AutomatonQueueItem));
@@ -620,13 +622,13 @@ automaton_make_automaton(PyObject* self, PyObject* args) {
             ASSERT(state);
             ASSERT(child);
             while (state != automaton->root and\
-                   not trienode_get_next(state, child->letter)) {
+                   not trienode_get_next(state, letter)) {
 
                 state = state->fail;
                 ASSERT(state);
             }
 
-            child->fail = trienode_get_next(state, child->letter);
+            child->fail = trienode_get_next(state, letter);
             if (child->fail == NULL)
                 child->fail = automaton->root;
 
@@ -1052,7 +1054,7 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
     // 2.
     for (i=0; i < node->n; i++) {
         child = trienode_get_ith_unsafe(node, i);
-        tuple = F(Py_BuildValue)("ici", node, child->letter, child);
+        tuple = F(Py_BuildValue)("ici", node, trieletter_get_ith_unsafe(node, i), child);
         append_tuple(Dump->edges)
     }
 

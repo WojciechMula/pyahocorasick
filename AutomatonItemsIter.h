@@ -35,6 +35,7 @@ typedef struct AutomatonItemsIter {
     Automaton*  automaton;
     int         version;        ///< automaton version
     TrieNode*   state;          ///< current automaton node
+    TRIE_LETTER_TYPE letter;    ///< current letter
     List        stack;          ///< stack
     ItemsType   type;           ///< type of iterator (KEYS/VALUES/ITEMS)
     TRIE_LETTER_TYPE* buffer;   ///< buffer to construct key representation

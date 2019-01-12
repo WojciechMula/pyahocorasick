@@ -64,7 +64,7 @@ typedef struct DumpState {
 static size_t
 get_pickled_size(TrieNode* node) {
     ASSERT(node != NULL);
-    return PICKLE_TRIENODE_SIZE + node->n * PICKLE_POINTER_SIZE;
+    return PICKLE_TRIENODE_SIZE + node->n * sizeof(Pair);
 }
 
 // replace fail with pairs (fail, id)
@@ -132,7 +132,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 
     TrieNode* dump;
     TrieNode* tmp;
-    TrieNode** arr;
+    Pair* arr;
     unsigned i;
     size_t size;
 
@@ -147,7 +147,7 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
     dump = (TrieNode*)(self->data + self->top);
 
     // we do not save the last pointer in array
-    arr = (TrieNode**)(self->data + self->top + PICKLE_TRIENODE_SIZE);
+    arr = (Pair*)(self->data + self->top + PICKLE_TRIENODE_SIZE);
 
     // append the python object to the list
     if (node->eow and self->values) {
@@ -165,7 +165,6 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
 
     dump->n         = node->n;
     dump->eow       = node->eow;
-    dump->letter    = node->letter;
 
     tmp = NODEID(node)->fail;
     if (tmp)
@@ -177,12 +176,12 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
     for (i=0; i < node->n; i++) {
         TrieNode* child = trienode_get_ith_unsafe(node, i);
         ASSERT(child);
-        arr[i] = (TrieNode*)(NODEID(child)->id);    // save id of child node
+        arr[i].child  = (TrieNode*)(NODEID(child)->id);    // save the id of child node
+        arr[i].letter = trieletter_get_ith_unsafe(node, i);
     }
 
     self->top       += size;
     (*self->count)  += 1;
-
     return 1;
 #undef NODEID
 #undef self
@@ -334,7 +333,7 @@ automaton_unpickle(
 
     TrieNode* node;
     TrieNode* dump;
-    TrieNode** next;
+    Pair* next;
     PyObject* bytes;
     PyObject* value;
     Py_ssize_t nodes_count;
@@ -383,7 +382,6 @@ automaton_unpickle(
             if (LIKELY(node != NULL)) {
                 node->output    = dump->output;
                 node->fail      = dump->fail;
-                node->letter    = dump->letter;
                 node->n         = dump->n;
                 node->eow       = dump->eow;
                 node->next      = NULL;
@@ -396,26 +394,26 @@ automaton_unpickle(
             id2node[id++] = node;
 
             if (node->n > 0) {
-                if (UNLIKELY(ptr + node->n * PICKLE_POINTER_SIZE > end)) {
+                if (UNLIKELY(ptr + node->n * sizeof(Pair) > end)) {
                     PyErr_Format(PyExc_ValueError,
                                 "Data truncated [parsing children of node #%d]: "
                                 "chunk #%d @ offset %lu, expected at least %ld bytes",
-                                 i, k, ptr - data + i, node->n * PICKLE_POINTER_SIZE);
+                                 i, k, ptr - data + i, node->n * sizeof(Pair));
 
                     goto exception;
                 }
 
-                node->next = (TrieNode**)memory_alloc(node->n * sizeof(TrieNode*));
+                node->next = (Pair*)memory_alloc(node->n * sizeof(Pair));
                 if (UNLIKELY(node->next == NULL)) {
                     goto no_mem;
                 }
 
-                next = (TrieNode**)(ptr);
+                next = (Pair*)(ptr);
                 for (j=0; j < node->n; j++) {
                     node->next[j] = next[j];
                 }
 
-                ptr += node->n * PICKLE_POINTER_SIZE;
+                ptr += node->n * sizeof(Pair);
             }
         }
     }
@@ -450,9 +448,9 @@ automaton_unpickle(
         }
 
         for (j=0; j < node->n; j++) {
-            index = (size_t)(node->next[j]);
+            index = (size_t)(node->next[j].child);
             if (LIKELY(index < count + 1)) {
-                node->next[j] = id2node[index];
+                node->next[j].child = id2node[index];
             } else {
                 PyErr_Format(PyExc_ValueError,
                              "Node #%lu malformed: next link #%lu points to node #%lu, while there are %lu nodes",

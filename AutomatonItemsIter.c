@@ -16,6 +16,7 @@ typedef struct AutomatonItemsStackItem {
     LISTITEM_data;
 
     struct TrieNode*    node;
+    TRIE_LETTER_TYPE    letter;
     size_t depth;
 } AutomatonItemsStackItem;
 
@@ -126,6 +127,7 @@ automaton_items_iter_next(PyObject* self) {
 
     bool output;
     TrieNode* node;
+    TRIE_LETTER_TYPE letter;
     size_t depth;
 
     if (UNLIKELY(iter->version != iter->automaton->version)) {
@@ -143,8 +145,9 @@ automaton_items_iter_next(PyObject* self) {
             return NULL; /* Stop iteration */
         }
 
-        node  = top->node;
-        depth = top->depth;
+        node   = top->node;
+        letter = top->letter;
+        depth  = top->depth;
         memory_free(top);
 
         if (iter->matchtype != MATCH_AT_LEAST_PREFIX and depth > iter->pattern_length)
@@ -166,7 +169,8 @@ automaton_items_iter_next(PyObject* self) {
 
         }
 
-        iter->state = node;
+        iter->state  = node;
+        iter->letter = letter;
         if ((depth >= iter->pattern_length) or
             (iter->use_wildcard and iter->pattern[depth] == iter->wildcard)) {
 
@@ -180,8 +184,9 @@ automaton_items_iter_next(PyObject* self) {
                     return NULL;
                 }
 
-                new_item->node  = trienode_get_ith_unsafe(iter->state, i);
-                new_item->depth = depth + 1;
+                new_item->node   = trienode_get_ith_unsafe(iter->state, i);
+                new_item->letter = trieletter_get_ith_unsafe(iter->state, i);
+                new_item->depth  = depth + 1;
                 list_push_front(&iter->stack, (ListItem*)new_item);
             }
         }
@@ -196,18 +201,21 @@ automaton_items_iter_next(PyObject* self) {
                     return NULL;
                 }
 
-                new_item->node  = node;
-                new_item->depth = depth + 1;
+                new_item->node   = node;
+                new_item->letter = iter->pattern[depth];
+                new_item->depth  = depth + 1;
                 list_push_front(&iter->stack, (ListItem*)new_item);
             }
         }
 
-        if (iter->type != ITER_VALUES)
+        if (iter->type != ITER_VALUES) {
             // update keys when needed
-            iter->buffer[depth] = iter->state->letter;
+            iter->buffer[depth] = iter->letter;
 #ifndef AHOCORASICK_UNICODE
-            iter->char_buffer[depth] = (char)iter->state->letter;
+            iter->char_buffer[depth] = (char)iter->letter;
 #endif
+        }
+
         if (output and iter->state->eow) {
             PyObject* val;
 

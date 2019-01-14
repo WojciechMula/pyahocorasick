@@ -1,3 +1,13 @@
+1.4.0 (2019-01-24)
+--------------------------------------------------
+
+- Change internal trie representation thanks to that performance
+  of common operation is 1.5 - 2.5 times faster. Details are
+  presented in https://github.com/WojciechMula/pyahocorasick/pull/107
+  Warning: this change breaks compatibility of pickle and ``save()``
+  format, this won't be possible to load files created in the
+  previous version.
+
 1.3.0 (2018-12-20)
 --------------------------------------------------
 

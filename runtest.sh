@@ -298,14 +298,14 @@ function handle_release
     # 2. build with memory debug and run unit tests and unpickle tests
     if true
     then
-        export CFLAGS="-DMEMORY_DEBUG"
+        export CFLAGS="${MEMORY_DEBUG}"
         force_rebuild > /dev/null 2>&1
 
-        rm -f memory.dump
+        rm -f ${MEMORY_DUMP_PATH}
         run_unittests
         run_leaktest
 
-        rm -f memory.dump
+        rm -f ${MEMORY_DUMP_PATH}
         run_unpickletests
         run_leaktest
     fi
@@ -313,7 +313,7 @@ function handle_release
     # 3. inject malloc faults
     if true
     then
-        export CFLAGS="-DMEMORY_DEBUG"
+        export CFLAGS="${MEMORY_DEBUG}"
         force_rebuild > /dev/null 2>&1
 
         run_mallocfaults

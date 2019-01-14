@@ -4,7 +4,7 @@
 
 static const char CUSTOMPICKLE_MAGICK[16] = {
     'p', 'y', 'a', 'h', 'o', 'c', 'o', 'r', 'a', 's', 'i', 'c', 'k',    // signature
-    '0', '0', '1'                                                       // format version
+    '0', '0', '2'                                                       // format version
 };
 
 

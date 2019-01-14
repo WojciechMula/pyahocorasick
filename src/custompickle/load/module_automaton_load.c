@@ -132,8 +132,8 @@ automaton_load_node(LoadBuffer* input) {
 
     // 3. load next pointers
     if (node->n > 0) {
-        size = sizeof(TrieNode*) * node->n;
-        node->next = (TrieNode**)memory_alloc(size);
+        size = sizeof(Pair) * node->n;
+        node->next = (Pair*)memory_alloc(size);
         if (UNLIKELY(node->next == NULL)) {
             PyErr_NoMemory();
             goto exception;
@@ -239,13 +239,12 @@ automaton_load_fixup_node(LoadBuffer* input, TrieNode* node) {
 
     if (node->n > 0) {
         for (i=0; i < node->n; i++) {
-            node->next[i] = lookup_address(input, node->next[i]);
-            if (UNLIKELY(node->next[i] == NULL)) {
+            node->next[i].child = lookup_address(input, node->next[i].child);
+            if (UNLIKELY(node->next[i].child == NULL)) {
                 return false;
             }
         }
     }
-
 
     return true;
 }

@@ -11,7 +11,7 @@
 #include "trienode.h"
 
 static TrieNode*
-trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
+trienode_new(const char eow) {
     TrieNode* node = (TrieNode*)memory_alloc(sizeof(TrieNode));
     if (node) {
         node->output.integer = 0;
@@ -19,7 +19,6 @@ trienode_new(const TRIE_LETTER_TYPE letter, const char eow) {
         node->fail      = NULL;
 
         node->n     = 0;
-        node->letter    = letter;
         node->eow       = eow;
         node->next  = NULL;
     }
@@ -44,11 +43,15 @@ static TrieNode* PURE
 trienode_get_next(TrieNode* node, const TRIE_LETTER_TYPE letter) {
 
     unsigned i;
+    Pair* next;
 
     ASSERT(node);
+    next = (Pair*)node->next;
+
     for (i=0; i < node->n; i++)
-        if ((node)->next[i]->letter == letter)
-            return node->next[i];
+        if (next[i].letter == letter) {
+            return next[i].child;
+        }
 
     return NULL;
 }
@@ -59,11 +62,11 @@ trienode_unset_next_pointer(TrieNode* node, TrieNode* child) {
 
     unsigned i;
     unsigned index;
-    TrieNode** next;
+    Pair* next;
 
     ASSERT(node);
     for (i=0; i < node->n; i++) {
-        if (node->next[i] == child) {
+        if (node->next[i].child == child) {
             index = i;
             goto found;
         }
@@ -82,7 +85,7 @@ found:
 
     // there are more nodes, reallocation is needed
 
-    next = (TrieNode**)memory_alloc((node->n - 1) * sizeof(TrieNode*));
+    next = (Pair*)memory_alloc((node->n - 1) * sizeof(Pair));
     if (UNLIKELY(next == NULL)) {
         return MEMORY_ERROR;
     }
@@ -106,7 +109,15 @@ static TrieNode* PURE
 trienode_get_ith_unsafe(TrieNode* node, size_t index) {
     ASSERT(node);
 
-    return node->next[index];
+    return node->next[index].child;
+}
+
+
+static TRIE_LETTER_TYPE PURE
+trieletter_get_ith_unsafe(TrieNode* node, size_t index) {
+    ASSERT(node);
+
+    return node->next[index].letter;
 }
 
 
@@ -114,17 +125,19 @@ static TrieNode*
 trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child) {
 
     int n;
-    TrieNode** next;
+    void* next;
 
     ASSERT(node);
     ASSERT(child);
     ASSERT(trienode_get_next(node, letter) == NULL);
 
     n = node->n;
-    next = (TrieNode**)memory_realloc(node->next, (n + 1) * sizeof(TrieNode*));
+    next = (TrieNode**)memory_realloc(node->next, (n + 1) * (sizeof(Pair)));
     if (next) {
+
         node->next = next;
-        node->next[n] = child;
+        node->next[n].letter = letter;
+        node->next[n].child = child;
         node->n += 1;
 
         return child;
@@ -136,17 +149,20 @@ trienode_set_next(TrieNode* node, const TRIE_LETTER_TYPE letter, TrieNode* child
 
 #ifdef DEBUG_LAYOUT
 void trienode_dump_layout() {
-#define field_size(name) sizeof(((TrieNode*)NULL)->name)
-#define field_ofs(name) offsetof(TrieNode, name)
-#define field_dump(name) printf("- %-12s: %d %d\n", #name, field_size(name), field_ofs(name));
+#define field_size(TYPE, name) sizeof(((TYPE*)NULL)->name)
+#define field_ofs(TYPE, name) offsetof(TYPE, name)
+#define field_dump(TYPE, name) printf("- %-12s: %d %d\n", #name, field_size(TYPE, name), field_ofs(TYPE, name));
 
-    puts("TrieNode:");
-    field_dump(output);
-    field_dump(fail);
-    field_dump(n);
-    field_dump(eow);
-    field_dump(letter);
-    field_dump(next);
+    printf("TrieNode (size=%lu):\n", sizeof(TrieNode));
+    field_dump(TrieNode, output);
+    field_dump(TrieNode, fail);
+    field_dump(TrieNode, n);
+    field_dump(TrieNode, eow);
+    field_dump(TrieNode, next);
+
+    printf("Pair (size=%lu):\n", sizeof(Pair));
+    field_dump(Pair, letter);
+    field_dump(Pair, child);
 
 #undef field_dump
 #undef field_size
@@ -157,7 +173,6 @@ void trienode_dump_layout() {
 
 UNUSED static void
 trienode_dump_to_file(TrieNode* node, FILE* f) {
-
     unsigned i;
 
     ASSERT(node != NULL);
@@ -167,7 +182,6 @@ trienode_dump_to_file(TrieNode* node, FILE* f) {
         fprintf(f, "leaf ");
 
     fprintf(f, "node %p\n", node);
-    fprintf(f, "- letter %d [%c]\n", node->letter, node->letter);
     if (node->eow)
         fprintf(f, "- eow [%p]\n", node->output.object);
 
@@ -176,9 +190,9 @@ trienode_dump_to_file(TrieNode* node, FILE* f) {
         if (node->next == NULL) {
             fprintf(f, "- %d next: %p\n", node->n, node->next);
         } else {
-            fprintf(f, "- %d next: [%p", node->n, node->next[0]);
+            fprintf(f, "- %d next: [(%d; %p)", node->n, node->next[0].letter, node->next[0].child);
             for (i=1; i < node->n; i++)
-                fprintf(f, ", %p", node->next[i]);
+                fprintf(f, ", (%d; %p)", node->next[i].letter, node->next[i].child);
             fprintf(f, "]\n");
         }
     }

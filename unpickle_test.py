@@ -12,7 +12,6 @@ class TreeNodeBuilderBase(object):
         self.fail    = 0
         self.n       = 0
         self.eow     = 0
-        self.letter  = 0
         self.next    = []
 
 
@@ -21,8 +20,8 @@ class TreeNodeBuilderBase(object):
         assert self.n == len(self.next)
 
         next = b''
-        for node in self.next:
-            next += struct.pack('Q', node)
+        for letter, node in self.next:
+            next += self.dump_edge(letter, node)
 
         return self.dump_node() + next
 
@@ -40,9 +39,7 @@ if sys.version_info.major == 3:
                 n         : size 4, offset 16
                 eow       : size 1, offset 20
                 padding   : size 3
-                letter    : size 4, offset 24
-                padding   : size 4
-                next      : size 8, offset 32 -- omitted in dump
+                next      : size 8, offset 24 -- omitted in dump
 
             python2:
 
@@ -51,19 +48,26 @@ if sys.version_info.major == 3:
                 n         : size 4, offset 16
                 eow       : size 1, offset 20
                 padding   : size 1
-                letter    : size 2, offset 22
-                next      : size 8, offset 24 -- omitted in dump
+                next      : size 8, offset 22 -- omitted in dump
             """
-            node = struct.pack('QQIBBBBII',
+            node = struct.pack('=QQIBxxx',
                 self.integer,
                 self.fail,
                 self.n,
-                self.eow, 0, 0, 0,
-                self.letter, 0)
+                self.eow)
 
-            assert len(node) == 32
+            assert len(node) == 24
 
             return node
+
+
+        def dump_edge(self, letter, node):
+            assert ord(letter) < 256
+
+            b = struct.pack('=IQ', ord(letter), node)
+            assert len(b) == 12
+
+            return b
 
 
     TreeNodeBuilder = TreeNodeBuilderPy3
@@ -81,20 +85,27 @@ elif sys.version_info.major == 2:
                 fail      : size 8, offset 8
                 n         : size 4, offset 16
                 eow       : size 1, offset 20
-                padding   : size 1
-                letter    : size 2, offset 22
+                padding   : size 3
                 next      : size 8, offset 24 -- omitted in dump
             """
-            node = struct.pack('QQIBBH',
+            node = struct.pack('QQIBxxx',
                 self.integer,
                 self.fail,
                 self.n,
-                self.eow, 0,
-                self.letter)
+                self.eow)
 
             assert len(node) == 24
 
             return node
+
+
+        def dump_edge(self, letter, node):
+            assert ord(letter) < 256
+
+            b = struct.pack('=HQ', ord(letter), node)
+            assert len(b) == 10
+
+            return b
 
 
     TreeNodeBuilder = TreeNodeBuilderPy2
@@ -146,22 +157,21 @@ class TestUnpickleRaw(unittest.TestCase):
         return ahocorasick.Automaton(*args)
 
 
-    def create_node_builder(self, letter, eow, children):
+    def create_node_builder(self, eow, children):
         builder = TreeNodeBuilder()
-        builder.letter  = ord(letter)
-        builder.next    = [i + 1 for i in children] # starts from 1
+        builder.next    = [(letter, i + 1) for letter, i in children] # starts from 1
         builder.n       = len(children)
         builder.eow     = eow
 
         return builder
 
-    
+
     def create_raw_count(self, n):
         return struct.pack('Q', n)
 
 
-    def create_raw_node(self, letter, eow, children):
-        return self.create_node_builder(letter, eow, children).dump()
+    def create_raw_node(self, eow, children):
+        return self.create_node_builder(eow, children).dump()
 
 
     # --------------------------------------------------
@@ -188,15 +198,15 @@ class TestUnpickleRaw(unittest.TestCase):
         """
         values = ["HE", "HER", "HIS", "HIM", "IT"]
 
-        node0 = self.create_raw_node('_', 0, [1, 7])
-        node1 = self.create_raw_node('h', 0, [2, 4])
-        node2 = self.create_raw_node('e', 1, [3])       # HE
-        node3 = self.create_raw_node('r', 1, [])        # HER
-        node4 = self.create_raw_node('i', 0, [5, 6])
-        node5 = self.create_raw_node('s', 1, [])        # HIS
-        node6 = self.create_raw_node('m', 1, [])        # HIM
-        node7 = self.create_raw_node('i', 0, [8])
-        node8 = self.create_raw_node('t', 1, [])        # IT
+        node0 = self.create_raw_node(0, [('h', 1), ('i', 7)])
+        node1 = self.create_raw_node(0, [('e', 2), ('i', 4)])
+        node2 = self.create_raw_node(1, [('r', 3)])             # HE
+        node3 = self.create_raw_node(1, [])                     # HER
+        node4 = self.create_raw_node(0, [('s', 5), ('m', 6)])
+        node5 = self.create_raw_node(1, [])                     # HIS
+        node6 = self.create_raw_node(1, [])                     # HIM
+        node7 = self.create_raw_node(0, [('t', 8)])
+        node8 = self.create_raw_node(1, [])                     # IT
 
         self.count = 9
         self.raw   = node0 + node1 + node2 + node3 + node4 + node5 + node6 + node7 + node8
@@ -226,15 +236,15 @@ class TestUnpickleRaw(unittest.TestCase):
         """
         values = ["HE", "HER", "HIS", "HIM", "IT"]
 
-        node0 = self.create_raw_node('_', 0, [1, 7])
-        node1 = self.create_raw_node('h', 0, [2, 4])
-        node2 = self.create_raw_node('e', 1, [3])       # HE
-        node3 = self.create_raw_node('r', 1, [])        # HER
-        node4 = self.create_raw_node('i', 0, [5, 6])
-        node5 = self.create_raw_node('s', 1, [])        # HIS
-        node6 = self.create_raw_node('m', 1, [])        # HIM
-        node7 = self.create_raw_node('i', 0, [8])
-        node8 = self.create_raw_node('t', 1, [])        # IT
+        node0 = self.create_raw_node(0, [('h', 1), ('i', 7)])
+        node1 = self.create_raw_node(0, [('e', 2), ('i', 4)])
+        node2 = self.create_raw_node(1, [('r', 3)])             # HE
+        node3 = self.create_raw_node(1, [])                     # HER
+        node4 = self.create_raw_node(0, [('s', 5), ('m', 6)])
+        node5 = self.create_raw_node(1, [])                     # HIS
+        node6 = self.create_raw_node(1, [])                     # HIM
+        node7 = self.create_raw_node(0, [('t', 8)])
+        node8 = self.create_raw_node(1, [])                     # IT
 
         self.count = 9
         self.raw   = [
@@ -287,9 +297,9 @@ class TestUnpickleRaw(unittest.TestCase):
         #0 -> [h #1*] -> [e #2*]
         """
 
-        node0 = self.create_raw_node('_', 0, [1])
-        node1 = self.create_raw_node('h', 1, [2])   # expect python value
-        node2 = self.create_raw_node('e', 1, [])    # also python value
+        node0 = self.create_raw_node(0, [('h', 1)])
+        node1 = self.create_raw_node(1, [('e', 2)])    # expect python value
+        node2 = self.create_raw_node(1, [])            # also python value
 
         self.count  = 3
         self.raw    = node0 + node1 + node2
@@ -318,9 +328,9 @@ class TestUnpickleRaw(unittest.TestCase):
         #0 -> [h #1 ] -> [e #2*]
         """
 
-        node0 = self.create_raw_node('_', 0, [1])
-        node1 = self.create_raw_node('h', 0, [2])
-        node2 = self.create_raw_node('e', 1, [])
+        node0 = self.create_raw_node(0, [('h', 1)])
+        node1 = self.create_raw_node(0, [('e', 2)])
+        node2 = self.create_raw_node(1, [])
         raw   = node0 + node1 + node2
 
         self.count  = 3
@@ -337,8 +347,8 @@ class TestUnpickleRaw(unittest.TestCase):
         #0 -> [? #1 ]
         """
 
-        node0 = self.create_raw_node('_', 0, [1])
-        node1 = self.create_raw_node('?', 0, [16]) # the second node point to non-existent node
+        node0 = self.create_raw_node(0, [('?', 1)])
+        node1 = self.create_raw_node(0, [('x', 16)]) # the second node point to non-existent node
 
         self.count = 2
         self.raw   = node0 + node1
@@ -353,7 +363,7 @@ class TestUnpickleRaw(unittest.TestCase):
         trie with just one node
         """
 
-        builder = self.create_node_builder('_', 0, [])
+        builder = self.create_node_builder(0, [])
         builder.fail = 42
 
         self.count = 1
@@ -371,11 +381,11 @@ class TestUnpickleRaw(unittest.TestCase):
         raw    = b''
         values = []
         for i in range(good_nodes):
-            raw += self.create_raw_node('?', 1, [])
+            raw += self.create_raw_node(1, [])
             values.append(tuple("node %d" % i))
 
         # create the last node that will cause error -- malformed next pointer
-        raw += self.create_raw_node('?', 1, [10000])
+        raw += self.create_raw_node(1, [('_', 10000)])
         values.append(tuple("never reached"))
 
         self.count  = good_nodes + 1

@@ -13,6 +13,17 @@
 
 #include "common.h"
 
+struct TrieNode;
+
+
+#pragma pack(push)
+#pragma pack(1)
+typedef struct Pair {
+    TRIE_LETTER_TYPE letter;    ///< edge label
+    struct TrieNode* child;     ///< next pointer
+} Pair;
+#pragma pack(pop)
+
 /* links to children nodes are stored in dynamic table */
 typedef struct TrieNode {
     union {
@@ -27,9 +38,7 @@ typedef struct TrieNode {
     uint32_t            n;      ///< length of next
 #endif
     uint8_t             eow;    ///< end of word marker
-    TRIE_LETTER_TYPE    letter; ///< incoming edge label
-
-    struct TrieNode**   next;   ///< table of pointers
+    Pair*               next;   ///< table of letters and associated next pointers
 } TrieNode;
 
 
@@ -42,7 +51,7 @@ typedef enum {
 
 /* allocate new node */
 static TrieNode*
-trienode_new(const TRIE_LETTER_TYPE letter, const char eow);
+trienode_new(const char eow);
 
 /* free node */
 static void
@@ -62,6 +71,9 @@ trienode_unset_next_pointer(TrieNode* node, TrieNode* child);
 
 static TrieNode* PURE
 trienode_get_ith_unsafe(TrieNode* node, size_t letter);
+
+static TRIE_LETTER_TYPE PURE
+trieletter_get_ith_unsafe(TrieNode* node, size_t letter);
 
 #define trienode_is_leaf(node) ((node)->n == 0)
 

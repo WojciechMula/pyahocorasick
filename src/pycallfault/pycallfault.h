@@ -32,6 +32,8 @@ int check_and_set_error(void);
 
 #define PyCallable_Check_custom(arg) (check() ? 0 : PyCallable_Check(arg))
 
+#define PyString_Check_custom(arg) (check() ? 0 : PyString_Check(arg))
+
 #define PyUnicode_Check_custom(arg) (check() ? 0 : PyUnicode_Check(arg))
 
 #define PyBytes_Check_custom(arg) (check() ? 0 : PyBytes_Check(arg))

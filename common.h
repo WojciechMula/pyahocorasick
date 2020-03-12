@@ -21,7 +21,11 @@
 #if defined(_MSC_VER)       // Visual Studio compiler
 #   include "windows.h"
 #else
-#   include "posix.h"
+#   if defined(__CYGWIN__)
+#        include "cygwin.h"
+#   else
+#        include "posix.h"
+#   endif
 #endif
 
 #if PY_MAJOR_VERSION >= 3

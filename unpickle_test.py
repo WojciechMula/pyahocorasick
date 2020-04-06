@@ -187,7 +187,7 @@ class TestUnpickleRaw(unittest.TestCase):
 
     def test__construct_simple_trie(self):
 
-        """
+        r"""
         trie for set {he, her, his, him, it}
 
         #0 -> [h #1 ] -> [e #2*] -> [r #3*]
@@ -225,7 +225,7 @@ class TestUnpickleRaw(unittest.TestCase):
 
     def test__construct_simple_trie__split_across_a_few_chunks(self):
 
-        """
+        r"""
         trie for set {he, her, his, him, it}
 
         #0 -> [h #1 ] -> [e #2*] -> [r #3*]

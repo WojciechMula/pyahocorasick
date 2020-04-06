@@ -116,6 +116,10 @@ The Automaton class has the following main Aho-Corasick methods:
     Perform the Aho-Corasick search procedure using the provided input ``string``.
     Return an iterator of tuples (end_index, value) for keys found in string.
 
+``iter_long(string, [start, [end]])``
+	Returns iterator (object of class AutomatonSearchIterLong) that
+	searches for longest, non-overlapping matches.
+
 AutomatonSearchIter class
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -118,7 +118,6 @@ The full documentation including the API overview and reference is published on
 
 
 Overview
-========
 
 With an `Aho-Corasick automaton <http://en.wikipedia.org/wiki/Aho-Corasick%20algorithm>`_
 you can efficiently search all occurrences of multiple strings (the needles) in an

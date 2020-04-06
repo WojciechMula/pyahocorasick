@@ -16,6 +16,7 @@
 #include "trie.h"
 #include "Automaton.h"
 #include "AutomatonSearchIter.h"
+#include "AutomatonSearchIterLong.h"
 #include "AutomatonItemsIter.h"
 #include "src/inline_doc.h"
 #include "src/custompickle/load/module_automaton_load.h"
@@ -28,6 +29,7 @@
 #include "Automaton.c"
 #include "AutomatonItemsIter.c"
 #include "AutomatonSearchIter.c"
+#include "AutomatonSearchIterLong.c"
 #ifdef PYCALLS_INJECT_FAULTS
 #include "src/pycallfault/pycallfault.c"
 #endif

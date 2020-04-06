@@ -980,39 +980,54 @@ automaton_iter_long(PyObject* self, PyObject* args) {
 	ssize_t end;
 
 	object = PyTuple_GetItem(args, 0);
-	if (object) {
+    if (object) {
+        if (automaton->key_type == KEY_STRING) {
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-		if (PyUnicode_Check(object)) {
-			start	= 0;
-			end		= PyUnicode_GET_SIZE(object);
-		}
-		else {
-			PyErr_SetString(PyExc_TypeError, "string required");
-			return NULL;
-		}
+        if (F(PyUnicode_Check)(object)) {
+            start   = 0;
+            #if PY_MINOR_VERSION >= 3
+                end = PyUnicode_GET_LENGTH(object);
+            #else
+                end = PyUnicode_GET_SIZE(object);
+            #endif
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError, "string required");
+            return NULL;
+        }
     #else
-		if (PyBytes_Check(object)) {
-			start 	= 0;
-			end		= PyBytes_GET_SIZE(object);
-		}
-		else {
-			PyErr_SetString(PyExc_TypeError, "bytes required");
-			return NULL;
-		}
+        if (F(PyBytes_Check)(object)) {
+            start   = 0;
+            end     = PyBytes_GET_SIZE(object);
+        }
+        else {
+            PyErr_SetString(PyExc_TypeError, "bytes required");
+            return NULL;
+        }
     #endif
 #else
-        if (PyString_Check(object)) {
-			start	= 0;
-			end		= PyString_GET_SIZE(object);
+        if (F(PyString_Check)(object)) {
+            start   = 0;
+            end     = PyString_GET_SIZE(object);
         } else {
-			PyErr_SetString(PyExc_TypeError, "string required");
-			return NULL;
+            PyErr_SetString(PyExc_TypeError, "string required");
+            return NULL;
         }
 #endif
-	}
-	else
-		return NULL;
+        }
+        else {
+        if (F(PyTuple_Check)(object)) {
+            start = 0;
+            end = PyTuple_GET_SIZE(object);
+        } else {
+            PyErr_SetString(PyExc_TypeError, "tuple required");
+            return NULL;
+        }
+        }
+    }
+    else
+        return NULL;
 
 	if (pymod_parse_start_end(args, 1, 2, start, end, &start, &end))
 		return NULL;

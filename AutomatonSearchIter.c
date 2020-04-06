@@ -311,6 +311,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
     // first argument - required string or buffer
     object = F(PyTuple_GetItem)(args, 0);
     if (object) {
+        init_input(&new_input);
         if (!prepare_input((PyObject*)iter->automaton, object, &new_input)) {
             return NULL;
         }

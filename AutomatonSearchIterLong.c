@@ -27,11 +27,6 @@ automaton_search_iter_long_new(
     iter->automaton = automaton;
     iter->version   = automaton->version;
     iter->object    = object;
-#ifdef AHOCORASICK_UNICODE
-    iter->data      = PyUnicode_AS_UNICODE(object);
-#else
-    iter->data      = (uint8_t*)PyBytes_AS_STRING(object);
-#endif
 
     iter->state = automaton->root;
     iter->shift = 0;
@@ -44,7 +39,15 @@ automaton_search_iter_long_new(
     Py_INCREF(iter->automaton);
     Py_INCREF(iter->object);
 
+    init_input(&iter->input);
+    if (!prepare_input((PyObject*)automaton, object, &iter->input)) {
+        goto error;
+    }
+
     return (PyObject*)iter;
+error:
+    Py_DECREF(iter);
+    return NULL;
 }
 
 #define iter ((AutomatonSearchIterLong*)self)
@@ -53,6 +56,7 @@ static void
 automaton_search_iter_long_del(PyObject* self) {
     Py_DECREF(iter->automaton);
     Py_DECREF(iter->object);
+    destroy_input(&iter->input);
     PyObject_Del(self);
 }
 
@@ -109,7 +113,7 @@ return_output:
 
     iter->index += 1;
     while (iter->index < iter->end) {
-        next = trienode_get_next(iter->state, iter->data[iter->index]);
+        next = trienode_get_next(iter->state, iter->input.word[iter->index]);
         if (next) {
             if (next->eow) {
                 // save the last node on the path
@@ -129,7 +133,7 @@ return_output:
                         iter->state = iter->automaton->root;
                         iter->index += 1;
                         break;
-                    } else if (trienode_get_next(iter->state, iter->data[iter->index])) {
+                    } else if (trienode_get_next(iter->state, iter->input.word[iter->index])) {
                         break;
                     }
                 }
@@ -151,34 +155,15 @@ automaton_search_iter_long_set(PyObject* self, PyObject* args) {
     PyObject* flag;
     ssize_t len;
     bool reset;
+    struct Input new_input;
 
     // first argument - required string or buffer
     object = PyTuple_GetItem(args, 0);
     if (object) {
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
-        if (PyUnicode_Check(object))
-            len = PyUnicode_GET_SIZE(object);
-        else {
-            PyErr_SetString(PyExc_TypeError, "string required");
+        init_input(&new_input);
+        if (!prepare_input((PyObject*)iter->automaton, object, &new_input)) {
             return NULL;
         }
-    #else
-        if (PyBytes_Check(object))
-            len = PyBytes_GET_SIZE(object);
-        else {
-            PyErr_SetString(PyExc_TypeError, "string or bytes object required");
-            return NULL;
-        }
-    #endif
-#else
-        if (PyString_Check(object)) {
-            len = PyString_GET_SIZE(object);
-        } else {
-            PyErr_SetString(PyExc_TypeError, "string required 2");
-            return NULL;
-        }
-#endif
     }
     else
         return NULL;
@@ -206,11 +191,9 @@ automaton_search_iter_long_set(PyObject* self, PyObject* args) {
     Py_XDECREF(iter->object);
     Py_INCREF(object);
     iter->object    = object;
-#ifdef AHOCORASICK_UNICODE
-    iter->data = PyUnicode_AS_UNICODE(object);
-#else
-    iter->data = (uint8_t*)PyBytes_AS_STRING(object);
-#endif
+
+    destroy_input(&iter->input);
+    assign_input(&iter->input, &new_input);
 
     if (!reset)
         iter->shift += (iter->index >= 0) ? iter->index : 0;

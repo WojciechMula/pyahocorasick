@@ -966,9 +966,6 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 }
 
 
-#define automaton_iter_long_doc \
-	"iter_long(string|buffer, [start, [end]])"
-
 static PyObject*
 automaton_iter_long(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)

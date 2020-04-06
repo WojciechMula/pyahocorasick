@@ -363,6 +363,7 @@ API Reference
 .. include:: automaton_values.rst
 .. include:: automaton_make_automaton.rst
 .. include:: automaton_iter.rst
+.. include:: automaton_iter_long.rst
 .. include:: automaton_find_all.rst
 .. include:: automaton___reduce__.rst
 .. include:: automaton_save.rst

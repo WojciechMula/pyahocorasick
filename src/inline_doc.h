@@ -160,6 +160,21 @@
 	"The ignore_white_space optional arguments can be used to\n" \
 	"ignore white spaces from input string."
 
+#define automaton_iter_long_doc \
+	"iter_long(string, [start, [end]])\n" \
+	"\n" \
+	"Perform the modified Aho-Corasick search procedure which\n" \
+	"matches the longest words from set.\n" \
+	"\n" \
+	"Return an iterator of tuples (end_index, value) for keys\n" \
+	"found in string where:\n" \
+	"- end_index is the end index in the input string where a\n" \
+	"  trie key string was found.\n" \
+	"- value is the value associated with the found key string.\n" \
+	"\n" \
+	"The start and end optional arguments can be used to limit\n" \
+	"the search to an input string slice as in string[start:end]."
+
 #define automaton_keys_doc \
 	"keys([prefix, [wildcard, [how]]])\n" \
 	"\n" \

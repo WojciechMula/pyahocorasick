@@ -400,7 +400,7 @@ class TestUnpickleRaw(unittest.TestCase):
     def test__wrong_type_of_chunk_container(self):
 
         self.count = 9
-        self.raw   = () # this shuld be a list
+        self.raw   = () # this should be a list
         self.kind  = ahocorasick.TRIE
         self.values = None
         self.word_count = 5

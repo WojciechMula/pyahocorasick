@@ -970,14 +970,14 @@ static PyObject*
 automaton_iter_long(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
+	PyObject* object;
+	ssize_t start;
+	ssize_t end;
+
 	if (automaton->kind != AHOCORASICK) {
 		PyErr_SetString(PyExc_AttributeError, "not an automaton yet; add some words and call make_automaton");
 		return NULL;
 	}
-
-	PyObject* object;
-	ssize_t start;
-	ssize_t end;
 
 	object = PyTuple_GetItem(args, 0);
     if (object) {

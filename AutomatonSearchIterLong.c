@@ -227,7 +227,7 @@ PyMethodDef automaton_search_iter_long_methods[] = {
 
 
 static PyTypeObject automaton_search_iter_long_type = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PY_OBJECT_HEAD_INIT
     "ahocorasick.AutomatonSearchIterLong",      /* tp_name */
     sizeof(AutomatonSearchIterLong),            /* tp_size */
     0,                                          /* tp_itemsize? */

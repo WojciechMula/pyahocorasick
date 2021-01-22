@@ -9,8 +9,10 @@
 
 # files
 MANIFEST
-!runtest.sh
+runtest.sh
 tags
+release_checklist.txt
+.gdb_history
 
 # dirs
 build/

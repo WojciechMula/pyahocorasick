@@ -1,0 +1,9 @@
+action                       python2    python3
+--------------------------------------------------
+./runtest.sh unit              [ ]        [ ]
+./runtest.sh unpickle          [ ]        [ ]
+./runtest.sh valgrind          [ ]        [ ]
+./runtest.sh mallocfaults      [ ]        [ ]
+./runtest.sh reallocfaults     [ ]        [ ]
+./runtest.sh pycallfaults      [ ]        [ ]
+./runtest.sh coverage          [ ]        [ ]

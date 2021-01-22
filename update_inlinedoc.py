@@ -1,11 +1,12 @@
-import os
+from pathlib import Path
 import sys
+import os
 import textwrap
 import xml.etree.ElementTree as ET
 
 
 def main():
-    dstpath = 'src/inline_doc.h'
+    dstpath = Path('src/inline_doc.h')
     app = Application(dstpath)
     app.run()
 
@@ -26,14 +27,12 @@ class Application(object):
             content += '\n' + self.__format_file(path, name)
 
         oldcontent = None
-        if os.path.exists(self.dstpath):
-            with open(self.dstpath, 'rt') as f:
-                oldcontent = f.read()
+        if self.dstpath.exists():
+            oldcontent = self.dstpath.read_text()
 
         if content != oldcontent:
-            with open(self.dstpath, 'wt') as f:
-                print("Creating %s" % self.dstpath)
-                f.write(content)
+            print("Creating %s" % self.dstpath)
+            self.dstpath.write_text(content)
 
 
     def __format_file(self, path, name):
@@ -45,11 +44,10 @@ class Application(object):
 
 
     def __get_files(self):
-        rootdir = 'docs'
-        for name in sorted(os.listdir(rootdir)):
-            if name.endswith('.rst') and name != 'index.rst':
-                path = os.path.join(rootdir, name)
-                name = name[:-4] + '_doc'
+        rootdir = Path('docs')
+        for path in sorted(rootdir.glob("*.rst")):
+            if path.name != 'index.rst':
+                name = path.stem + '_doc'
                 yield (path, name)
 
 
@@ -64,7 +62,7 @@ class Formatter(object):
 
     def format(self):
         self.lines = []
-        for node in self.xml.getiterator('document')[0]:
+        for node in next(self.xml.iter('document')):
             if node.tag == 'title':
                 self.format_title(node)
             elif node.tag == 'paragraph':
@@ -90,24 +88,22 @@ class Formatter(object):
 
 
     def format_bullet_list(self, node):
-        for child in node.iterfind('list_item'):
-            par = child.getchildren()[0]
-            assert par.tag == 'paragraph'
+        for list_item in node.iter('list_item'):
+            for paragraph in list_item.iter('paragraph'):
 
-            text = self.normalize(par)
+                text = self.normalize(paragraph)
+                lines = textwrap.wrap(text, width=(WIDTH - 2))
+                for i, line in enumerate(lines):
+                    if i == 0:
+                        prefix = '- '
+                    else:
+                        prefix = '  '
 
-            lines = textwrap.wrap(text, width=(WIDTH - 2))
-            for i, line in enumerate(lines):
-                if i == 0:
-                    prefix = '- '
-                else:
-                    prefix = '  '
-
-                self.lines.append(prefix + line)
+                    self.lines.append(prefix + line)
 
 
     def normalize(self, node):
-        t = ET.tostring(node, method='text')
+        t = ET.tostring(node, method='text', encoding='unicode')
         t = t.split()
         return ' '.join(t)
 

@@ -268,7 +268,7 @@ return_output:
 #else
     iter->index += 1;
     if (iter->ignore_white_space) {
-        while (iswspace(iter->input.word[iter->index]) && (iter->index < iter->end)) {
+        while ((iter->index < iter->end) and iswspace(iter->input.word[iter->index])) {
             iter->index += 1;
         }
     }

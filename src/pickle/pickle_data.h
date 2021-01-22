@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Python.h>
-
 typedef struct PickleData {
 	PyObject*	bytes_list;	///< PyList of PyBytes
 	bool		chunked;	///< bytes_list has more than one element
@@ -29,4 +27,3 @@ pickle_data__shrink_last_buffer(PickleData* data);
 
 static int
 pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t max_array_size);
-

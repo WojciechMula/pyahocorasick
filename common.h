@@ -11,6 +11,7 @@
 #ifndef ahocorasick_common_h_included__
 #define ahocorasick_common_h_included__
 
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <structmember.h>   // PyMemberDef
 

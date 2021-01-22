@@ -1,8 +1,6 @@
 #ifndef PYCALLFAULT_H_
 #define PYCALLFAULT_H_
 
-#include <Python.h>
-
 #define F(name) name##_custom
 
 void initialize_pycallfault(void);

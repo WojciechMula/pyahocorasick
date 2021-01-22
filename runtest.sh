@@ -140,6 +140,11 @@ function handle_leaks
 
 function handle_valgrind
 {
+    if ! command -v valgrind > /dev/null
+    then
+        echo "Valgrind not found"
+        exit 1
+    fi
     force_rebuild
 
     local LOGFILE=${TMPDIR}/valgrind.log
@@ -162,9 +167,10 @@ function run_mallocfaults
     # simulate failures of all allocations
     for ID in `seq ${MINID} ${MAXID}`
     do
-        echo "Checking memalloc fail ${ID} of ${MAXID}"
+        echo -ne "Checking memalloc fail ${ID} of ${MAXID}\r"
         mallocfault ${ID}
     done
+    echo
 }
 
 function mallocfault
@@ -210,9 +216,10 @@ function run_reallocfaults
     # simulate failures of all allocations
     for ID in `seq ${MINID} ${MAXID}`
     do
-        echo "Checking realloc fail ${ID} of ${MAXID}"
+        echo -ne "\rChecking realloc fail ${ID} of ${MAXID}"
         reallocfault ${ID}
     done
+    echo
 }
 
 function reallocfault

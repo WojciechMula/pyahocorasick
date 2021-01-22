@@ -279,6 +279,16 @@ function handle_pycallfaults
 
 function handle_coverage
 {
+    if ! command -v gcovr > /dev/null
+    then
+        echo "gcovr not found"
+        exit 1
+    fi
+
+    export CFLAGS="--coverage"
+    force_rebuild
+    run_unittests
+
     local DIR=coverage
     local INDEX=pyahocorasick.html
 

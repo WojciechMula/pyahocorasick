@@ -82,7 +82,7 @@ function force_rebuild
 {
     if [[ ${REBUILD} == 1 ]]
     then
-        rm -rf build 2> /dev/null
+        rm -r build ahocorasick*.so 2> /dev/null
         rebuild
     fi
 }

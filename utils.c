@@ -258,7 +258,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 
         // TODO: both min and max values should be configured
 #if TRIE_LETTER_SIZE == 4
-    #define MAX_VAL 4294967295ul
+    #define MAX_VAL 4294967295l
 #else
     #define MAX_VAL 65535ul
 #endif

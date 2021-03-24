@@ -44,6 +44,8 @@ int check_and_set_error(void);
 
 #define PyObject_CallFunction_custom(...) (check_and_set_error() ? NULL : PyObject_CallFunction(__VA_ARGS__))
 
+#define PyObject_CallFunctionObjArgs_custom(...) (check_and_set_error() ? NULL : PyObject_CallFunctionObjArgs(__VA_ARGS__))
+
 #define PyArg_ParseTupleAndKeywords_custom(...) (check_and_set_error() ? 0 : PyArg_ParseTupleAndKeywords(__VA_ARGS__))
 
 #define PyNumber_Index_custom(arg) (check_and_set_error() ? NULL : PyNumber_Index(arg))

@@ -105,7 +105,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
 
     // 3. pickle python value associated with word
     if (node->eow && output->store == STORE_ANY) {
-        bytes = F(PyObject_CallFunction)(output->serializer, "O", node->output.object);
+        bytes = F(PyObject_CallFunctionObjArgs)(output->serializer, node->output.object, NULL);
         if (UNLIKELY(bytes == NULL)) {
             return 0;
         }

@@ -1530,6 +1530,20 @@ class TestLoadSave(TestAutomatonBase):
         self.compare_automatons(A, B)
 
 
+    def test_save_and_load_tuples(self):
+        import pickle
+
+        A = ahocorasick.Automaton(ahocorasick.STORE_ANY)
+        for i, word in enumerate(conv("he she her cat car carriage zoo")):
+            A.add_word(word, (i, word))
+
+        A.save(self.path, pickle.dumps)
+        B = ahocorasick.load(self.path, pickle.loads)
+
+        self.compare_automatons(A, B)
+
+
+
     def compare_automatons(self, A, B):
         if print_dumps:
             print([x for x in B.items()])

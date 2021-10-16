@@ -86,7 +86,7 @@ class TestTrie(unittest.TestCase):
 		t.add_word('php', 5)
 
 		result = list(t.items())
-		self.assertEquals(len(result), 5)
+		self.assertEqual(len(result), 5)
 		self.assertIn(('python', 1), result)
 		self.assertIn(('ada',    2), result)
 		self.assertIn(('perl',   3), result)
@@ -104,7 +104,7 @@ class TestTrie(unittest.TestCase):
 		t.add_word('php', 5)
 
 		result = list(t.keys())
-		self.assertEquals(len(result), 5)
+		self.assertEqual(len(result), 5)
 		self.assertIn('python',result)
 		self.assertIn('ada',   result)
 		self.assertIn('perl',  result)
@@ -122,7 +122,7 @@ class TestTrie(unittest.TestCase):
 		t.add_word('php', 5)
 
 		result = list(t.values())
-		self.assertEquals(len(result), 5)
+		self.assertEqual(len(result), 5)
 		self.assertIn(1, result)
 		self.assertIn(2, result)
 		self.assertIn(3, result)
@@ -168,7 +168,7 @@ class TestTrie(unittest.TestCase):
 		result = list(t.iter(test_string))
 
 		# there are 5 matching positions
-		self.assertEquals(len(result), 5)
+		self.assertEqual(len(result), 5)
 
 		# result should have be valid, i.e. returned position and substring
 		# must match substring from test string
@@ -202,7 +202,7 @@ class TestTrie(unittest.TestCase):
 		t.find_all(test_string, find_all_callback)
 
 		result_items = list(t.iter(test_string))
-		self.assertEquals(find_all_arguments, result_items)
+		self.assertEqual(find_all_arguments, result_items)
 
 
 if __name__ == '__main__':

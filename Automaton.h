@@ -56,12 +56,12 @@ struct Input {
 typedef struct AutomatonStatistics {
     int         version;
 
-    ssize_t     nodes_count;        ///< total number of nodes
-    ssize_t     words_count;        ///< len(automaton)
-    ssize_t     longest_word;       ///< longest word
-    ssize_t     links_count;        ///< links count
-    ssize_t     sizeof_node;        ///< size of single node (a C structure)
-    ssize_t     total_size;         ///< total size in bytes
+    Py_ssize_t     nodes_count;        ///< total number of nodes
+    Py_ssize_t     words_count;        ///< len(automaton)
+    Py_ssize_t     longest_word;       ///< longest word
+    Py_ssize_t     links_count;        ///< links count
+    Py_ssize_t     sizeof_node;        ///< size of single node (a C structure)
+    Py_ssize_t     total_size;         ///< total size in bytes
 } AutomatonStatistics;
 
 
@@ -101,7 +101,7 @@ static PyObject*
 automaton_clear(PyObject* self, PyObject* args);
 
 /* len() */
-static ssize_t
+static Py_ssize_t
 automaton_len(PyObject* self);
 
 /* add_word */

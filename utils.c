@@ -60,7 +60,7 @@ void initialize_memory_debug(void) {
 }
 #endif
 
-void* memory_alloc(ssize_t size) {
+void* memory_alloc(Py_ssize_t size) {
 #ifdef MEMORY_DEBUG
     if (alloc_num == alloc_fail) {
         if (alloc_trap_on_fail) {
@@ -143,10 +143,10 @@ void memory_safefree(void* ptr) {
 
 /* returns bytes or unicode internal buffer */
 static PyObject*
-pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool* is_copy) {
+pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, Py_ssize_t* wordlen, bool* is_copy) {
 
 #ifdef INPUT_KEEPS_COPY
-    ssize_t i;
+    Py_ssize_t i;
     char* bytes;
 #endif
 
@@ -236,7 +236,7 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen, bool*
 }
 
 static bool
-__read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+__read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, Py_ssize_t* wordlen) {
     Py_ssize_t i;
     Py_ssize_t size = PyTuple_GET_SIZE(obj);
     TRIE_LETTER_TYPE* tmpword;
@@ -279,7 +279,7 @@ __read_sequence__from_tuple(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wor
 
 
 static bool
-pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, ssize_t* wordlen) {
+pymod_get_sequence(PyObject* obj, TRIE_LETTER_TYPE** word, Py_ssize_t* wordlen) {
     if (LIKELY(F(PyTuple_Check)(obj))) {
         return __read_sequence__from_tuple(obj, word, wordlen);
     } else {
@@ -294,8 +294,8 @@ static int
 pymod_parse_start_end(
     PyObject* args,
     int idx_start, int idx_end,
-    const ssize_t min, const ssize_t max,
-    ssize_t* Start, ssize_t* End
+    const Py_ssize_t min, const Py_ssize_t max,
+    Py_ssize_t* Start, Py_ssize_t* End
 ) {
     PyObject* obj;
 #define start (*Start)

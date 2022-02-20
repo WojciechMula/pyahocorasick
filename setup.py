@@ -93,11 +93,12 @@ setup(
 
     description=(
         'pyahocorasick is a fast and memory efficient library for exact or '
-        'approximate multi-pattern string search.  With the ahocorasick.Automaton '
+        'approximate multi-pattern string search.  With the "ahocorasick.Automaton" '
         'class, you can find multiple key strings occurrences at once in some input '
         'text.  You can use it as a plain dict-like Trie or convert a Trie to an '
-        'automaton for efficient Aho-Corasick search.  Implemented in C and tested '
-        'on Python 2.7 and 3.4+.  Works on Linux, Mac and Windows. BSD-3-clause license.'
+        'automaton for efficient Aho-Corasick search.  Pickle to disk for easy '
+        'reuse of large automatons. Implemented in C and tested  on Python 3.6+. '
+        'Works on Linux, macOS and Windows. BSD-3-Cause license.'
     ),
     author='Wojciech Muła',
     author_email='wojciech_mula@poczta.onet.pl',

@@ -12,12 +12,14 @@
 
 **pyahocorasick** is a fast and memory efficient library for exact or approximate
 multi-pattern string search meaning that you can find multiple key strings
-occurrences at once in some input text.  The library provides an `ahocorasick` Python
-module that you can use as a plain dict-like Trie or convert a Trie to an automaton
-for efficient Aho-Corasick search.
+occurrences at once in some input text.  The strings "index" can be built ahead
+of time and saved (as a pickle) to disk to re re-sed later.  The library provides
+an `ahocorasick` Python module that you can use as a plain dict-like Trie or
+convert a Trie to an automaton for efficient Aho-Corasick search.
 
-It is implemented in C and tested on Python 2.7 and 3.4+. It works on Linux, Mac and
-Windows.
+It is implemented in C and tested on Python 3.6. It works on Linux, maOS and Windows.
+Older versions until 1.4.2 were tested and weorked on Python 2.7 too.
+
 
 The license_ is BSD-3-clause. Some utilities, such as tests and the pure Python
 automaton are dedicated to the Public Domain.

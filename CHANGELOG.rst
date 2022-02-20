@@ -1,4 +1,10 @@
-1.4.3 (2021-03-27)
+1.4.4 (2022-02-20)
+--------------------------------------------------
+
+- Minor rebuild to ensure Windows wheel documentation is correct ReST.
+
+
+1.4.3 (2022-02-20)
 --------------------------------------------------
 
 - Use cibuildwheel to tests and build wheels on many OSes (with GitHub actions)

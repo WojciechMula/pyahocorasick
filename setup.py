@@ -17,13 +17,9 @@ from sys import version_info as python_version
 
 
 def get_long_description():
-    """
-    Strip the content index from the long description.
-    """
-    import codecs 
-    with codecs.open('README.rst', encoding='UTF-8') as f:
-        readme = [line for line in f if not line.startswith('.. contents::')]
-        return ''.join(readme)
+    import io
+    with io.open('README.rst', encoding='UTF-8') as f:
+        return f.read()
 
 
 if python_version.major not in [2, 3]:
@@ -88,7 +84,7 @@ module = Extension(
 
 setup(
     name='pyahocorasick',
-    version='1.4.4.dev1',
+    version='1.4.4',
     ext_modules=[module],
 
     description=(

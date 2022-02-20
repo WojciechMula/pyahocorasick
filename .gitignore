@@ -20,3 +20,4 @@ dist/
 /pyahocorasick.egg-info/
 /tmp/
 coverage/
+/venv/

@@ -8,6 +8,8 @@ DEPS=*.c \
      setup.py \
      unittests.py
 
+test3: stamp/regression_py3
+
 test: stamp/regression_py2 stamp/regression_py3
 
 stamp/build_py2: $(DEPS)
@@ -61,6 +63,9 @@ valgrind:
 
 pip-release:
 	python setup.py sdist upload
+
+dist:
+	python setup.py sdist
 
 clean:
 	rm -f stamp/*

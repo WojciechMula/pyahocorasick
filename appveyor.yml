@@ -1,28 +1,54 @@
 version: 1.0.{build}
 
 environment:
-  matrix:
-    - PYTHON: "C:\\Python27"
-    - PYTHON: "C:\\Python27-x64"
-    - PYTHON: "C:\\Python36"
-    - PYTHON: "C:\\Python36-x64"
-    - PYTHON: "C:\\Python37"
-    - PYTHON: "C:\\Python37-x64"
-    - PYTHON: "C:\\Python38"
-    - PYTHON: "C:\\Python38-x64"
+
+    # borrowed from https://github.com/giampaolo/psutil
+    matrix:
+        # 32 bits
+        - PYTHON: "C:\\Python36"
+          PYTHON_VERSION: "3.6.x"
+          PYTHON_ARCH: "32"
+        - PYTHON: "C:\\Python37"
+          PYTHON_VERSION: "3.7.x"
+          PYTHON_ARCH: "32"
+        - PYTHON: "C:\\Python38"
+          PYTHON_VERSION: "3.8.x"
+          PYTHON_ARCH: "32"
+        - PYTHON: "C:\\Python39"
+          PYTHON_VERSION: "3.9.x"
+          APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+          PYTHON_ARCH: "32"
+        - PYTHON: "C:\\Python310"
+          PYTHON_VERSION: "3.10.x"
+          APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+          PYTHON_ARCH: "32"
+        # 64 bits
+        - PYTHON: "C:\\Python27-x64"
+          PYTHON_VERSION: "2.7.x"
+          PYTHON_ARCH: "64"
+        - PYTHON: "C:\\Python36-x64"
+          PYTHON_VERSION: "3.6.x"
+          PYTHON_ARCH: "64"
+        - PYTHON: "C:\\Python37-x64"
+          PYTHON_VERSION: "3.7.x"
+          PYTHON_ARCH: "64"
+        - PYTHON: "C:\\Python38-x64"
+          PYTHON_VERSION: "3.8.x"
+          PYTHON_ARCH: "64"
+        - PYTHON: "C:\\Python39-x64"
+          PYTHON_VERSION: "3.9.x"
+          APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+          PYTHON_ARCH: "64"
+        - PYTHON: "C:\\Python310-x64"
+          PYTHON_VERSION: "3.10.x"
+          APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+          PYTHON_ARCH: "64"
 
 install:
-  - cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip wheel"
+    - cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip wheel"
 
 build: off
 
 test_script:
-  - cmd: "%PYTHON%\\python.exe -m pip install ."
-  - cmd: "%PYTHON%\\python.exe setup.py test"
-  - dir
-  - mkdir wheels
-  - cmd: "%PYTHON%\\python.exe -m pip wheel . --wheel-dir=wheels"
-  - dir wheels
-
-artifacts:
-  - path: wheels\*
+    - cmd: "%PYTHON%\\python.exe -m pip install ."
+    - cmd: "%PYTHON%\\python.exe setup.py test"

@@ -2,34 +2,48 @@
                           pyahocorasick
 ========================================================================
 
-.. image:: https://travis-ci.org/WojciechMula/pyahocorasick.svg?branch=master
-    :target: https://travis-ci.org/WojciechMula/pyahocorasick
-    :alt: Linux Master branch tests status
 
-.. image:: https://ci.appveyor.com/api/projects/status/github/WojciechMula/pyahocorasick?branch=master&svg=true
-   :target: https://ci.appveyor.com/project/WojciechMula/pyahocorasick
-   :alt: Windows Master branch tests status
+|build-appveyor| |build-ghactions| |docs|
+
 
 **pyahocorasick** is a fast and memory efficient library for exact or approximate
 multi-pattern string search meaning that you can find multiple key strings
-occurrences at once in some input text.  The library provides an `ahocorasick` Python
-module that you can use as a plain dict-like Trie or convert a Trie to an automaton
-for efficient Aho-Corasick search.
+occurrences at once in some input text.  The strings "index" can be built ahead
+of time and saved (as a pickle) to disk to re re-sed later.  The library provides
+an `ahocorasick` Python module that you can use as a plain dict-like Trie or
+convert a Trie to an automaton for efficient Aho-Corasick search.
 
-It is implemented in C and tested on Python 2.7 and 3.4+. It works on Linux, Mac and
-Windows.
+It is implemented in C and tested on Python 3.6. It works on Linux, maOS and Windows.
+Older versions until 1.4.2 were tested and worked on Python 2.7 too. 1.4.3 and
+later may work on Python 2.7+ but it is no longer tested in Python 2.
 
 The license_ is BSD-3-clause. Some utilities, such as tests and the pure Python
 automaton are dedicated to the Public Domain.
+
+
+Testimonials
+=============
+
+`Many thanks for this package. Wasn't sure where to leave a thank you note but
+this package is absolutely fantastic in our application where we have a library
+of 100k+ CRISPR guides that we have to count in a stream of millions of DNA
+sequencing reads. This package does it faster than the previous C program we
+used for the purpose and helps us stick to just Python code in our pipeline.`
+
+Miika (AstraZeneca Functional Genomics Centre)
+https://github.com/WojciechMula/pyahocorasick/issues/145
 
 
 Download and source code
 ========================
 
 You can fetch **pyahocorasick** from:
-    - GitHub https://github.com/WojciechMula/pyahocorasick/
-    - Pypi https://pypi.python.org/pypi/pyahocorasick/
-    - Conda-Forge https://github.com/conda-forge/pyahocorasick-feedstock/
+
+- GitHub https://github.com/WojciechMula/pyahocorasick/
+- Pypi https://pypi.python.org/pypi/pyahocorasick/
+- Conda-Forge https://github.com/conda-forge/pyahocorasick-feedstock/
+
+The **documentation** is published at https://pyahocorasick.readthedocs.io/
 
 
 Quick start
@@ -311,3 +325,15 @@ for Python you may consider these other libraries:
  * seems unmaintained (last update in 2005).
  * GPL-licensed.
 
+
+.. |build-appveyor| image:: https://ci.appveyor.com/api/projects/status/github/WojciechMula/pyahocorasick?branch=master&svg=true
+   :target: https://ci.appveyor.com/project/WojciechMula/pyahocorasick
+   :alt: Appveyor Windows Master branch tests status
+
+.. |build-ghactions| image:: https://github.com/WojciechMula/pyahocorasick/actions/workflows/test-and-build.yml/badge.svg
+   :target: https://github.com/WojciechMula/pyahocorasick/actions/workflows/test-and-build.yml
+   :alt: GitHub Action build on test -  Master branch status
+
+.. |docs| image:: https://readthedocs.org/projects/pyahocorasick/badge/?version=latest
+   :alt: Documentation Status
+   :target: https://pyahocorasick.readthedocs.io/en/latest/

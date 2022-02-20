@@ -20,3 +20,5 @@ dist/
 /pyahocorasick.egg-info/
 /tmp/
 coverage/
+/venv/
+/.python-version

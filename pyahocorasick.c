@@ -70,21 +70,21 @@ init_function(void) {
 
 #ifdef MEMORY_DEBUG
     PyErr_WarnEx(PyExc_RuntimeWarning,
-                 "This is a developer version of pyahcorosick. "
+                 "This is a developer version of pyahcorasick. "
                  "The module was compiled with flag MEMORY_DEBUG.", 1);
     initialize_memory_debug();
 #endif
 
 #ifdef PYCALLS_INJECT_FAULTS
     PyErr_WarnEx(PyExc_RuntimeWarning,
-                 "This is a developer version of pyahcorosick. "
+                 "This is a developer version of pyahcorasick. "
                  "The module was compiled with flag PYCALLS_INJECT_FAULTS.", 1);
     initialize_pycallfault();
 #endif
 
 #if DEBUG_LAYOUT
     PyErr_WarnEx(PyExc_RuntimeWarning,
-                 "This is a developer version of pyahcorosick. "
+                 "This is a developer version of pyahcorasick. "
                  "The module was compiled with flag DEBUG_LAYOUT.", 1);
     trienode_dump_layout();
 #endif

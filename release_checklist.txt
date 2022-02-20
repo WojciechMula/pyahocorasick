@@ -1,5 +1,16 @@
+Use this checklist to track the thing to check before a release.
+
+1. Push a branch with all the code ready for release. Check that the
+   the automated teats and build did run OK on all the OS/Python combos
+   supported by the various CI (Appveyor, Travis and Github Actions).
+
+2. Run these extra tests on Linux.
+   You will need valgring and gcovr installed first.
+
+
 action                       python2    python3
 --------------------------------------------------
+make test                      [ ]        [ ]
 ./runtest.sh unit              [ ]        [ ]
 ./runtest.sh unpickle          [ ]        [ ]
 ./runtest.sh valgrind          [ ]        [ ]
@@ -7,3 +18,7 @@ action                       python2    python3
 ./runtest.sh reallocfaults     [ ]        [ ]
 ./runtest.sh pycallfaults      [ ]        [ ]
 ./runtest.sh coverage          [ ]        [ ]
+
+
+Once you ran the coverage, copy and commit the coverage/ report to 
+etc/coverage

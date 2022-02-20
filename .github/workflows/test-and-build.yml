@@ -1,0 +1,70 @@
+name: Run tests and build wheel and sdist on all supported OS and Python
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+    build_wheels_on_posix:
+        name: Build wheels on ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [ubuntu-20.04, macos-10.15]
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Build wheels and run tests
+              uses: pypa/cibuildwheel@v2.3.1
+              env:
+                  # Skip PyPy wheels
+                  CIBW_SKIP: "pp*"
+                  CIBW_TEST_COMMAND: "make -C {project} test3"
+
+            - name: Collect built wheels
+              uses: actions/upload-artifact@v2
+              with:
+                  path: ./wheelhouse/*.whl
+
+
+    build_wheels_on_windows:
+        name: Build wheels on ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [windows-2019]
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Build wheels and run tests
+              uses: pypa/cibuildwheel@v2.3.1
+              env:
+                  # Skip PyPy wheels
+                  CIBW_SKIP: "pp*"
+
+            - name: Collect built wheels
+              uses: actions/upload-artifact@v2
+              with:
+                  path: ./wheelhouse/*.whl
+
+
+    build_sdist:
+      name: Build source distribution
+      runs-on: ubuntu-20.04
+
+      steps:
+          - uses: actions/checkout@v2
+
+          - name: Checkout and install reqs
+            run: |
+                pip install --upgrade --user build twine pip setuptools
+
+          - name: Build sdist
+            run: |
+                python setup.py sdist
+                twine check dist/*
+
+          - name: Collect built sdist
+            uses: actions/upload-artifact@v2
+            with:
+                path: dist/*.tar.gz

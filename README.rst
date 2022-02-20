@@ -21,6 +21,19 @@ The license_ is BSD-3-clause. Some utilities, such as tests and the pure Python
 automaton are dedicated to the Public Domain.
 
 
+Testimonials
+=============
+
+`Many thanks for this package. Wasn't sure where to leave a thank you note but
+this package is absolutely fantastic in our application where we have a library
+of 100k+ CRISPR guides that we have to count in a stream of millions of DNA
+sequencing reads. This package does it faster than the previous C program we
+used for the purpose and helps us stick to just Python code in our pipeline.`
+
+Miika (AstraZeneca Functional Genomics Centre)
+https://github.com/WojciechMula/pyahocorasick/issues/145
+
+
 Download and source code
 ========================
 

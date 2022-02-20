@@ -22,3 +22,13 @@ make test                      [ ]        [ ]
 
 Once you ran the coverage, copy and commit the coverage/ report to 
 etc/coverage
+
+
+3. marge and tag the release w=once everything is a-OK
+
+4. Finally: 
+
+- collect the built wheels and sdist from the CI run for the tag run (artifact.zip)
+- extract the zip
+- run a clamscan and a twine check on these
+- publish on PyPI with twine.

@@ -1,11 +1,18 @@
-1.4.0 (2020-01-26)
+1.4.2 (2021-03-27)
 --------------------------------------------------
 
 - Add method ``iter_long``, that performs the modified
   Aho-Corasick search procedure matching the longest
   words from set.
 
-1.4.0 (2019-01-24)
+1.4.1 (2020-01-26)
+--------------------------------------------------
+
+- Add method ``iter_long``, that performs the modified
+  Aho-Corasick search procedure matching the longest
+  words from set.
+
+1.4.0 (2019-01-14)
 --------------------------------------------------
 
 - Change internal trie representation thanks to that performance

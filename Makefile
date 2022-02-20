@@ -62,6 +62,9 @@ valgrind:
 pip-release:
 	python setup.py sdist upload
 
+dist:
+	python setup.py sdist
+
 clean:
 	rm -f stamp/*
 	rm -rf dist build

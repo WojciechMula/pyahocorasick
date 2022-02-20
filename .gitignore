@@ -21,3 +21,4 @@ dist/
 /tmp/
 coverage/
 /venv/
+/.python-version

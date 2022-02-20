@@ -13,7 +13,9 @@ of time and saved (as a pickle) to disk to re re-sed later.  The library provide
 an `ahocorasick` Python module that you can use as a plain dict-like Trie or
 convert a Trie to an automaton for efficient Aho-Corasick search.
 
-It is implemented in C and tested on Python 3.6. It works on Linux, maOS and Windows.
+**pyahocorasick** is implemented in C and tested on Python 3.6 and up.
+It works on Linux, maOS and Windows.
+
 Older versions until 1.4.2 were tested and worked on Python 2.7 too. 1.4.3 and
 later may work on Python 2.7+ but it is no longer tested in Python 2.
 

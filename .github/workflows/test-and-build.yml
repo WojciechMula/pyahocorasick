@@ -18,7 +18,7 @@ jobs:
               env:
                   # Skip PyPy wheels
                   CIBW_SKIP: "pp*"
-                  CIBW_TEST_COMMAND: make -C {project} test3
+                  CIBW_TEST_COMMAND: "make -C {project} test3"
 
             - name: Collect built wheels
               uses: actions/upload-artifact@v2
@@ -41,7 +41,7 @@ jobs:
               env:
                   # Skip PyPy wheels
                   CIBW_SKIP: "pp*"
-                  CIBW_TEST_COMMAND: "python.exe {project}\setup.py test"
+                  CIBW_TEST_COMMAND: "python.exe {project}/setup.py test"
 
             - name: Collect built wheels
               uses: actions/upload-artifact@v2

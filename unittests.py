@@ -12,6 +12,7 @@
 import sys
 import os
 import unittest
+import tempfile
 import ahocorasick
 
 try:
@@ -1432,7 +1433,7 @@ class TestLoadSave(TestAutomatonBase):
         if os.path.isdir("/dev/shm"):
             tmp = "/dev/shm"
         else:
-            tmp = "/tmp"
+            tmp = tempfile.gettempdir()
 
         self.path = conv(os.path.join(tmp, "test.dat"))
 

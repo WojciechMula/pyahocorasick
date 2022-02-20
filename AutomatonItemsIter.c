@@ -26,7 +26,7 @@ static PyObject*
 automaton_items_iter_new(
     Automaton* automaton,
     const TRIE_LETTER_TYPE* word,
-    const ssize_t wordlen,
+    const Py_ssize_t wordlen,
 
     const bool use_wildcard,
     const TRIE_LETTER_TYPE wildcard,

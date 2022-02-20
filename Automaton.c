@@ -190,7 +190,7 @@ automaton_del(PyObject* self) {
 }
 
 
-static ssize_t
+static Py_ssize_t
 automaton_len(PyObject* self) {
 #define automaton ((Automaton*)self)
     return automaton->count;
@@ -654,12 +654,12 @@ automaton_find_all(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
     struct Input input;
-    ssize_t start;
-    ssize_t end;
+    Py_ssize_t start;
+    Py_ssize_t end;
     PyObject* callback;
     PyObject* callback_ret;
 
-    ssize_t i;
+    Py_ssize_t i;
     TrieNode* state;
     TrieNode* tmp;
 
@@ -726,7 +726,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
     PyObject* arg3 = NULL;
     TRIE_LETTER_TYPE* word = NULL;
     TRIE_LETTER_TYPE* tmp = NULL;
-    ssize_t wordlen = 0;
+    Py_ssize_t wordlen = 0;
 
     TRIE_LETTER_TYPE wildcard;
     bool use_wildcard = false;
@@ -761,7 +761,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
         arg2 = NULL;
 
     if (arg2) {
-        ssize_t len = 0;
+        Py_ssize_t len = 0;
 
         arg2 = pymod_get_string(arg2, &tmp, &len, &tmp_is_copy);
         if (arg2 == NULL) {
@@ -878,8 +878,8 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
     static char *kwlist[] = {"string", "start", "end", "ignore_white_space", NULL};
 
     PyObject* object;
-    ssize_t start, start_tmp = -1;
-    ssize_t end, end_tmp = -1;
+    Py_ssize_t start, start_tmp = -1;
+    Py_ssize_t end, end_tmp = -1;
     int ignore_white_space_tmp = -1;
     bool ignore_white_space = false;
 
@@ -971,8 +971,8 @@ automaton_iter_long(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
 	PyObject* object;
-	ssize_t start;
-	ssize_t end;
+	Py_ssize_t start;
+	Py_ssize_t end;
 
 	if (automaton->kind != AHOCORASICK) {
 		PyErr_SetString(PyExc_AttributeError, "not an automaton yet; add some words and call make_automaton");

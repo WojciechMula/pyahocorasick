@@ -176,8 +176,8 @@ pyahocorasick is available in two flavors:
 * a CPython **C-based extension**, compatible with Python 2 and 3.
 
 * a simpler pure Python module, compatible with Python 2 and 3. This is only
-  available in the source repository (not on Pypi) under the py/ directory and
-  has a slightly different API.
+  available in the source repository (not on Pypi) under the etc/py/ directory
+  and has a slightly different API.
 
 
 Unicode and bytes
@@ -197,7 +197,7 @@ On Python 3, unicode is the default. On Python 2, bytes is the default and only 
     store 2 or 4 bytes per letter, depending on your Python installation. When built
     for bytes, only one byte per letter is needed.
 
-    Unicode is **NOT supported** on Python 2 for now.
+    Unicode is **NOT supported** on Python 2.
 
 
 Build and install from PyPi

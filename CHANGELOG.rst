@@ -6,6 +6,8 @@ Changelog
 --------------------------------------------------
 
 - Minor rebuild to build better, more compatible Linux wheels.
+- reorganize code such that sources are under src/, utilities under etc/
+  and tests are under tests/
 
 
 1.4.4 (2022-02-20)

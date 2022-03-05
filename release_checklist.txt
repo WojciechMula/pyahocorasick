@@ -11,6 +11,8 @@ Use this checklist to track the things to check before a release.
 action                       python3
 ---------------------------------------
 make test                      [ ]
+pip install pytest             [ ]
+pytest -vvs                    [ ]
 ./runtest.sh unit              [ ]
 ./runtest.sh unpickle          [ ]
 ./runtest.sh valgrind          [ ]

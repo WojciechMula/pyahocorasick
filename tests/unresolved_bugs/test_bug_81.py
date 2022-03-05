@@ -8,15 +8,16 @@
 """
 
 import os
-import sys
+from unittest import expectedFailure
+from unittest.case import TestCase
 
 import ahocorasick
 
-
 try:
-    range = xrange # for Py2
+    range = xrange  # for Py2
 except NameError:
     pass
+
 
 def get_memory_usage():
     # Linux only
@@ -35,8 +36,9 @@ def get_memory_usage():
 
     return 0
 
-def test():
-    with open('README.rst', 'r') as f:
+
+def use_memory():
+    with open('README.rst') as f:
         data = f.read().split()
 
     ac = ahocorasick.Automaton()
@@ -49,12 +51,18 @@ def test():
         s = list(ac.keys())
 
 
+@expectedFailure
+class TestMemory(TestCase):
+
+    def test_does_not_leak_memory(self):
+        before = get_memory_usage()
+        use_memory()
+        after = get_memory_usage()
+    
+        msg = ("Memory's usage growth: %s (before = %s, after = %s)" % (after - before, before, after))
+        assert before == after
+
+
 if __name__ == '__main__':
 
-    before = get_memory_usage()
-    test()
-    after = get_memory_usage()
-
-    print("Memory's usage growth: %s (before = %s, after = %s)" % (after - before, before, after))
-    assert(before == after)
-
+    test_does_leak_memory()

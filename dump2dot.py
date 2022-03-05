@@ -9,7 +9,7 @@
 import ahocorasick
 import os
 
-from ahocorasick import EMPTY, TRIE, AHOCORASICK;
+from ahocorasick import EMPTY, TRIE
 
 
 def dump2dot(automaton, file):

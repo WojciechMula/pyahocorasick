@@ -1,10 +1,4 @@
-import sys
-import os
 import random
-import gzip
-import pickle
-import optparse
-import time
 
 from optparse import OptionParser
 
@@ -27,14 +21,14 @@ class TestApplication(object):
     def run(self):
         n = self.options.words
 
-        for i in range(n):
+        for _i in range(n):
             print(self.generate_random_word())
 
 
     def generate_random_word(self):
         n = random.randint(1, self.options.maxlength + 1)
         s = ''
-        for i in range(n):
+        for _i in range(n):
             s += random.choice(chars)
 
         return s
@@ -63,7 +57,7 @@ def parse_args():
         help="maximum count of characters in a word"
     )
 
-    (options, rest) = parser.parse_args()
+    (options, _rest) = parser.parse_args()
 
     return options
 

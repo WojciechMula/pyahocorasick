@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 import os
 import textwrap
 import xml.etree.ElementTree as ET

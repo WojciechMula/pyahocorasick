@@ -1,9 +1,5 @@
-import sys
-import os
 import random
 import gzip
-import pickle
-import optparse
 
 import ahocorasick
 

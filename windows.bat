@@ -20,24 +20,24 @@ IF NOT EXIST stamp\unittests_pyW (
     type nul > stamp\unittests_pyW
 ) ELSE echo unittests were run
 
-IF NOT EXIST stamp\regression_pyW (
-	python regression/test_issue_5.py
+IF NOT EXIST stamp\tests_pyW (
+	python tests/test_issue_5.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/test_issue_8.py
+	python tests/test_issue_8.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/test_issue_9.py
+	python tests/test_issue_9.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/test_issue_10.py
+	python tests/test_issue_10.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/test_issue_26.py
+	python tests/test_issue_26.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/test_issue_56.py
+	python tests/test_issue_56.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-    type nul > stamp\regression_pyW
-) ELSE echo regression tests were run
+    type nul > stamp\tests_pyW
+) ELSE echo tests tests were run

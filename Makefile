@@ -21,12 +21,12 @@ stamp/unittests_py2: stamp/build_py2
 	touch $@
 
 stamp/regression_py2: stamp/unittests_py2 
-	python2 regression/test_issue_5.py
-	python2 regression/test_issue_8.py
-	python2 regression/test_issue_9.py
-	python2 regression/test_issue_10.py
-	python2 regression/test_issue_26.py
-	python2 regression/test_issue_56.py
+	python2 tests/test_issue_5.py
+	python2 tests/test_issue_8.py
+	python2 tests/test_issue_9.py
+	python2 tests/test_issue_10.py
+	python2 tests/test_issue_26.py
+	python2 tests/test_issue_56.py
 	touch $@
 
 
@@ -39,12 +39,12 @@ stamp/unittests_py3: stamp/build_py3
 	touch $@
 
 stamp/regression_py3: stamp/unittests_py3
-	python3 regression/test_issue_5.py
-	python3 regression/test_issue_8.py
-	python3 regression/test_issue_9.py
-	python3 regression/test_issue_10.py
-	python3 regression/test_issue_26.py
-	python3 regression/test_issue_56.py
+	python3 tests/test_issue_5.py
+	python3 tests/test_issue_8.py
+	python3 tests/test_issue_9.py
+	python3 tests/test_issue_10.py
+	python3 tests/test_issue_26.py
+	python3 tests/test_issue_56.py
 	touch $@
 
 

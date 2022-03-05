@@ -4,7 +4,7 @@ graft docs
 graft msinttypes
 graft py
 graft docs
-graft regression
+graft tests
 graft src
 graft stamp
 graft unresolved_bugs

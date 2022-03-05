@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-	Aho-Corasick string search algorithm.
+    Aho-Corasick string search algorithm.
 
-	Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
-	WWW       : http://0x80.pl
-	License   : public domain
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
 """
 
 import ahocorasick
@@ -23,20 +23,20 @@ words = b"he e hers his she hi him man he"
 if not is_python_2():
     words = words.decode('utf8')
 for i,w in enumerate(words.split()):
-	a.add_word(w, (i, w))
+    a.add_word(w, (i, w))
 
 #print(len(a), len(set(words)))
 #print(a.get(b"hea", 1))
 
 """
 for w in a.keys():
-	print(w)
+    print(w)
 
 for w in a.values():
-	print(w)
+    print(w)
 
 for w in a.items():
-	print(w)
+    print(w)
 """
 
 s = b"he rshershidamanza "
@@ -45,11 +45,11 @@ if not is_python_2():
 
 a.make_automaton()
 for item in a.iter(s, 2, 8):
-	print(item)
+    print(item)
 
 print("==")
 
 def callback(index, item):
-	print(index, item)
+    print(index, item)
 
 a.find_all(s, callback, 2, 11)

@@ -1,6 +1,9 @@
-from time import clock
 from random import choice, randint, seed
 from sys import stdout
+try:
+    from time import clock
+except ImportError:
+    from time import perf_counter as clock
 
 import ahocorasick
 

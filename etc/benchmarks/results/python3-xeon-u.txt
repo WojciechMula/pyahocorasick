@@ -1,0 +1,8 @@
+CPU: Intel(R) Xeon(R) CPU E3-1505M v6 @ 3.00GHz
+Python 3.9.10 64 bit
+
+Generating data (1000000 words)         : 17.722 s
+Add words                               : 1.040 s
+Building automaton                      : 6.015 s
+Look up                                 : 1.307 s
+Search                                  : 0.279 s

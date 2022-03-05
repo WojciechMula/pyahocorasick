@@ -48,8 +48,8 @@ stamp/regression_py3: stamp/unittests_py3
 	touch $@
 
 
-benchmark: benchmarks/benchmark.py stamp/build_py2
-	python2 $^
+benchmark: etc/benchmarks/benchmark.py stamp/build_py3
+	python3 $^
 
 devbuild2:
 	python2 setup.py build_ext --inplace

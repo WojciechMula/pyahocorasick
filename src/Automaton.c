@@ -11,8 +11,8 @@
 
 #include "Automaton.h"
 #include "slist.h"
-#include "src/inline_doc.h"
-#include "src/custompickle/save/automaton_save.h"
+#include "inline_doc.h"
+#include "custompickle/save/automaton_save.h"
 
 static PyTypeObject automaton_type;
 

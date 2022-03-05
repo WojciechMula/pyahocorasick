@@ -3,10 +3,10 @@
 
 export PYTHONPATH := .:$(PYTHONPATH):$(PATH)
 
-DEPS=*.c \
-     *.h \
+DEPS=src/*.c \
+     src/*.h \
      setup.py \
-     test_unit.py
+     tests/test_unit.py
 
 test3: stamp/regression_py3
 
@@ -17,7 +17,7 @@ stamp/build_py2: $(DEPS)
 	touch $@
 
 stamp/unittests_py2: stamp/build_py2
-	python2 test_unit.py
+	python2 tests/test_unit.py
 	touch $@
 
 stamp/regression_py2: stamp/unittests_py2 
@@ -35,7 +35,7 @@ stamp/build_py3: $(DEPS)
 	touch $@
 
 stamp/unittests_py3: stamp/build_py3
-	python3 test_unit.py
+	python3 tests/test_unit.py
 	touch $@
 
 stamp/regression_py3: stamp/unittests_py3
@@ -59,7 +59,7 @@ devbuild3:
 
 valgrind:
 	python -c "import sys;print(sys.version)"
-	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log python unittests.py
+	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log python tests/test_unit.py
 
 pip-release:
 	python setup.py sdist upload

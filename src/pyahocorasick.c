@@ -18,8 +18,8 @@
 #include "AutomatonSearchIter.h"
 #include "AutomatonSearchIterLong.h"
 #include "AutomatonItemsIter.h"
-#include "src/inline_doc.h"
-#include "src/custompickle/load/module_automaton_load.h"
+#include "inline_doc.h"
+#include "custompickle/load/module_automaton_load.h"
 
 /* code */
 #include "utils.c"
@@ -31,7 +31,7 @@
 #include "AutomatonSearchIter.c"
 #include "AutomatonSearchIterLong.c"
 #ifdef PYCALLS_INJECT_FAULTS
-#include "src/pycallfault/pycallfault.c"
+#include "pycallfault/pycallfault.c"
 #endif
 #include "allsources.c"
 

@@ -46,7 +46,7 @@ Unpickling (automaton_unpickle, called in Automaton constructor)
 
 
 #include <string.h>
-#include "src/pickle/pickle_data.c"
+#include "pickle/pickle_data.c"
 
 typedef struct NodeID {
     TrieNode* fail;         ///< original fail value

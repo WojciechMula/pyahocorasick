@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../trienode.h"
+#include "../trienode.h"
 
 // We save all TrieNode's fields except the last one, which is a pointer to array,
 // as we're store that array just after the node

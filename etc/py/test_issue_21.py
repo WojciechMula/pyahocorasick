@@ -30,7 +30,7 @@ test_cases = [
 ]
 
 
-def test(case):
+def check_automaton(case):
 
     tree = pyahocorasick.Trie()
     for word in case['words']:
@@ -47,8 +47,12 @@ def test(case):
         assert(False)
 
 
-if __name__ == '__main__':
+def test_pure_python():
     for data in test_cases:
-        test(data)
+        check_automaton(data)
 
     print("OK")
+
+
+if __name__ == '__main__':
+    test_pure_python()

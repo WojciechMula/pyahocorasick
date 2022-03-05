@@ -5,27 +5,26 @@ Use this checklist to track the things to check before a release.
    supported by the various CI (Appveyor, Travis and Github Actions).
 
 2. Run these extra tests on Linux.
-   You will need valgring and gcovr installed first.
+   You will need valgrind and gcovr installed first.
 
 
 action                       python3
 ---------------------------------------
-make test                      [ ]
-pip install pytest             [ ]
-pytest -vvs                    [ ]
-./runtest.sh unit              [ ]
-./runtest.sh unpickle          [ ]
-./runtest.sh valgrind          [ ]
-./runtest.sh mallocfaults      [ ]
-./runtest.sh reallocfaults     [ ]
-./runtest.sh pycallfaults      [ ]
-./runtest.sh coverage          [ ]
+make test                           [ ]
+pip install pytest && pytest -vvs   [ ]
+./runtest.sh unit                   [ ]
+./runtest.sh unpickle               [ ]
+./runtest.sh valgrind               [ ]
+./runtest.sh mallocfaults           [ ]
+./runtest.sh reallocfaults          [ ]
+./runtest.sh pycallfaults           [ ]
+./runtest.sh coverage               [ ]
 
 
 Once you ran the coverage, copy and commit the coverage/report to etc/coverage
 
 
-3. marge and tag the release once everything is a-OK
+3. marge and tag the release once everything is A-OK
 
 4. Finally: 
 

@@ -6,7 +6,7 @@ export PYTHONPATH := .:$(PYTHONPATH):$(PATH)
 DEPS=*.c \
      *.h \
      setup.py \
-     unittests.py
+     test_unit.py
 
 test3: stamp/regression_py3
 
@@ -17,16 +17,16 @@ stamp/build_py2: $(DEPS)
 	touch $@
 
 stamp/unittests_py2: stamp/build_py2
-	python2 unittests.py
+	python2 test_unit.py
 	touch $@
 
 stamp/regression_py2: stamp/unittests_py2 
-	python2 regression/issue_5.py
-	python2 regression/issue_8.py
-	python2 regression/issue_9.py
-	python2 regression/issue_10.py
-	python2 regression/issue_26.py
-	python2 regression/issue_56.py
+	python2 regression/test_issue_5.py
+	python2 regression/test_issue_8.py
+	python2 regression/test_issue_9.py
+	python2 regression/test_issue_10.py
+	python2 regression/test_issue_26.py
+	python2 regression/test_issue_56.py
 	touch $@
 
 
@@ -35,16 +35,16 @@ stamp/build_py3: $(DEPS)
 	touch $@
 
 stamp/unittests_py3: stamp/build_py3
-	python3 unittests.py
+	python3 test_unit.py
 	touch $@
 
 stamp/regression_py3: stamp/unittests_py3
-	python3 regression/issue_5.py
-	python3 regression/issue_8.py
-	python3 regression/issue_9.py
-	python3 regression/issue_10.py
-	python3 regression/issue_26.py
-	python3 regression/issue_56.py
+	python3 regression/test_issue_5.py
+	python3 regression/test_issue_8.py
+	python3 regression/test_issue_9.py
+	python3 regression/test_issue_10.py
+	python3 regression/test_issue_26.py
+	python3 regression/test_issue_56.py
 	touch $@
 
 

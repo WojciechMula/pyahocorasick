@@ -15,28 +15,28 @@ IF NOT EXIST stamp\build_pyW (
 ) ELSE echo the extension was built
 
 IF NOT EXIST stamp\unittests_pyW (
-    python unittests.py
+    python test_unit.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
     type nul > stamp\unittests_pyW
 ) ELSE echo unittests were run
 
 IF NOT EXIST stamp\regression_pyW (
-	python regression/issue_5.py
+	python regression/test_issue_5.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/issue_8.py
+	python regression/test_issue_8.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/issue_9.py
+	python regression/test_issue_9.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/issue_10.py
+	python regression/test_issue_10.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/issue_26.py
+	python regression/test_issue_26.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
-	python regression/issue_56.py
+	python regression/test_issue_56.py
     IF %ERRORLEVEL% NEQ 0 EXIT /B
 
     type nul > stamp\regression_pyW

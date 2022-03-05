@@ -22,3 +22,4 @@ dist/
 coverage/
 /venv/
 /.python-version
+/automaton-wee.pickle

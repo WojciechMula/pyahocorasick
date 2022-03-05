@@ -300,7 +300,7 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
         bytes = PyList_GET_ITEM(bytes_list, k);
         if (UNLIKELY(!F(PyBytes_CheckExact)(bytes))) {
             PyErr_Format(PyExc_ValueError,
-                         "Item #%d on the bytes list is not a bytes object",
+                         "Item #%lu on the bytes list is not a bytes object",
                          k);
             return false;
         }
@@ -310,7 +310,7 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
         nodes_count = *((Py_ssize_t*)data);
         if (UNLIKELY(nodes_count <= 0)) {
             PyErr_Format(PyExc_ValueError,
-                         "Nodes count for item #%d on the bytes list is not positive (%d)",
+                         "Nodes count for item #%lu on the bytes list is not positive (%lu)",
                          k, nodes_count);
             return false;
         }
@@ -339,13 +339,13 @@ automaton_unpickle(
     Py_ssize_t nodes_count;
     Py_ssize_t i;
 
-    size_t id;
+    unsigned id;
     const uint8_t* data;
     const uint8_t* ptr;
     const uint8_t* end;
-    size_t k;
+    unsigned k;
     size_t j;
-    size_t object_idx = 0;
+    unsigned object_idx = 0;
     size_t index;
     size_t count;
 
@@ -371,8 +371,7 @@ automaton_unpickle(
         for (i=0; i < nodes_count; i++) {
             if (UNLIKELY(ptr + PICKLE_TRIENODE_SIZE > end)) {
                 PyErr_Format(PyExc_ValueError,
-                             "Data truncated [parsing header of node #%d]: "
-                             "chunk #%d @ offset %lu, expected at least %lu bytes",
+                             "Data truncated [parsing header of node #%li]: chunk #%di @ offset %ld, expected at least %lu bytes",
                              i, k, ptr - data, PICKLE_TRIENODE_SIZE);
                 goto exception;
             }
@@ -396,7 +395,7 @@ automaton_unpickle(
             if (node->n > 0) {
                 if (UNLIKELY(ptr + node->n * sizeof(Pair) > end)) {
                     PyErr_Format(PyExc_ValueError,
-                                "Data truncated [parsing children of node #%d]: "
+                                "Data truncated [parsing children of node #%lu]: "
                                 "chunk #%d @ offset %lu, expected at least %ld bytes",
                                  i, k, ptr - data + i, node->n * sizeof(Pair));
 

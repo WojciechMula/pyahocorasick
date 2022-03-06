@@ -71,7 +71,8 @@ jobs:
                   CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
                   CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
                   CIBW_ARCHS: ${{ matrix.arch }}
-                  CIBW_TEST_COMMAND: "make -C {project} test3"
+                  CIBW_TEST_REQUIRES: pytest
+                  CIBW_TEST_COMMAND: pytest {project}/tests
                   # Skip PyPy wheels
                   CIBW_SKIP: "pp*"
 
@@ -123,4 +124,8 @@ jobs:
             - uses: actions/checkout@v2
 
             - name: Build, install and test
-              run: make
+              run: >
+                  pip install --upgrade pytest setuptools &&
+                  pip install . &&
+                  pytest -vvs tests/ etc/
+

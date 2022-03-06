@@ -11,19 +11,19 @@ def main():
 
 chars = 'abcdefghijklmnopqestuvwxyzABCDEFGHIJKLMNOPQESTUVWXYZ0123456789.,;:-'
 
+
 class TestApplication(object):
+
     def __init__(self, options):
         self.options = options
 
         random.seed(options.seed)
 
-
     def run(self):
         n = self.options.words
 
         for _i in range(n):
-            print(self.generate_random_word())
-
+            self.generate_random_word()
 
     def generate_random_word(self):
         n = random.randint(1, self.options.maxlength + 1)

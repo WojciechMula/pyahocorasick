@@ -32,7 +32,8 @@ test_sentences_pl = [
     "waży"
 ]
 
-def create_sutomata_rus():
+
+def test_create_automata_rus_does_not_crash():
     A = ahocorasick.Automaton()
     for sentences in test_sentences_rus[-7:]:
         for index, word in enumerate(sentences.split(' ')):
@@ -41,15 +42,14 @@ def create_sutomata_rus():
     A.make_automaton()
 
 
-def create_and_iter_sutomata_pl():
+def test_create_and_iter_automata_pl_works():
     A = ahocorasick.Automaton()
     for index, word in enumerate(test_sentences_pl):
         A.add_word(word, (index, word))
 
     A.make_automaton()
+    results = []
     for item in A.iter("wyważyć"):
-        print(item)
+        results.append(item)
+    assert results == [(4, (3, 'aż')), (5, (4, 'waży'))]
 
-if __name__ == '__main__':
-    create_sutomata_rus()
-    create_and_iter_sutomata_pl()

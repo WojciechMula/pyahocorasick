@@ -9,17 +9,20 @@
 
 import os
 import sys
+import unittest
+from pathlib import Path
 
 import ahocorasick
 
-ac = ahocorasick.Automaton()
-ac.add_word('SSSSS', 1)
-ac.make_automaton()
+on_linux = str(sys.platform).lower().startswith('linux')
 
-try:
-    range = xrange # for Py2
-except NameError:
-    pass
+
+def build_automaton():
+    ac = ahocorasick.Automaton()
+    ac.add_word('SSSSS', 1)
+    ac.make_automaton()
+    return ac
+
 
 def get_memory_usage():
     # Linux only
@@ -38,20 +41,23 @@ def get_memory_usage():
 
     return 0
 
-def test():
-    with open('README.rst', 'r') as f:
-        data = f.read()[:1024 * 2]
 
-    for loop in range(1000):
-        for start in range(0, len(data) - 20):
-            ac.iter(data, start)
+@unittest.skipIf(not on_linux, "Works only on linux")
+class MemoryUsageDoesNotGrow(unittest.TestCase):
 
+    def test_memory_usage_does_not_grow(self):
 
-if __name__ == '__main__':
+        ac = build_automaton()
 
-    before = get_memory_usage()
-    test()
-    after = get_memory_usage()
+        here = Path(__file__).parent
+        with open(here.parent / 'README.rst') as f:
+            data = f.read()[:1024 * 2]
 
-    print("Memory's usage growth: %s (before = %s, after = %s)" % (after - before, before, after))
-    assert(before == after)
+        before = get_memory_usage()
+
+        for _ in range(1000):
+            for start in range(0, len(data) - 20):
+                ac.iter(data, start)
+
+        after = get_memory_usage()
+        assert before == after

@@ -1,41 +1,35 @@
 import ahocorasick
 
 
-
-
-def iter_results(s):
+def iter_results(teststr, automaton):
     r = []
-    for x in A.iter(teststr):
+    for x in automaton.iter(teststr):
         r.append(x)
 
     return r
 
 
-def find_all_results(s):
-
+def find_all_results(teststr, automaton):
     r = []
-    
-    def append(x, s):
-        r.append((x, s))
 
-    A.find_all(s, append)
+    def append(x, teststr):
+        r.append((x, teststr))
 
+    automaton.find_all(teststr, append)
     return r
 
 
-A = ahocorasick.Automaton()
+def test_issue56():
+    automaton = ahocorasick.Automaton()
 
-for word in ("poke", "go", "pokegois", "egoist"):
-    A.add_word(word, word)
+    for word in ("poke", "go", "pokegois", "egoist"):
+        automaton.add_word(word, word)
 
-A.make_automaton()
+    automaton.make_automaton()
 
-teststr = 'pokego pokego  pokegoist'
-expected = iter_results(teststr)
-findall  = find_all_results(teststr)
+    teststr = 'pokego pokego  pokegoist'
+    expected = iter_results(teststr, automaton)
+    findall = find_all_results(teststr, automaton)
 
-if findall != expected:
-    print("expected: %s" % expected)
-    print("findall : %s" % findall)
     assert findall == expected
 

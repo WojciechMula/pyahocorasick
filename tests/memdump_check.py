@@ -1,5 +1,6 @@
 import sys
 
+
 def main():
     try:
         path = sys.argv[1]
@@ -14,10 +15,10 @@ def main():
 
 
 class Application(object):
+
     def __init__(self, path):
         self.path = path
         self.memory = {}
-
 
     def run(self):
         with open(self.path, 'rt') as f:
@@ -27,15 +28,14 @@ class Application(object):
 
         return len(self.memory) == 0
 
-
     def analyze(self, file):
-        self.memory  = {}
+        self.memory = {}
 
         for i, line in enumerate(file):
             fields = line.split()
             action = fields[0]
             if action == 'A':
-                id   = fields[1]
+                id = fields[1]
                 addr = fields[2]
                 size = int(fields[3])
 
@@ -44,10 +44,10 @@ class Application(object):
 
             elif action == 'R':
 
-                id      = fields[1]
+                id = fields[1]
                 oldaddr = fields[2]
                 newaddr = fields[3]
-                size    = int(fields[4])
+                size = int(fields[4])
 
                 try:
                     key = int(oldaddr, 16)
@@ -63,7 +63,6 @@ class Application(object):
                 addr = fields[1]
                 if addr in self.memory:
                     del self.memory[addr]
-
 
     def print_leaks(self):
         n = len(self.memory)

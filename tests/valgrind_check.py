@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 def main():
     app = Application(sys.argv[1], sys.argv[2])
     if app.run():
@@ -10,13 +11,13 @@ def main():
 
 
 class Application(object):
-    def __init__(self, srcdir, path):
-        self.srcdir  = srcdir
-        self.path    = path
-        self.sources = set()
-        self.dump    = 0
 
-    
+    def __init__(self, srcdir, path):
+        self.srcdir = srcdir
+        self.path = path
+        self.sources = set()
+        self.dump = 0
+
     def run(self):
         self.gather_sources()
 
@@ -31,12 +32,10 @@ class Application(object):
                 lines = ', '.join(map(str, leaks[name]))
                 print("- %s: %s" % (name, lines))
 
-
     def gather_sources(self):
         for path in os.listdir(self.srcdir):
             if path.endswith('.c'):
                 self.sources.add(path)
-
 
     def analyze(self, file):
         result = {}
@@ -46,7 +45,7 @@ class Application(object):
                     # by 0xfffff: function (file.c:1234)
                     #                       ^^^^^^
                     index = line.rindex('(') + 1
-                    name  = line[index:]
+                    name = line[index:]
                     if name.startswith('in '):
                         continue
 

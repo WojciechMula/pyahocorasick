@@ -9,26 +9,26 @@
 
 import ahocorasick
 
-ac = ahocorasick.Automaton()
-ac.add_word('S', 1)
-ac.make_automaton()
-buffer = 'SSS'
 
-def case_1():
+def test_issue_10_case_1():
+    ac = ahocorasick.Automaton()
+    ac.add_word('S', 1)
+    ac.make_automaton()
+    buffer = 'SSS'
     count = 0
-    for item in ac.iter(buffer, 0, 3):  # this causes an error
-        print(item)
+    for _item in ac.iter(buffer, 0, 3):  # this causes an error
         count += 1
 
-    assert(count == 3)
+    assert count == 3
 
-def case_2():
+
+def test_issue_10_case_2():
+    ac = ahocorasick.Automaton()
+    ac.add_word('S', 1)
+    ac.make_automaton()
+    buffer = 'SSS'
     count = 0
-    for item in ac.iter(buffer, 0, 2):  # no error, but it misses the last 'S' in the buffer
-        print(item)
+    for _item in ac.iter(buffer, 0, 2):  # no error, but it misses the last 'S' in the buffer
         count += 1
 
-    assert(count == 2)
-
-case_1()
-case_2()
+    assert count == 2

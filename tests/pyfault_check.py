@@ -1,5 +1,6 @@
 import sys
 
+
 def main():
     path = sys.argv[1]
 
@@ -8,6 +9,7 @@ def main():
 
 
 class Application(object):
+
     def __init__(self, path):
         self.path = path
 
@@ -16,12 +18,11 @@ class Application(object):
             lines = [line.rstrip() for line in f if line.rstrip()]
             self.analyze(lines)
 
-
     def analyze(self, lines):
-        error_sep     = '======================================================================'
+        error_sep = '======================================================================'
         traceback_sep = '----------------------------------------------------------------------'
 
-        index  = 0
+        index = 0
         while True:
             try:
                 index = lines.index(error_sep, index)
@@ -32,7 +33,7 @@ class Application(object):
             function = lines[index]
             index += 1
             start = lines.index(traceback_sep, index)
-            end   = lines.index(traceback_sep, start + 1)
+            end = lines.index(traceback_sep, start + 1)
             index = end + 1
 
             error = lines[end - 1]

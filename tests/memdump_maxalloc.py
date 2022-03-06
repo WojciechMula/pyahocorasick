@@ -1,5 +1,6 @@
 import sys
 
+
 def main():
     try:
         path = sys.argv[1]
@@ -11,14 +12,13 @@ def main():
 
 
 class Application(object):
+
     def __init__(self, path):
         self.path = path
-
 
     def run(self):
         with open(self.path, 'rt') as f:
             print(max(self.ids(f)))
-
 
     def ids(self, file):
         for i, line in enumerate(file):

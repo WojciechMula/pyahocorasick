@@ -14,20 +14,20 @@ def main():
 
 chars = 'abcdefghijklmnopqestuvwxyzABCDEFGHIJKLMNOPQESTUVWXYZ0123456789.,;:-'
 
+
 class TestApplication(object):
+
     def __init__(self, options):
         self.options = options
-        self.words   = []
+        self.words = []
 
         random.seed(options.seed)
-
 
     def run(self):
         self.A = ahocorasick.Automaton()
 
         self.add_words()
         self.remove()
-
 
     def add_words(self):
         if self.options.random:
@@ -44,13 +44,11 @@ class TestApplication(object):
         print("- sizeof_node  : %d" % d['sizeof_node'])
         print("- total_size   : %d" % d['total_size'])
 
-
     def remove(self):
         print("Removing %d words" % len(self.words))
         random.shuffle(self.words)
         for word in self.words:
             self.A.remove_word(word)
-
 
         print("Automaton statistics:")
         d = self.A.get_stats()
@@ -71,7 +69,6 @@ class TestApplication(object):
                 n -= 1
                 self.words.append(word)
 
-
     def __add_from_file(self):
         n = self.options.words
 
@@ -83,13 +80,11 @@ class TestApplication(object):
             self.A.add_word(word, True)
             self.words.append(word)
 
-
     def generate_words(self):
         if self.options.random:
             self.__generate_random_words()
         else:
             self.__load_words()
-
 
     def __generate_random_words(self):
         n = self.options.words
@@ -98,7 +93,6 @@ class TestApplication(object):
         while len(self.words) < n:
             word = self.generate_random_word()
             self.words.add(word)
-
 
     def __load_words(self):
         n = self.options.words
@@ -109,12 +103,10 @@ class TestApplication(object):
             else:
                 return
 
-
     def read(self):
         with gzip.open(self.options.file_gz, "rt", encoding="utf-8") as f:
             for line in f:
                 yield line.strip()
-
 
     def generate_random_word(self):
         n = random.randint(1, self.options.maxlength + 1)
@@ -127,14 +119,14 @@ class TestApplication(object):
 
 def format_size(size):
     units = [
-        ('GB', 1024**3),
-        ('MB', 1024**2),
+        ('GB', 1024 ** 3),
+        ('MB', 1024 ** 2),
         ('kB', 1024),
     ]
 
     for suffix, threshold in units:
         if size > threshold:
-            return '%0.2f %s (%d bytes)' % (float(size)/threshold, suffix, size)
+            return '%0.2f %s (%d bytes)' % (float(size) / threshold, suffix, size)
 
     return '%d bytes' % size
 

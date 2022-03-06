@@ -19,9 +19,6 @@ jobs:
                       test: make test
 
                     - os: ubuntu-latest
-                      test: pip install pytest . && pytest -vvs
-
-                    - os: ubuntu-latest
                       test: ./runtest.sh unit
 
                     - os: ubuntu-latest

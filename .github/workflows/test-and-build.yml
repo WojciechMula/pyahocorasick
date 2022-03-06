@@ -72,7 +72,7 @@ jobs:
                   CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
                   CIBW_ARCHS: ${{ matrix.arch }}
                   CIBW_TEST_REQUIRES: pytest
-                  CIBW_TEST_COMMAND: pytest {project}/tests
+                  CIBW_TEST_COMMAND: pytest -vvs {project}/tests
                   # Skip PyPy wheels
                   CIBW_SKIP: "pp*"
 

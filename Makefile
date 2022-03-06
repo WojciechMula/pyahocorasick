@@ -1,72 +1,31 @@
 .SUFFIXES:
-.PHONY: test clean valgrind
-
-export PYTHONPATH := .:$(PYTHONPATH):$(PATH)
+.PHONY: test clean valgrind benchmark
 
 DEPS=src/*.c \
      src/*.h \
      setup.py \
-     tests/test_unit.py
+     tests/*.py
 
-test3: stamp/regression_py3
+test:  $(DEPS) build 
+	venv/bin/pytest -vvs
 
-test: stamp/regression_py2 stamp/regression_py3
+build: $(DEPS) venv/bin/activate
+	venv/bin/pip install -e .[testing]
 
-stamp/build_py2: $(DEPS)
-	python2 setup.py build_ext --inplace
-	touch $@
+venv/virtualenv.pyz:
+	@mkdir -p venv
+	@curl -o venv/virtualenv.pyz https://bootstrap.pypa.io/virtualenv/virtualenv.pyz
 
-stamp/unittests_py2: stamp/build_py2
-	python2 tests/test_unit.py
-	touch $@
+venv/bin/activate: venv/virtualenv.pyz
+	python3 venv/virtualenv.pyz venv
 
-stamp/regression_py2: stamp/unittests_py2 
-	python2 tests/test_issue_5.py
-	python2 tests/test_issue_8.py
-	python2 tests/test_issue_9.py
-	python2 tests/test_issue_10.py
-	python2 tests/test_issue_26.py
-	python2 tests/test_issue_56.py
-	touch $@
-
-
-stamp/build_py3: $(DEPS)
-	python3 setup.py build_ext --inplace
-	touch $@
-
-stamp/unittests_py3: stamp/build_py3
-	python3 tests/test_unit.py
-	touch $@
-
-stamp/regression_py3: stamp/unittests_py3
-	python3 tests/test_issue_5.py
-	python3 tests/test_issue_8.py
-	python3 tests/test_issue_9.py
-	python3 tests/test_issue_10.py
-	python3 tests/test_issue_26.py
-	python3 tests/test_issue_56.py
-	touch $@
-
-
-benchmark: etc/benchmarks/benchmark.py stamp/build_py3
+benchmark: etc/benchmarks/benchmark.py build
 	python3 $^
-
-devbuild2:
-	python2 setup.py build_ext --inplace
-
-devbuild3:
-	python3 setup.py build_ext --inplace
 
 valgrind:
 	python -c "import sys;print(sys.version)"
-	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log python tests/test_unit.py
-
-pip-release:
-	python setup.py sdist upload
-
-dist:
-	python setup.py sdist
+	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log venv/bin/pytest -vvs
 
 clean:
 	rm -f stamp/*
-	rm -rf dist build
+	rm -rf dist build venv

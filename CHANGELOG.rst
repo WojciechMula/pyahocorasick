@@ -2,12 +2,15 @@
 Changelog
 =============
 
-1.4.5 (2022-03-05)
+
+2.0.0 (2022-03-06)
 --------------------------------------------------
 
-- Minor rebuild to build better, more compatible Linux wheels.
-- reorganize code such that sources are under src/, utilities under etc/
+- Drop support for Python 2
+- Reorganize code such that sources are under src/, utilities under etc/
   and tests are under tests/
+- Build better, more compatible Linux wheels.
+- Use pytest for testing and streamline tests to use a more conventional Python approach
 
 
 1.4.4 (2022-02-20)

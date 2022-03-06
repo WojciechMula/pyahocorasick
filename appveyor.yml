@@ -22,10 +22,8 @@ environment:
           PYTHON_VERSION: "3.10.x"
           APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
           PYTHON_ARCH: "32"
+
         # 64 bits
-        - PYTHON: "C:\\Python27-x64"
-          PYTHON_VERSION: "2.7.x"
-          PYTHON_ARCH: "64"
         - PYTHON: "C:\\Python36-x64"
           PYTHON_VERSION: "3.6.x"
           PYTHON_ARCH: "64"
@@ -45,10 +43,9 @@ environment:
           PYTHON_ARCH: "64"
 
 install:
-    - cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip wheel"
+    - cmd: "%PYTHON%\\python.exe -m pip install --upgrade -e .[testing] pip wheel setuptools virtualenv"
 
 build: off
 
 test_script:
-    - cmd: "%PYTHON%\\python.exe -m pip install ."
-    - cmd: "%PYTHON%\\python.exe setup.py test"
+    - cmd: pytest -vvs"

@@ -8,12 +8,8 @@
     License   : BSD-3-Clause (see LICENSE)
 """
 
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup, Extension
-
-from sys import version_info as python_version
+from setuptools import setup
+from setuptools import Extension
 
 
 def get_long_description():
@@ -21,27 +17,15 @@ def get_long_description():
     with io.open('README.rst', encoding='UTF-8') as f:
         return f.read()
 
-
-if python_version.major not in [2, 3]:
-    raise ValueError('Python %s is not supported' % python_version)
-
-
-if python_version.major == 3:
-    macros = [
-        # when defined unicode strings are supported
-        ('AHOCORASICK_UNICODE', ''),
-    ]
-else:
-    # On Python 2, unicode strings are not supported (yet).
-    macros = []
-
-
 module = Extension(
     'ahocorasick',
     sources=[
         'src/pyahocorasick.c',
     ],
-    define_macros=macros,
+    define_macros= [
+        # when defined unicode strings are supported
+        ('AHOCORASICK_UNICODE', ''),
+    ],
     depends=[
         'src/common.h',
         'src/Automaton.c',
@@ -84,7 +68,7 @@ module = Extension(
 
 setup(
     name='pyahocorasick',
-    version='1.4.5',
+    version='2.0.0.beta1',
     ext_modules=[module],
 
     description=(
@@ -115,9 +99,12 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: C',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries',
         'Topic :: Text Editors :: Text Processing',
     ],
+    extras_require={
+        "testing": ["pytest", "twine", "setuptools", "wheel",],
+    },
+    python_requires=">=3.6",
 )

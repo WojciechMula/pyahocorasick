@@ -16,10 +16,7 @@ convert a Trie to an automaton for efficient Aho-Corasick search.
 **pyahocorasick** is implemented in C and tested on Python 3.6 and up.
 It works on Linux, maOS and Windows.
 
-Older versions until 1.4.2 were tested and worked on Python 2.7 too. 1.4.3 and
-later may work on Python 2.7+ but it is no longer tested in Python 2.
-
-The license_ is BSD-3-clause. Some utilities, such as tests and the pure Python
+The license_ is BSD-3-Clause. Some utilities, such as tests and the pure Python
 automaton are dedicated to the Public Domain.
 
 
@@ -59,38 +56,38 @@ CPython extensions. To install::
 Then create an Automaton::
 
     >>> import ahocorasick
-    >>> A = ahocorasick.Automaton()
+    >>> automaton = ahocorasick.Automaton()
 
 You can use the Automaton class as a trie. Add some string keys and their associated
 value to this trie. Here we associate a tuple of (insertion index, original string)
 as a value to each key string we add to the trie::
 
     >>> for idx, key in enumerate('he her hers she'.split()):
-    ...   A.add_word(key, (idx, key))
+    ...   automaton.add_word(key, (idx, key))
 
 Then check if some string exists in the trie::
 
-    >>> 'he' in A
+    >>> 'he' in automaton
     True
-    >>> 'HER' in A
+    >>> 'HER' in automaton
     False
 
 And play with the ``get()`` dict-like method::
 
-    >>> A.get('he')
+    >>> automaton.get('he')
     (0, 'he')
-    >>> A.get('she')
+    >>> automaton.get('she')
     (3, 'she')
-    >>> A.get('cat', 'not exists')
+    >>> automaton.get('cat', 'not exists')
     'not exists'
-    >>> A.get('dog')
+    >>> automaton.get('dog')
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     KeyError
 
 Now convert the trie to an Aho-Corasick automaton to enable Aho-Corasick search::
 
-    >>> A.make_automaton()
+    >>> automaton.make_automaton()
 
 Then search all occurrences of the keys (the needles) in an input string (our haystack).
 
@@ -100,7 +97,7 @@ trie key was found in the input string and the associated `value` for this key. 
 we had stored as values a tuple with the original string and its trie insertion
 order::
 
-    >>> for end_index, (insert_order, original_value) in A.iter(haystack):
+    >>> for end_index, (insert_order, original_value) in automaton.iter(haystack):
     ...     start_index = end_index - len(original_value) + 1
     ...     print((start_index, end_index, (insert_order, original_value)))
     ...     assert haystack[start_index:start_index + len(original_value)] == original_value
@@ -115,15 +112,17 @@ You can also create an eventually large automaton ahead of time and `pickle` it 
 re-load later. Here we just pickle to a string. You would typically pickle to a
 file instead::
 
-    >>> import cPickle
-    >>> pickled = cPickle.dumps(A)
-    >>> B = cPickle.loads(pickled)
+    >>> import pickle
+    >>> pickled = pickle.dumps(automaton)
+    >>> B = pickle.loads(pickled)
     >>> B.get('he')
     (0, 'he')
 
 
 See also:
-    - FAQ and Who is using pyahocorasick? https://github.com/WojciechMula/pyahocorasick/wiki/FAQ#who-is-using-pyahocorasick
+
+* FAQ and Who is using pyahocorasick? 
+  https://github.com/WojciechMula/pyahocorasick/wiki/FAQ#who-is-using-pyahocorasick
 
 
 Documentation
@@ -150,8 +149,9 @@ Because pyahocorasick is based on a Trie, it stores redundant keys prefixes only
 once using memory efficiently.
 
 A drawback is that it needs to be constructed and "finalized" ahead of time
-before you can search strings. In several applications where you search for several
-pre-defined "needles" in a variable "haystacks" this is actually an advantage.
+before you can search strings. In several applications where you search for
+several pre-defined "needles" in a variable "haystacks" this is actually an
+advantage.
 
 **Aho-Corasick automatons** are commonly used for fast multi-pattern matching
 in intrusion detection systems (such as snort), anti-viruses and many other
@@ -162,8 +162,8 @@ data for failure links and an implementation of the Aho-Corasick search
 procedure.
 
 Behind the scenes the **pyahocorasick** Python library implements these two data
-structures:  a `Trie <http://en.wikipedia.org/wiki/trie>`_ and an Aho-Corasick string
-matching automaton. Both are exposed through the `Automaton` class.
+structures:  a `Trie <http://en.wikipedia.org/wiki/trie>`_ and an Aho-Corasick
+string matching automaton. Both are exposed through the `Automaton` class.
 
 In addition to Trie-like and Aho-Corasick methods and data structures,
 **pyahocorasick** also implements dict-like methods: The pyahocorasick
@@ -173,7 +173,8 @@ in a time proportional to a string key length.
 
 pyahocorasick is available in two flavors:
 
-* a CPython **C-based extension**, compatible with Python 2 and 3.
+* a CPython **C-based extension**, compatible with Python 3 only. Use older
+  version 1.4.x for Python 2 support.
 
 * a simpler pure Python module, compatible with Python 2 and 3. This is only
   available in the source repository (not on Pypi) under the etc/py/ directory
@@ -188,16 +189,14 @@ The type of strings accepted and returned by ``Automaton`` methods are either
 definition of ``AHOCORASICK_UNICODE`` as set in `setup.py`).
 
 The ``Automaton.unicode`` attributes can tell you how the library was built.
-On Python 3, unicode is the default. On Python 2, bytes is the default and only value.
+On Python 3, unicode is the default..
 
 
 .. warning::
 
-    When the library is built with unicode support on Python 3, an Automaton will
-    store 2 or 4 bytes per letter, depending on your Python installation. When built
+    When the library is built with unicode support, an Automaton will store 2 or
+    4 bytes per letter, depending on your Python installation. When built
     for bytes, only one byte per letter is needed.
-
-    Unicode is **NOT supported** on Python 2.
 
 
 Build and install from PyPi
@@ -210,12 +209,6 @@ available on Pypi at some point in the future::
 
 To build from sources you need to have a C compiler installed and configured which
 should be standard on Linux and easy to get on MacOSX.
-
-On Windows and Python 2.7 you need the `Microsoft Visual C++ Compiler for Python 2.7
-<https://www.microsoft.com/en-us/download/details.aspx?id=44266>`_ (aka. Visual
-Studio 2008). There have been reports that `pyahocorasick` does not build yet with
-MinGW. It may build with cygwin but this has not been tested. If you get this working
-with these platforms, please report in a ticket!
 
 To build from sources, clone the git repository or download and extract the source
 archive.
@@ -242,14 +235,18 @@ Contributing
 You can submit contributions through `GitHub pull requests
 <https://github.com/WojciechMula/pyahocorasick/pull>`_.
 
+- There is a Makefile with a default target that builds and runs tests.
+- The tests can run with a `pip installe -e .[testing] && pytest -vvs`
+- See also the .github directory for CI tests and workflow
+
 
 Authors
 =======
 
 The initial author and maintainer is Wojciech Muła. `Philippe Ombredanne
-<https://github.com/pombredanne>`_, the current co-owner, rewrote
-documentation, setup CI servers and did a whole lot of work to make this module
-better accessible to end users.
+<https://github.com/pombredanne>`_ is Wojciech's sidekick and helps maintaining,
+and rewrote documentation, setup CI servers and did a some work to make this
+module more accessible to end users.
 
 Alphabetic list of authors:
 
@@ -268,6 +265,8 @@ Alphabetic list of authors:
 * **Sylvain Zimmer**
 * **Xiaopeng Xu**
 
+and many others!
+
 This library would not be possible without help of many people, who contributed in
 various ways.
 They created `pull requests <https://github.com/WojciechMula/pyahocorasick/pull>`_,
@@ -281,9 +280,9 @@ License
 =======
 
 This library is licensed under very liberal
-`BSD-3-Clause <http://spdx.org/licenses/BSD-3-Clause.html>`_ license. Some portions of
-the code are dedicated to the public domain such as the pure Python automaton and test
-code.
+`BSD-3-Clause <http://spdx.org/licenses/BSD-3-Clause.html>`_ license. Some
+portions of the code are dedicated to the public domain such as the pure Python
+automaton and test code.
 
 Full text of license is available in LICENSE file.
 

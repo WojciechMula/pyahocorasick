@@ -4,7 +4,7 @@ TMPDIR=/dev/shm
 
 if [[ ${PYTHON} == "" ]]
 then
-    PYTHON=python
+    PYTHON=python3
 fi
 
 function print_help
@@ -89,7 +89,7 @@ function force_rebuild
 
 function run_unittests
 {
-    ${PYTHON} tests/test_unit.py ${UNITTEST}
+    venv/bin/pytest tests/test_unit.py ${UNITTEST}
     if [[ $? != 0 ]]
     then
         echo -e "${RED}Unit tests failed${RESET}"
@@ -105,7 +105,7 @@ function handle_unit
 
 function run_unpickletests
 {
-    ${PYTHON} tests/test_unpickle.py
+    venv/bin/pytest tests/test_unpickle.py
     if [[ $? != 0 ]]
     then
         echo -e "${RED}Unpickle tests failed${RESET}"
@@ -149,7 +149,7 @@ function handle_valgrind
 
     local LOGFILE=${TMPDIR}/valgrind.log
     echo "Running valgrind..."
-    valgrind --log-file=${LOGFILE} --leak-check=full --track-origins=yes ${PYTHON} tests/test_unit.py
+    valgrind --log-file=${LOGFILE} --leak-check=full --track-origins=yes venv/bin/pytest tests/test_unit.py
     ${PYTHON} tests/valgrind_check.py . ${LOGFILE}
 }
 
@@ -179,7 +179,7 @@ function mallocfault
     export ALLOC_FAIL=$1
 
     local LOG=${TMPDIR}/mallocfault${ID}.log
-    ${PYTHON} tests/test_unit.py ${UNITTEST} -q > ${LOG} 2>&1
+    venv/bin/pytest tests/test_unit.py ${UNITTEST} -q > ${LOG} 2>&1
     if [[ $? == 139 ]]
     then
         echo -e "${RED}SEGFAULT${RESET}"
@@ -228,7 +228,7 @@ function reallocfault
     export REALLOC_FAIL=$1
 
     local LOG=${TMPDIR}/reallocfault${ID}.log
-    ${PYTHON} tests/test_unit.py ${UNITTEST} -q > ${LOG} 2>&1
+    venv/bin/pytest -vvs tests/test_unit.py ${UNITTEST} -q > ${LOG} 2>&1
     if [[ $? == 139 ]]
     then
         echo -e "${RED}SEGFAULT${RESET}"
@@ -257,7 +257,7 @@ function handle_pycallfaults
     force_rebuild
 
     local TMP=${TMPDIR}/pycallfaults
-    ${PYTHON} tests/test_unit.py ${UNITTEST} > ${TMP}
+    venv/bin/pytest tests/test_unit.py ${UNITTEST} > ${TMP}
 
     local MINID=0
     local MAXID=$(awk '
@@ -271,7 +271,7 @@ function handle_pycallfaults
         echo -n "Checking Python C-API fail ${ID} of ${MAXID}"
         local LOG=${TMPDIR}/pycallfaults${ID}.log
         export PYCALL_FAIL=${ID}
-        ${PYTHON} tests/test_unit.py ${UNITTEST} > ${LOG} 2>&1
+        venv/bin/pytest tests/test_unit.py ${UNITTEST} > ${LOG} 2>&1
         echo " return code $?"
         ${PYTHON} tests/pyfault_check.py ${LOG}
     done

@@ -51,15 +51,11 @@ def use_memory():
         s = list(ac.keys())
 
 
-@unittest.expectedFailure
-@unittest.skipIf(not on_linux, "Works only on linux")
 class TestMemory(unittest.TestCase):
 
+    @unittest.skipIf(not on_linux, "Works only on linux")
     def test_does_not_leak_memory(self):
         before = get_memory_usage()
         use_memory()
         after = get_memory_usage()
-
-        msg = ("Memory's usage growth: %s (before = %s, after = %s)" % (after - before, before, after))
         assert before == after
-

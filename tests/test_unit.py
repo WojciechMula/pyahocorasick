@@ -20,20 +20,10 @@ import ahocorasick
 if ahocorasick.unicode:
     conv = lambda x: x
 else:
-    if sys.version_info.major >= 3:
-        conv = lambda x: bytes(x, 'ascii')
-    else:
-        conv = lambda x: x
+    conv = lambda x: bytes(x, 'ascii')
 
 
 class TestCase(unittest.TestCase):
-
-    def __init__(self, *args):
-        super(TestCase, self).__init__(*args)
-
-        if not hasattr(self, 'assertRaisesRegex'):
-            # fixup for Py2
-            self.assertRaisesRegex = self.assertRaisesRegexp
 
     def assertEmpty(self, collection):
         self.assertEqual(0, len(collection))

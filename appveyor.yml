@@ -43,9 +43,9 @@ environment:
           PYTHON_ARCH: "64"
 
 install:
-    - cmd: "%PYTHON%\\python.exe -m pip install --upgrade -e .[testing] pip wheel setuptools virtualenv"
+    - cmd: "%PYTHON%\\Scripts\\pip install -e .[testing]"
 
 build: off
 
 test_script:
-    - cmd: pytest -vvs"
+    - cmd: "%PYTHON%\\Scripts\\pytest -vvs"

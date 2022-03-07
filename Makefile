@@ -6,11 +6,12 @@ DEPS=src/*.c \
      setup.py \
      tests/*.py
 
-test:  $(DEPS) build 
-	venv/bin/pytest -vvs
-
 build: $(DEPS) venv/bin/activate
+	venv/bin/pip install -e .
+
+test:  $(DEPS) build 
 	venv/bin/pip install -e .[testing]
+	venv/bin/pytest -vvs
 
 venv/virtualenv.pyz:
 	@mkdir -p venv

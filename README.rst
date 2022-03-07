@@ -189,7 +189,7 @@ The type of strings accepted and returned by ``Automaton`` methods are either
 definition of ``AHOCORASICK_UNICODE`` as set in `setup.py`).
 
 The ``Automaton.unicode`` attributes can tell you how the library was built.
-On Python 3, unicode is the default..
+On Python 3, unicode is the default.
 
 
 .. warning::

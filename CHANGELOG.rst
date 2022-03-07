@@ -7,10 +7,11 @@ Changelog
 --------------------------------------------------
 
 - Drop support for Python 2
-- Reorganize code such that sources are under src/, utilities under etc/
+- Drop support for 32 bits OSes
+- Re-organize code such that sources are under src/, utilities under etc/
   and tests are under tests/
-- Build better, more compatible Linux wheels.
 - Use pytest for testing and streamline tests to use a more conventional Python approach
+- Build more compatible Linux wheels.
 
 
 1.4.4 (2022-02-20)

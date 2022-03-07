@@ -42,13 +42,13 @@ jobs:
 
                 include:
                     - os: ubuntu-latest
-                      arch: auto
+                      arch: auto64
                       type: manylinux1
                       build: "cp{36,37,38,39}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
 
                     - os: ubuntu-latest
-                      arch: auto
+                      arch: auto64
                       type: manylinux2010
                       build: "cp310-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2010

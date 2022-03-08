@@ -1,5 +1,5 @@
 
-name: Run extensive tests Linux and select suppoprted Pythons
+name: Run extensive tests Linux and select supported Pythons
 
 on: [workflow_dispatch]
 

@@ -8,8 +8,38 @@
     License   : BSD-3-Clause (see LICENSE)
 """
 
+import os
+
 from setuptools import setup
 from setuptools import Extension
+
+# check for the mere of environment variables
+try:
+    build_as_unicode = os.environ['AHOCORASICK_UNICODE']
+    build_as_unicode = True
+except KeyError:
+    build_as_unicode = False
+
+try:
+    build_as_bytes = os.environ['AHOCORASICK_BYTES']
+    build_as_bytes = True
+except KeyError:
+    build_as_bytes = False
+
+if build_as_unicode and build_as_bytes:
+    raise Exception(
+        'Cannot build pyahocorasick both as bytes and unicode: '
+        'only one of AHOCORASICK_UNICODE and AHOCORASICK_BYTES environment variable should be set.'
+    )
+
+if not build_as_unicode and not build_as_bytes:
+    # we default to unicode
+    build_as_unicode = True
+
+if build_as_unicode:
+    macros = [('AHOCORASICK_UNICODE', '')]
+else:
+    macros = []
 
 
 def get_long_description():
@@ -17,15 +47,13 @@ def get_long_description():
     with io.open('README.rst', encoding='UTF-8') as f:
         return f.read()
 
+
 module = Extension(
     'ahocorasick',
     sources=[
         'src/pyahocorasick.c',
     ],
-    define_macros= [
-        # when defined unicode strings are supported
-        ('AHOCORASICK_UNICODE', ''),
-    ],
+    define_macros=macros,
     depends=[
         'src/common.h',
         'src/Automaton.c',
@@ -65,7 +93,6 @@ module = Extension(
     ],
 )
 
-
 setup(
     name='pyahocorasick',
     version='2.0.0b1',
@@ -104,7 +131,7 @@ setup(
         'Topic :: Text Editors :: Text Processing',
     ],
     extras_require={
-        "testing": ["pytest", "twine", "setuptools", "wheel",],
+        "testing": ["pytest", "twine", "setuptools", "wheel", ],
     },
     python_requires=">=3.6",
 )

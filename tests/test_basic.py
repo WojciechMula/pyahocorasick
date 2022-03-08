@@ -46,6 +46,39 @@ def test_basic_bytes():
     assert res == expected
 
 
+@skipIf(ahocorasick.unicode, "Run only with bytes build")
+def test_basic_items_keys_and_values_with_bytes_build():
+    automaton = ahocorasick.Automaton()
+    words = b"he e hers his she hi him man he".split()
+    #         0 1    2   3   4  5   6   7  8
+    for i, w in enumerate(words):
+        automaton.add_word(w, (i, w))
+
+    expected_keys = [b'e', b'hers', b'his', b'she', b'hi', b'him', b'man', b'he', ]
+    expected_values = [
+        (1, b'e'),
+        (2, b'hers'),
+        (3, b'his'),
+        (4, b'she'),
+        (5, b'hi'),
+        (6, b'him'),
+        (7, b'man'),
+        (8, b'he'),
+    ]
+
+    assert sorted(automaton.keys()) == sorted(expected_keys)
+    assert sorted(automaton.values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
+
+    automaton.make_automaton()
+
+    assert sorted(automaton.keys()) == sorted(expected_keys)
+    assert sorted(automaton.values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
+
+
 @skipIf(not ahocorasick.unicode, "Run only with unicode build")
 def test_basic_unicode():
     automaton = ahocorasick.Automaton()
@@ -78,3 +111,37 @@ def test_basic_unicode():
     ]
 
     assert res == expected
+
+
+@skipIf(not ahocorasick.unicode, "Run only with unicode build")
+def test_basic_items_keys_and_values_with_unicode_build():
+    automaton = ahocorasick.Automaton()
+    words = 'he e hers his she hi him man he'.split()
+    #         0 1    2   3   4  5   6   7  8
+    for i, w in enumerate(words):
+        automaton.add_word(w, (i, w))
+
+    expected_keys = ['man', 'she', 'e', 'hi', 'him', 'his', 'he', 'hers']
+
+    expected_values = [
+        (7, 'man'),
+        (4, 'she'),
+        (1, 'e'),
+        (5, 'hi'),
+        (6, 'him'),
+        (3, 'his'),
+        (8, 'he'),
+        (2, 'hers'),
+    ]
+
+    assert sorted(automaton.keys()) == sorted(expected_keys)
+    assert sorted(automaton.values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
+
+    automaton.make_automaton()
+
+    assert sorted(automaton.keys()) == sorted(expected_keys)
+    assert sorted(automaton.values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
+    assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)

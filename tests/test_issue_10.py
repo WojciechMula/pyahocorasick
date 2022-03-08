@@ -8,13 +8,14 @@
 """
 
 import ahocorasick
+from pytestingutils import conv
 
 
 def test_issue_10_case_1():
     ac = ahocorasick.Automaton()
-    ac.add_word('S', 1)
+    ac.add_word(conv('S'), 1)
     ac.make_automaton()
-    buffer = 'SSS'
+    buffer = conv('SSS')
     count = 0
     for _item in ac.iter(buffer, 0, 3):  # this causes an error
         count += 1
@@ -24,9 +25,9 @@ def test_issue_10_case_1():
 
 def test_issue_10_case_2():
     ac = ahocorasick.Automaton()
-    ac.add_word('S', 1)
+    ac.add_word(conv('S'), 1)
     ac.make_automaton()
-    buffer = 'SSS'
+    buffer = conv('SSS')
     count = 0
     for _item in ac.iter(buffer, 0, 2):  # no error, but it misses the last 'S' in the buffer
         count += 1

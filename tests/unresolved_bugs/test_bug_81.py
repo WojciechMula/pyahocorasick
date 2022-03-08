@@ -15,6 +15,9 @@ from pathlib import Path
 
 import ahocorasick
 
+from pytestingutils import conv
+
+
 on_linux = str(sys.platform).lower().startswith('linux')
 
 
@@ -39,7 +42,9 @@ def get_memory_usage():
 def use_memory():
     here = Path(__file__).parent
     with open(here.parent.parent / 'README.rst') as f:
-        data = f.read().split()
+        data = f.read()
+        data = conv(data)
+        data = data.split()
 
     ac = ahocorasick.Automaton()
     for i, word in enumerate(data):

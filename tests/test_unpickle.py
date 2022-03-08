@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
+
 import ahocorasick
 import unittest
 import struct
-import sys
+
+from unittest.case import skipIf
 
 
 class TreeNodeBuilderBase(object):
@@ -124,6 +133,7 @@ class TestUnpickleRaw(unittest.TestCase):
         self.assertTrue(A.kind == ahocorasick.EMPTY)
         self.assertTrue(len(A) == 0)
 
+    @skipIf(not ahocorasick.unicode, "Run only with unicode build")
     def test__construct_simple_trie(self):
 
         r"""
@@ -161,7 +171,8 @@ class TestUnpickleRaw(unittest.TestCase):
         self.assertEqual(A.get("his"), "HIS")
         self.assertEqual(A.get("it"), "IT")
 
-    def test__construct_simple_trie__split_across_a_few_chunks(self):
+    @skipIf(not ahocorasick.unicode, "Run only with unicode build")
+    def test__construct_simple_trie__split_across_a_few_chunks_unicode(self):
 
         r"""
         trie for set {he, her, his, him, it}
@@ -224,7 +235,8 @@ class TestUnpickleRaw(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "key_type must have.*"):
             self.create_automaton()
 
-    def test__construct_simple_trie__wrong_index(self):
+    @skipIf(not ahocorasick.unicode, "Run only with unicode build")
+    def test__construct_simple_trie__wrong_index_unicode(self):
         """
         trie for set {he}
 
@@ -242,6 +254,27 @@ class TestUnpickleRaw(unittest.TestCase):
         self.word_count = 2
 
         with self.assertRaises(IndexError):
+            self.create_automaton()
+
+    @skipIf(ahocorasick.unicode, "Run only with bytes build")
+    def test__construct_simple_trie__wrong_index_bytes(self):
+        """
+        trie for set {he}
+
+        #0 -> [h #1*] -> [e #2*]
+        """
+
+        node0 = self.create_raw_node(0, [(b'h', 1)])
+        node1 = self.create_raw_node(1, [(b'e', 2)])  # expect python value
+        node2 = self.create_raw_node(1, [])  # also python value
+
+        self.count = 3
+        self.raw = node0 + node1 + node2
+        self.kind = ahocorasick.TRIE
+        self.values = [b"HE"]  # but we provide a too short collection
+        self.word_count = 2
+
+        with self.assertRaises(ValueError):
             self.create_automaton()
 
     def test__truncated_raw__case_1(self):
@@ -273,7 +306,8 @@ class TestUnpickleRaw(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Data truncated.*"):
                 self.create_automaton()
 
-    def test__malicious_next_pointer(self):
+    @skipIf(not ahocorasick.unicode, "Run only with unicode build")
+    def test__malicious_next_pointer_unicode(self):
         """
         #0 -> [? #1 ]
         """
@@ -286,6 +320,22 @@ class TestUnpickleRaw(unittest.TestCase):
         self.kind = ahocorasick.TRIE
 
         with self.assertRaisesRegex(ValueError, "Node #1 malformed: next link #0 points to.*"):
+            self.create_automaton()
+
+    @skipIf(ahocorasick.unicode, "Run only with bytes build")
+    def test__malicious_next_pointer_bytes(self):
+        """
+        #0 -> [? #1 ]
+        """
+
+        node0 = self.create_raw_node(0, [('?', 1)])
+        node1 = self.create_raw_node(0, [('x', 16)])  # the second node point to non-existent node
+
+        self.count = 2
+        self.raw = node0 + node1
+        self.kind = ahocorasick.TRIE
+
+        with self.assertRaisesRegex(ValueError, "Data truncated \\[parsing children of node #1\\]: chunk #0 @ offset.*"):
             self.create_automaton()
 
     def test__malicious_fail_pointer(self):

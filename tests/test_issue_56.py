@@ -1,4 +1,15 @@
+# -*- coding: utf-8 -*-
+
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
 import ahocorasick
+
+from pytestingutils import conv
 
 
 def iter_results(teststr, automaton):
@@ -23,11 +34,11 @@ def test_issue56():
     automaton = ahocorasick.Automaton()
 
     for word in ("poke", "go", "pokegois", "egoist"):
-        automaton.add_word(word, word)
+        automaton.add_word(conv(word), word)
 
     automaton.make_automaton()
 
-    teststr = 'pokego pokego  pokegoist'
+    teststr = conv("pokego pokego  pokegoist")
     expected = iter_results(teststr, automaton)
     findall = find_all_results(teststr, automaton)
 

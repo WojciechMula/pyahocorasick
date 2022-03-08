@@ -7,7 +7,11 @@
     WWW       : http://0x80.pl
     License   : public domain
 """
+from unittest.case import skipIf
+
 import ahocorasick
+
+from pytestingutils import conv
 
 test_sentences_rus = ["!ASM Print",
 "!ASM Print, tyre компания er",
@@ -33,7 +37,8 @@ test_sentences_pl = [
 ]
 
 
-def test_create_automata_rus_does_not_crash():
+@skipIf(not ahocorasick.unicode, "Run only with unicode build")
+def test_create_automata_rus_does_not_crash_unicode():
     A = ahocorasick.Automaton()
     for sentences in test_sentences_rus[-7:]:
         for index, word in enumerate(sentences.split(' ')):
@@ -42,7 +47,8 @@ def test_create_automata_rus_does_not_crash():
     A.make_automaton()
 
 
-def test_create_and_iter_automata_pl_works():
+@skipIf(not ahocorasick.unicode, "Run only with unicode build")
+def test_create_and_iter_automata_pl_works_unicode():
     A = ahocorasick.Automaton()
     for index, word in enumerate(test_sentences_pl):
         A.add_word(word, (index, word))
@@ -52,4 +58,27 @@ def test_create_and_iter_automata_pl_works():
     for item in A.iter("wyważyć"):
         results.append(item)
     assert results == [(4, (3, 'aż')), (5, (4, 'waży'))]
+
+
+@skipIf(ahocorasick.unicode, "Run only with bytes build")
+def test_create_automata_rus_does_not_crash_bytes():
+    A = ahocorasick.Automaton()
+    for sentences in test_sentences_rus[-7:]:
+        for index, word in enumerate(sentences.split(' ')):
+            A.add_word(conv(word), (index, word))
+
+    A.make_automaton()
+
+
+@skipIf(ahocorasick.unicode, "Run only with bytes build")
+def test_create_and_iter_automata_pl_works_bytes():
+    A = ahocorasick.Automaton()
+    for index, word in enumerate(test_sentences_pl):
+        A.add_word(conv(word), (index, word))
+
+    A.make_automaton()
+    results = []
+    for item in A.iter(conv("wyważyć")):
+        results.append(item)
+    assert results == [(5, (3, 'aż')), (6, (4, 'waży'))]
 

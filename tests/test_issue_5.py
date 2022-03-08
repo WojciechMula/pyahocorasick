@@ -9,12 +9,14 @@
 
 import ahocorasick
 
+from pytestingutils import conv
+
 
 def test_issue_5():
     A = ahocorasick.Automaton()
 
     # add some words to trie
-    for index, word in enumerate("he her hers she".split()):
+    for index, word in enumerate(conv("he her hers she").split()):
         A.add_word(word, (index, word))
 
     A = None  #### segfault here

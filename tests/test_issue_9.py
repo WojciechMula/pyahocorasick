@@ -14,12 +14,15 @@ from pathlib import Path
 
 import ahocorasick
 
+from pytestingutils import conv
+
+
 on_linux = str(sys.platform).lower().startswith('linux')
 
 
 def build_automaton():
     ac = ahocorasick.Automaton()
-    ac.add_word('SSSSS', 1)
+    ac.add_word(conv('SSSSS'), 1)
     ac.make_automaton()
     return ac
 
@@ -48,10 +51,11 @@ class MemoryUsageDoesNotGrow(unittest.TestCase):
     def test_memory_usage_does_not_grow(self):
 
         ac = build_automaton()
-
+        
         here = Path(__file__).parent
         with open(here.parent / 'README.rst') as f:
             data = f.read()[:1024 * 2]
+            data = conv(data)
 
         before = get_memory_usage()
 

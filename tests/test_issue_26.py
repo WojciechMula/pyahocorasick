@@ -9,11 +9,12 @@
 
 import pickle
 
-import ahocorasick as aho
+import ahocorasick
+from pytestingutils import conv
 
 
 def test_issue_26_pickle_workds():
-    a = aho.Automaton(aho.STORE_INTS)
-    a.add_word('abc', 12)
+    a = ahocorasick.Automaton(ahocorasick.STORE_INTS)
+    a.add_word(conv('abc'), 12)
     a.make_automaton()
     pickle.dumps(a)

@@ -103,7 +103,7 @@ jobs:
                 path: dist/*.tar.gz
 
     test_on_many_oses:
-        name: Run tests ${{ matrix.python }} on ${{ matrix.os }} with build ${{ matrix.build_type }}
+        name: build ${{ matrix.build_type }} - Run tests ${{ matrix.python }} on ${{ matrix.os }} 
         runs-on: ${{ matrix.os }}
         defaults:
           run:

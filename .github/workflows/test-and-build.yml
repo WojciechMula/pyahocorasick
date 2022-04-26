@@ -28,7 +28,7 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
     build_wheels:
-        name: Build wheels ${{ matrix.type }} ${{ matrix.arch }} on ${{ matrix.os }}
+        name: Build unicode wheels ${{ matrix.type }} ${{ matrix.arch }} on ${{ matrix.os }}
         runs-on: ${{ matrix.os }}
         defaults:
           run:

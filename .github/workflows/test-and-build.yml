@@ -127,7 +127,7 @@ jobs:
             - name: Build, install and test
               run: >
                   export ${{ matrix.build_type }}=yes &&
-                  pip install --upgrade pytest setuptools &&
+                  set ${{ matrix.build_type }}=yes &&
                   pip install .[testing] &&
-                  pytest -vvs tests/ etc/
+                  pytest -vvs
 

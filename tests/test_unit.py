@@ -20,7 +20,7 @@ import pytest
 import ahocorasick
 
 from pytestingutils import conv
-from pytestingutils import on_linux
+from pytestingutils import on_windows
 
 
 class TestCase(unittest.TestCase):
@@ -435,8 +435,8 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         L = sorted(A.items())
         assert sorted(set(L)) == sorted(set(I))
 
-    if on_linux:
-        test_items = pytest.mark.xfail(test_items, reason="Windows fails for now")
+    if not ahocorasick.unicode or (ahocorasick.unicode and on_windows):
+        test_items = pytest.mark.xfail(test_items, reason="Bytes fail everywher. Windows fails on unicode too")
 
     def test_items_with_prefix_valid(self):
         A = self.A

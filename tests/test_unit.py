@@ -391,8 +391,8 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 
     def test_iter(self):
         A = self.A
-        for i, w in enumerate(self.words):
-            A.add_word(conv(w), i + 1)
+        for i, w in enumerate(self.words, 1):
+            A.add_word(conv(w), i)
 
         L = [word for word in A]
         K = list(map(conv, self.words))
@@ -401,8 +401,8 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 
     def test_keys(self):
         A = self.A
-        for i, w in enumerate(self.words):
-            A.add_word(conv(w), i + 1)
+        for i, w in enumerate(self.words, 1):
+            A.add_word(conv(w), i)
 
         L = [word for word in A.keys()]
         K = [conv(word) for word in self.words]
@@ -411,8 +411,8 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 
     def test_values(self):
         A = self.A
-        for i, w in enumerate(self.words):
-            A.add_word(conv(w), i + 1)
+        for i, w in enumerate(self.words, 1):
+            A.add_word(conv(w), i)
 
         L = [x for x in A.values()]
         V = list(range(1, len(self.words) + 1))
@@ -420,15 +420,17 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         self.assertEqual(set(L), set(V))
 
     def test_items(self):
-        A = self.A
+        A = ahocorasick.Automaton();
+        words = ["word", "python", "aho", "corasick", "\x00\x00\x00"]
+        # use bytes or unicode dependening no build type
+        words = [conv(w) for w in words]
         I = []
-        for i, w in enumerate(self.words):
-            A.add_word(conv(w), i + 1)
-            I.append((conv(w), i + 1))
+        for i, w in enumerate(words, 1):
+            A.add_word(w, i)
+            I.append((w, i))
 
-        L = [x for x in A.items()]
-        self.assertEqual(len(L), len(I))
-        self.assertEqual(set(L), set(I))
+        L = sorted(A.items())
+        assert sorted(set(L)) == sorted(set(I))
 
     def test_items_with_prefix_valid(self):
         A = self.A

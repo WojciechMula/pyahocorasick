@@ -9,9 +9,9 @@
 
 import os
 import sys
-import unittest
-
 from pathlib import Path
+
+import pytest
 
 import ahocorasick
 
@@ -39,7 +39,7 @@ def get_memory_usage():
     return 0
 
 
-def use_memory():
+def build_automaton():
     here = Path(__file__).parent
     with open(here.parent.parent / 'README.rst') as f:
         data = f.read()
@@ -51,17 +51,16 @@ def use_memory():
         ac.add_word(word, i)
 
     ac.make_automaton()
+    return ac
+
+
+@pytest.mark.skipif(not on_linux, reason="Works only on linux")
+def test_does_not_leak_memory():
+    ac = build_automaton()
+    before = get_memory_usage()
 
     for i in range(1024):
         s = list(ac.keys())
 
-
-class TestMemory(unittest.TestCase):
-
-    @unittest.skipIf(not on_linux, "Works only on linux")
-    @unittest.expectedFailure
-    def test_does_not_leak_memory(self):
-        before = get_memory_usage()
-        use_memory()
-        after = get_memory_usage()
-        assert before == after
+    after = get_memory_usage()
+    assert before == after

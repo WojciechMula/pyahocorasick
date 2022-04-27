@@ -8,16 +8,13 @@
 """
 
 import os
-import sys
 import unittest
 from pathlib import Path
 
 import ahocorasick
 
 from pytestingutils import conv
-
-
-on_linux = str(sys.platform).lower().startswith('linux')
+from pytestingutils import on_linux
 
 
 def build_automaton():

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-    This is part of pyahocorasick Python module.
+This is part of pyahocorasick Python module.
 
-    Unit tests for the C-based ahocorasick module.
+Unit tests for the C-based ahocorasick module.
 
-    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
-    WWW       : http://0x80.pl/proj/pyahocorasick/
-    License   : public domain
+Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+WWW       : http://0x80.pl/proj/pyahocorasick/
+License   : public domain
 """
 
 import os
@@ -14,11 +14,13 @@ import pickle
 import sys
 import tempfile
 import unittest
-from unittest.case import expectedFailure
+
+import pytest
 
 import ahocorasick
 
 from pytestingutils import conv
+from pytestingutils import on_linux
 
 
 class TestCase(unittest.TestCase):
@@ -420,7 +422,6 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         self.assertEqual(len(L), len(V))
         self.assertEqual(set(L), set(V))
 
-    @expectedFailure
     def test_items(self):
         A = ahocorasick.Automaton();
         words = ["word", "python", "aho", "corasick", "\x00\x00\x00"]
@@ -433,6 +434,9 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 
         L = sorted(A.items())
         assert sorted(set(L)) == sorted(set(I))
+
+    if on_linux:
+        test_items = pytest.mark.xfail(test_items, reason="Windows fails for now")
 
     def test_items_with_prefix_valid(self):
         A = self.A

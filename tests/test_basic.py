@@ -8,9 +8,12 @@
     License   : public domain
 """
 
+import pytest
+
 import ahocorasick
 
-import pytest
+from pytestingutils import on_windows
+
 
 @pytest.mark.skipif(ahocorasick.unicode, reason="Run only with bytes build")
 @pytest.mark.xfail(reason="Fails on Windows")
@@ -48,7 +51,7 @@ def test_basic_bytes():
 
 
 @pytest.mark.skipif(ahocorasick.unicode, reason="Run only with bytes build")
-@pytest.mark.xfail(reason="Fails on Windows")
+@pytest.mark.xfail(reason="Fails on everywhere")
 def test_basic_items_keys_and_values_with_bytes_build():
     automaton = ahocorasick.Automaton()
     words = b"he e hers his she hi him man he".split()
@@ -95,8 +98,8 @@ def test_basic_items_keys_and_values_with_bytes_build():
     assert sorted(automaton.items()) == sorted(expected_items)
 
 
-
 @pytest.mark.skipif(not ahocorasick.unicode, reason="Run only with unicode build")
+@pytest.mark.xfail(on_windows, reason="Fails on Windows")
 def test_basic_unicode():
     automaton = ahocorasick.Automaton()
     words = "he e hers his she hi him man he".split()
@@ -129,8 +132,9 @@ def test_basic_unicode():
 
     assert res == expected
 
+
 @pytest.mark.skipif(not ahocorasick.unicode, reason="Run only with unicode build")
-@pytest.mark.xfail(reason="Fails on Windows")
+@pytest.mark.xfail(on_windows, reason="Fails on Windows")
 def test_basic_items_keys_and_values_with_unicode_build():
     automaton = ahocorasick.Automaton()
     words = 'he e hers his she hi him man he'.split()

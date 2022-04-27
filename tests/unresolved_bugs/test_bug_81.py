@@ -8,7 +8,6 @@
 """
 
 import os
-import sys
 from pathlib import Path
 
 import pytest
@@ -16,9 +15,7 @@ import pytest
 import ahocorasick
 
 from pytestingutils import conv
-
-
-on_linux = str(sys.platform).lower().startswith('linux')
+from pytestingutils import on_linux
 
 
 def get_memory_usage():

@@ -50,20 +50,33 @@ def test_basic_bytes():
 def test_basic_items_keys_and_values_with_bytes_build():
     automaton = ahocorasick.Automaton()
     words = b"he e hers his she hi him man he".split()
-    #         0 1    2   3   4  5   6   7  8
-    for i, w in enumerate(words):
+    #         1  2 3    4   5   6  7   8   9
+    for i, w in enumerate(words, 1):
         automaton.add_word(w, (i, w))
 
     expected_keys = [b'e', b'hers', b'his', b'she', b'hi', b'him', b'man', b'he', ]
     expected_values = [
-        (1, b'e'),
-        (2, b'hers'),
-        (3, b'his'),
-        (4, b'she'),
-        (5, b'hi'),
-        (6, b'him'),
-        (7, b'man'),
-        (8, b'he'),
+        # the second addition munges this by design, like in a dict (1, b'he'),
+        (2, b'e'),
+        (3, b'hers'),
+        (4, b'his'),
+        (5, b'she'),
+        (6, b'hi'),
+        (7, b'him'),
+        (8, b'man'),
+        (9, b'he'),
+    ]
+
+    expected_items = [
+        # the second addition munges this by design, like in a dict  (b'he', (1, b'he')),
+        (b'e', (2, b'e')),
+        (b'hers', (3, b'hers')),
+        (b'his', (4, b'his')),
+        (b'she', (5, b'she')),
+        (b'hi', (6, b'hi')),
+        (b'him', (7, b'him')),
+        (b'man', (8, b'man')),
+        (b'he', (9, b'he')),
     ]
 
     assert sorted(automaton.keys()) == sorted(expected_keys)
@@ -77,13 +90,14 @@ def test_basic_items_keys_and_values_with_bytes_build():
     assert sorted(automaton.values()) == sorted(expected_values)
     assert sorted(dict(automaton.items()).values()) == sorted(expected_values)
     assert sorted(dict(automaton.items()).keys()) == sorted(expected_keys)
+    assert sorted(automaton.items()) == sorted(expected_items)
 
 
 @skipIf(not ahocorasick.unicode, "Run only with unicode build")
 def test_basic_unicode():
     automaton = ahocorasick.Automaton()
     words = "he e hers his she hi him man he".split()
-    #         0 1    2   3   4  5   6   7  8
+    #        0  1 2    3   4   5  6   7   8
     for i, w in enumerate(words):
         automaton.add_word(w, (i, w))
     query = "he rshershidamanza "

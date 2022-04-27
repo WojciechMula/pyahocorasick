@@ -3,7 +3,7 @@ Changelog
 =============
 
 
-2.0.0 (2022-03-06)
+2.0.0 (2022-04-xx)
 --------------------------------------------------
 
 - Drop support for Python 2
@@ -11,7 +11,7 @@ Changelog
 - Re-organize code such that sources are under src/, utilities under etc/
   and tests are under tests/
 - Use pytest for testing and streamline tests to use a more conventional Python approach
-- Build more compatible Linux wheels.
+- Build more compatible Linux wheels using "ci-build-wheel"
 
 
 1.4.4 (2022-02-20)

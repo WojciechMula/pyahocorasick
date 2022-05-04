@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../Automaton.h"
+#include "../Automaton.h"
 
 typedef struct AutomatonData {
     AutomatonKind   kind;

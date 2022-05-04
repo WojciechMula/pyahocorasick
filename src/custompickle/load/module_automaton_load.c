@@ -1,6 +1,6 @@
 #include "module_automaton_load.h"
 
-#include "../../../Automaton.h"
+#include "../../Automaton.h"
 #include "loadbuffer.h"
 
 

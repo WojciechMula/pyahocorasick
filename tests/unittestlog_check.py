@@ -1,4 +1,15 @@
+# -*- coding: utf-8 -*-
+
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
+
 import sys
+
 
 def main():
     path = sys.argv[1]
@@ -11,6 +22,7 @@ def main():
 
 
 class Application(object):
+
     def __init__(self, path):
         self.path = path
 
@@ -21,12 +33,11 @@ class Application(object):
 
         return errors
 
-
     def analyze(self, lines):
-        error_sep     = '======================================================================'
+        error_sep = '======================================================================'
         traceback_sep = '----------------------------------------------------------------------'
 
-        index  = 0
+        index = 0
         result = True
         while True:
             try:
@@ -38,7 +49,7 @@ class Application(object):
             function = lines[index]
             index += 1
             start = lines.index(traceback_sep, index)
-            end   = lines.index(traceback_sep, start + 1)
+            end = lines.index(traceback_sep, start + 1)
             index = end + 1
 
             error = lines[end - 1]

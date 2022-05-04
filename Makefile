@@ -1,72 +1,47 @@
 .SUFFIXES:
-.PHONY: test clean valgrind
+.PHONY: test test_unicode test_bytes build build_unicode build_bytes clean valgrind benchmark
 
-export PYTHONPATH := .:$(PYTHONPATH):$(PATH)
-
-DEPS=*.c \
-     *.h \
+DEPS=src/*.c \
+     src/*.h \
      setup.py \
-     unittests.py
+     tests/*.py
 
-test3: stamp/regression_py3
+build: build_unicode
 
-test: stamp/regression_py2 stamp/regression_py3
+build_unicode: $(DEPS) venv/bin/activate
+	@rm -rf dist build *.so
+	AHOCORASICK_UNICODE=yes venv/bin/pip install -e .
 
-stamp/build_py2: $(DEPS)
-	python2 setup.py build_ext --inplace
-	touch $@
+build_bytes: $(DEPS) venv/bin/activate
+	@rm -rf dist build *.so
+	AHOCORASICK_BYTES=yes venv/bin/pip install -e .
 
-stamp/unittests_py2: stamp/build_py2
-	python2 unittests.py
-	touch $@
+test:  test_unicode
 
-stamp/regression_py2: stamp/unittests_py2 
-	python2 regression/issue_5.py
-	python2 regression/issue_8.py
-	python2 regression/issue_9.py
-	python2 regression/issue_10.py
-	python2 regression/issue_26.py
-	python2 regression/issue_56.py
-	touch $@
+test_unicode:  $(DEPS) build_unicode
+	@rm -rf dist build *.so
+	AHOCORASICK_UNICODE=yes venv/bin/pip install -e .[testing]
+	venv/bin/pytest -vvs
 
+test_bytes: $(DEPS) build_bytes
+	@rm -rf dist build *.so
+	AHOCORASICK_BYTES=yes venv/bin/pip install -e .[testing]
+	venv/bin/pytest -vvs
 
-stamp/build_py3: $(DEPS)
-	python3 setup.py build_ext --inplace
-	touch $@
+venv/virtualenv.pyz:
+	@mkdir -p venv
+	@curl -o venv/virtualenv.pyz https://bootstrap.pypa.io/virtualenv/virtualenv.pyz
 
-stamp/unittests_py3: stamp/build_py3
-	python3 unittests.py
-	touch $@
+venv/bin/activate: venv/virtualenv.pyz
+	python3 venv/virtualenv.pyz venv
 
-stamp/regression_py3: stamp/unittests_py3
-	python3 regression/issue_5.py
-	python3 regression/issue_8.py
-	python3 regression/issue_9.py
-	python3 regression/issue_10.py
-	python3 regression/issue_26.py
-	python3 regression/issue_56.py
-	touch $@
-
-
-benchmark: benchmarks/benchmark.py stamp/build_py2
-	python2 $^
-
-devbuild2:
-	python2 setup.py build_ext --inplace
-
-devbuild3:
-	python3 setup.py build_ext --inplace
+benchmark: etc/benchmarks/benchmark.py build
+	python3 $^
 
 valgrind:
 	python -c "import sys;print(sys.version)"
-	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log python unittests.py
-
-pip-release:
-	python setup.py sdist upload
-
-dist:
-	python setup.py sdist
+	valgrind --leak-check=full --track-origins=yes --log-file=valgrind.log venv/bin/pytest -vvs
 
 clean:
 	rm -f stamp/*
-	rm -rf dist build
+	rm -rf dist build venv

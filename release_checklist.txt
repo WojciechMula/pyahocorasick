@@ -1,34 +1,34 @@
-Use this checklist to track the thing to check before a release.
+Use this checklist to track the things to check before a release.
 
 1. Push a branch with all the code ready for release. Check that the
-   the automated teats and build did run OK on all the OS/Python combos
-   supported by the various CI (Appveyor, Travis and Github Actions).
+   the automated tests and build ran without error on all the OS/Python combos
+   supported by the various CI (Appveyor and Github Actions).
 
 2. Run these extra tests on Linux.
-   You will need valgring and gcovr installed first.
+   You will need valgrind and gcovr installed first.
 
 
-action                       python2    python3
---------------------------------------------------
-make test                      [ ]        [ ]
-./runtest.sh unit              [ ]        [ ]
-./runtest.sh unpickle          [ ]        [ ]
-./runtest.sh valgrind          [ ]        [ ]
-./runtest.sh mallocfaults      [ ]        [ ]
-./runtest.sh reallocfaults     [ ]        [ ]
-./runtest.sh pycallfaults      [ ]        [ ]
-./runtest.sh coverage          [ ]        [ ]
+action                       python3
+---------------------------------------
+make test                           [ ]
+./runtest.sh unit                   [ ]
+./runtest.sh unpickle               [ ]
+./runtest.sh valgrind               [ ]
+./runtest.sh mallocfaults           [ ]
+./runtest.sh reallocfaults          [ ]
+./runtest.sh pycallfaults           [ ]
+./runtest.sh coverage               [ ]
 
 
-Once you ran the coverage, copy and commit the coverage/ report to 
-etc/coverage
+Once you ran the coverage, copy and commit the coverage/report to etc/coverage
 
 
-3. marge and tag the release w=once everything is a-OK
+3. marge and tag the release once everything is A-OK
+
 
 4. Finally: 
 
 - collect the built wheels and sdist from the CI run for the tag run (artifact.zip)
 - extract the zip
 - run a clamscan and a twine check on these
-- publish on PyPI with twine.
+- publish on PyPI with twine upload.

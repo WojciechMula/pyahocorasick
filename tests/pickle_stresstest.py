@@ -1,9 +1,17 @@
-import sys
+# -*- coding: utf-8 -*-
+
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
+
 import os
 import random
 import gzip
 import pickle
-import optparse
 import time
 
 import ahocorasick
@@ -19,13 +27,14 @@ def main():
 
 chars = 'abcdefghijklmnopqestuvwxyzABCDEFGHIJKLMNOPQESTUVWXYZ0123456789.,;:-'
 
+
 class TestApplication(object):
+
     def __init__(self, options):
         self.options = options
-        self.words   = set()
+        self.words = set()
 
         random.seed(options.seed)
-
 
     def run(self):
         self.A = ahocorasick.Automaton()
@@ -65,7 +74,6 @@ class TestApplication(object):
         if self.options.compare:
             self.compare()
 
-
     def add_words(self):
         if self.options.random:
             self.__add_random_words()
@@ -81,7 +89,6 @@ class TestApplication(object):
         print("- sizeof_node  : %d" % d['sizeof_node'])
         print("- total_size   : %d" % d['total_size'])
 
-
     def __add_random_words(self):
         n = self.options.words
 
@@ -93,7 +100,6 @@ class TestApplication(object):
 
             if self.A.add_word(word, True):
                 n -= 1
-
 
     def __add_from_file(self):
         n = self.options.words
@@ -108,13 +114,11 @@ class TestApplication(object):
 
             self.A.add_word(word, True)
 
-
     def generate_words(self):
         if self.options.random:
             self.__generate_random_words()
         else:
             self.__load_words()
-
 
     def __generate_random_words(self):
         n = self.options.words
@@ -123,7 +127,6 @@ class TestApplication(object):
         while len(self.words) < n:
             word = self.generate_random_word()
             self.words.add(word)
-
 
     def __load_words(self):
         n = self.options.words
@@ -134,12 +137,10 @@ class TestApplication(object):
             else:
                 return
 
-
     def read(self):
         with gzip.open(self.options.file_gz, "rt", encoding="utf-8") as f:
             for line in f:
                 yield line.strip()
-
 
     def pickle(self):
         path = self.options.picklepath
@@ -152,14 +153,12 @@ class TestApplication(object):
         size = os.path.getsize(path)
         print("   file size is %s" % format_size(size))
 
-
     def unpickle(self):
         path = self.options.picklepath
 
         print("Unpickling automaton from %s" % path)
         with open(path, 'rb') as f:
             self.A = pickle.load(f)
-
 
     def save(self):
         path = self.options.picklepath
@@ -171,14 +170,12 @@ class TestApplication(object):
         size = os.path.getsize(path)
         print("   file size is %s" % format_size(size))
 
-
     def load(self):
         path = self.options.picklepath
 
         print("Loading automaton from %s" % path)
 
         self.A = ahocorasick.load(path, pickle.loads)
-
 
     def compare(self):
         print("Comparing added words with restored automaton")
@@ -188,7 +185,6 @@ class TestApplication(object):
 
         if self.words:
             print("Not all words were restored (%d missing)" % len(self.words))
-
 
     def generate_random_word(self):
         n = random.randint(1, self.options.maxlength + 1)
@@ -201,14 +197,14 @@ class TestApplication(object):
 
 def format_size(size):
     units = [
-        ('GB', 1024**3),
-        ('MB', 1024**2),
+        ('GB', 1024 ** 3),
+        ('MB', 1024 ** 2),
         ('kB', 1024),
     ]
 
     for suffix, threshold in units:
         if size > threshold:
-            return '%0.2f %s (%d bytes)' % (float(size)/threshold, suffix, size)
+            return '%0.2f %s (%d bytes)' % (float(size) / threshold, suffix, size)
 
     return '%d bytes' % size
 
@@ -240,7 +236,6 @@ def parse_args():
         "-l", "--load", dest='load', action='store_true', default=False,
         help="perform load operation on previously saved data"
     )
-
 
     parser.add_option(
         "-c", "--compare", action='store_true', default=False,

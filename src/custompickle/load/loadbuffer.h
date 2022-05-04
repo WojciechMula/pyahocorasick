@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "../../../trienode.h"
+#include "../../trienode.h"
 #include "../custompickle.h"
 
 typedef struct AddressPair {

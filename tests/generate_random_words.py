@@ -1,10 +1,14 @@
-import sys
-import os
+# -*- coding: utf-8 -*-
+
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
+
 import random
-import gzip
-import pickle
-import optparse
-import time
 
 from optparse import OptionParser
 
@@ -17,24 +21,24 @@ def main():
 
 chars = 'abcdefghijklmnopqestuvwxyzABCDEFGHIJKLMNOPQESTUVWXYZ0123456789.,;:-'
 
+
 class TestApplication(object):
+
     def __init__(self, options):
         self.options = options
 
         random.seed(options.seed)
 
-
     def run(self):
         n = self.options.words
 
-        for i in range(n):
-            print(self.generate_random_word())
-
+        for _i in range(n):
+            self.generate_random_word()
 
     def generate_random_word(self):
         n = random.randint(1, self.options.maxlength + 1)
         s = ''
-        for i in range(n):
+        for _i in range(n):
             s += random.choice(chars)
 
         return s
@@ -63,7 +67,7 @@ def parse_args():
         help="maximum count of characters in a word"
     )
 
-    (options, rest) = parser.parse_args()
+    (options, _rest) = parser.parse_args()
 
     return options
 

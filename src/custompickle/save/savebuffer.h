@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../Automaton.h"
+#include "../../Automaton.h"
 
 #define SAVEBUFFER_DEFAULT_SIZE (32 * 1024lu)
 

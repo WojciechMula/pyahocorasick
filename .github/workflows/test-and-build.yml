@@ -1,14 +1,65 @@
+
+# Derived in part from https://github.com/google/brotli-wheels
+#
+# Copyright (c) 2009, 2010, 2013-2016 by the Brotli Authors.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+
 name: Run tests and build wheel and sdist on all supported OS and Python
 
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-    build_wheels_on_posix:
-        name: Build wheels on ${{ matrix.os }}
+    build_wheels:
+        name: Build unicode wheels ${{ matrix.type }} ${{ matrix.arch }} on ${{ matrix.os }}
         runs-on: ${{ matrix.os }}
+        defaults:
+          run:
+            shell: bash
         strategy:
+            fail-fast: false
             matrix:
-                os: [ubuntu-20.04, macos-10.15]
+                os: [macos-10.15, windows-2019]
+                arch: [auto64]
+                build: ["cp{36,37,38,39}-*"]
+
+                include:
+                    - os: ubuntu-latest
+                      arch: auto64
+                      type: manylinux1
+                      build: "cp{36,37,38,39}-*"
+                      CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
+
+                    - os: ubuntu-latest
+                      arch: auto64
+                      type: manylinux2010
+                      build: "cp310-*"
+                      CIBW_MANYLINUX_X86_64_IMAGE: manylinux2010
+
+                    - os: macos-latest
+                      arch: universal2
+                      build: "cp{36,37,38,39,310}-*"
+                 
+                    - os: windows-latest
+                      arch: auto64
+                      build: "cp{36,37,38,39,310}-*"
 
         steps:
             - uses: actions/checkout@v2
@@ -16,37 +67,19 @@ jobs:
             - name: Build wheels and run tests
               uses: pypa/cibuildwheel@v2.3.1
               env:
-                  # Skip PyPy wheels
-                  CIBW_SKIP: "pp*"
-                  CIBW_TEST_COMMAND: "make -C {project} test3"
-
-            - name: Collect built wheels
-              uses: actions/upload-artifact@v2
-              with:
-                  path: ./wheelhouse/*.whl
-
-
-    build_wheels_on_windows:
-        name: Build wheels on ${{ matrix.os }}
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [windows-2019]
-
-        steps:
-            - uses: actions/checkout@v2
-
-            - name: Build wheels and run tests
-              uses: pypa/cibuildwheel@v2.3.1
-              env:
+                  CIBW_BUILD: ${{ matrix.build }}
+                  CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
+                  CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
+                  CIBW_ARCHS: ${{ matrix.arch }}
+                  CIBW_TEST_REQUIRES: pytest
+                  CIBW_TEST_COMMAND: pytest -vvs {project}/tests
                   # Skip PyPy wheels
                   CIBW_SKIP: "pp*"
 
             - name: Collect built wheels
               uses: actions/upload-artifact@v2
               with:
-                  path: ./wheelhouse/*.whl
-
+                  path: wheelhouse/*.whl
 
     build_sdist:
       name: Build source distribution
@@ -68,3 +101,33 @@ jobs:
             uses: actions/upload-artifact@v2
             with:
                 path: dist/*.tar.gz
+
+    test_on_many_oses:
+        name: build ${{ matrix.build_type }} - Run tests ${{ matrix.python }} on ${{ matrix.os }} 
+        runs-on: ${{ matrix.os }}
+        defaults:
+          run:
+            shell: bash
+
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-18.04, ubuntu-20.04, macos-10.15, macos-11, windows-2019, windows-2022]
+                python: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+                build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
+
+        steps:
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                python-version: "${{ matrix.python }}"
+
+            - uses: actions/checkout@v2
+
+            - name: Build, install and test
+              run: >
+                  export ${{ matrix.build_type }}=yes &&
+                  set ${{ matrix.build_type }}=yes &&
+                  pip install .[testing] &&
+                  pytest -vvs
+

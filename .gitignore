@@ -22,3 +22,5 @@ dist/
 coverage/
 /venv/
 /.python-version
+/automaton-wee.pickle
+/.pytest_cache/

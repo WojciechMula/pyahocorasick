@@ -1,4 +1,15 @@
+# -*- coding: utf-8 -*-
+
+"""
+    Aho-Corasick string search algorithm.
+
+    Author    : Wojciech Muła, wojciech_mula@poczta.onet.pl
+    WWW       : http://0x80.pl
+    License   : public domain
+"""
+
 import sys
+
 
 def main():
     try:
@@ -11,14 +22,13 @@ def main():
 
 
 class Application(object):
+
     def __init__(self, path):
         self.path = path
-
 
     def run(self):
         with open(self.path, 'rt') as f:
             print(max(self.ids(f)))
-
 
     def ids(self, file):
         for i, line in enumerate(file):

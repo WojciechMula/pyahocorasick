@@ -1,0 +1,54 @@
+
+name: Run extensive tests Linux and select supported Pythons
+
+on: [workflow_dispatch]
+
+jobs:
+    extensive_tests:
+        name: Run test ${{ matrix.test }} on ${{ matrix.os }} and Python ${{ matrix.python }}
+        runs-on: ${{ matrix.os }}
+        defaults:
+          run:
+            shell: bash
+        strategy:
+            fail-fast: false
+            matrix:
+                python: ["3.8"]
+                include:
+                    - os: ubuntu-latest
+                      test: make test
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh unit
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh unpickle
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh mallocfaults
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh reallocfaults
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh pycallfaults
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh coverage
+
+                    - os: ubuntu-latest
+                      test: ./runtest.sh valgrind
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Setup
+              run: sudo apt-get install -y gcovr valgrind
+
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                python-version: "${{ matrix.python }}"
+
+            - name: Run tests
+              run: ${{ matrix.test }}

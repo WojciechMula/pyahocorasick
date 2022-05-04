@@ -1,5 +1,5 @@
 #include "custompickle.h"
-#include "../../Automaton.h"
+#include "../Automaton.h"
 
 
 static const char CUSTOMPICKLE_MAGICK[16] = {

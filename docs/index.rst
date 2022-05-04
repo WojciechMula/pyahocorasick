@@ -89,6 +89,7 @@ implements a subset of dict-like methods. Some of them are:
 ``items([prefix, [wildcard, [how]]]) => yield tuple (string, object)``
     Return an iterator on tuples of (key, value).
 
+
 Wildcard search
 ~~~~~~~~~~~~~~~
 
@@ -250,7 +251,7 @@ The Automaton class has a few other interesting methods:
 ``dump() => (list of nodes, list of edges, list of fail links)``
     Return a three-tuple of lists describing the Automaton as a graph of
     (nodes, edges, failure links).
-    The source repository and source package also contains the  ``dump2dot.py``
+    The source repository and source package also contains the  ``etc/dump2dot.py``
     script that converts ``dump()`` results to a `graphviz <http://graphviz.org>`_ dot
     format for convenient visualization of the trie and Automaton data structure.
 

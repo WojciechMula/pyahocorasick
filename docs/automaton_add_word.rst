@@ -9,13 +9,13 @@ trie or False otherwise. The value associated with an existing word is replaced.
 The value is either mandatory or optional:
 
 - If the Automaton was created without argument (the default) as ``Automaton()``
-  or with ``Automaton(ahocorasik.STORE_ANY)`` then the value is required and can
+  or with ``Automaton(ahocorasick.STORE_ANY)`` then the value is required and can
   be any Python object.
-- If the Automaton was created with ``Automaton(ahocorasik.STORE_INTS)`` then the
+- If the Automaton was created with ``Automaton(ahocorasick.STORE_INTS)`` then the
   value is optional. If provided it must be an integer, otherwise it defaults to
   ``len(automaton)`` which is therefore the order index in which keys are added
   to the trie.
-- If the Automaton was created with ``Automaton(ahocorasik.STORE_LENGTH)`` then
+- If the Automaton was created with ``Automaton(ahocorasick.STORE_LENGTH)`` then
   associating a value is not allowed - ``len(word)`` is saved automatically as
   a value instead.
 

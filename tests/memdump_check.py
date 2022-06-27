@@ -61,7 +61,8 @@ class Application(object):
 
                 try:
                     key = int(oldaddr, 16)
-                    del self.memory[oldaddr]
+                    if key != 0:
+                        del self.memory[oldaddr]
                 except ValueError:
                     pass
 

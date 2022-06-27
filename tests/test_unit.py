@@ -467,7 +467,7 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
             A.add_word(conv(word), word)
 
         I = ["aXcd"]
-        L = [x for x in A.keys(conv("a?cd"), conv("?"))]
+        L = [x for x in A.keys(conv("a?cd"), ahocorasick.MATCH_WHOLE)]
         self.assertEqual(set(map(conv, I)), set(L))
 
     def test_items_with_valid_pattern2(self):
@@ -476,25 +476,97 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
         for word in words:
             A.add_word(conv(word), word)
 
-        L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_EXACT_LENGTH)]
+        L = [x for x in A.keys(conv("a?c??"), ahocorasick.MATCH_WHOLE)]
         I = ["abcde", "aXcde"]
         self.assertEqual(set(map(conv, I)), set(L))
 
-        L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_MOST_PREFIX)]
-        I = ["aYc", "abcde", "aXcde"]
-        self.assertEqual(set(map(conv, I)), set(L))
-
-        L = [x for x in A.keys(conv("a?c??"), conv("?"), ahocorasick.MATCH_AT_LEAST_PREFIX)]
+        L = [x for x in A.keys(conv("a?c??*"), ahocorasick.MATCH_WHOLE)]
         I = ["abcde", "aXcde", "aZcdef"]
         self.assertEqual(set(map(conv, I)), set(L))
 
-    def test_items_wrong_wildcrard(self):
-        with self.assertRaisesRegex(ValueError, "Wildcard must be a single character.*"):
-            self.A.keys(conv("anything"), conv("??"))
+        L = [x for x in A.keys(conv("a?c??"))]
+        I = ["abcde", "aXcde", "aZcdef"]
+        self.assertEqual(set(map(conv, I)), set(L))
+
+    def test_items_with_valid_pattern3(self):
+        A = self.A
+        words = "ash ashley ash* ash? ash*ley*?* ash\\ley ash\\*ley".split()
+        for word in words:
+            A.add_word(conv(word), word)
+
+        L = [x for x in A.values(conv("a*"), ahocorasick.MATCH_WHOLE)]
+        I = words
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash*"), ahocorasick.MATCH_WHOLE)]
+        I = words
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash???"), ahocorasick.MATCH_WHOLE)]
+        I = ["ashley"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash?"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash*", "ash?"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash?"))]
+        I = ["ashley", "ash*", "ash?", "ash*ley*?*", "ash\\ley", "ash\\*ley"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash*ley"), ahocorasick.MATCH_WHOLE)]
+        I = ["ashley", "ash\\ley", "ash\\*ley"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash***"), ahocorasick.MATCH_WHOLE)]
+        I = words
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("*a******"), ahocorasick.MATCH_WHOLE)]
+        I = words
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("*"), ahocorasick.MATCH_WHOLE)]
+        I = words
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv("ash*t"), ahocorasick.MATCH_WHOLE)]
+        I = []
+        self.assertEqual(set(I), set(L))
+
+    def test_items_with_valid_escaped_pattern(self):
+        A = self.A
+        words = "ash ashley ash* ash? ash*ley*?* ash\\ley ash\\*ley".split()
+        for word in words:
+            A.add_word(conv(word), word)
+
+        L = [x for x in A.values(conv(r"ash\\*"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash\\ley", "ash\\*ley"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv(r"ash\*"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash*"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv(r"ash\\\**"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash\\*ley"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv(r"ash\\\*ley"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash\\*ley"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv(r"ash\?"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash?"]
+        self.assertEqual(set(I), set(L))
+
+        L = [x for x in A.values(conv(r"ash*\?\*"), ahocorasick.MATCH_WHOLE)]
+        I = ["ash*ley*?*"]
+        self.assertEqual(set(I), set(L))
 
     def test_items_wrong_match_enum(self):
-        with self.assertRaisesRegex(ValueError, "The optional how third argument must be one of"):
-            self.A.keys(conv("anything"), conv("?"), -42)
+        with self.assertRaisesRegex(ValueError, "The optional 'how' argument must be one of"):
+            self.A.keys(conv("anything"), -42)
 
 
 class TestTrieIteratorsInvalidate(TestTrieStorePyObjectsBase):

@@ -61,7 +61,8 @@ memory_free_stack_item(StackItem *item) {
 
 static void
 stack_item_set_prefix(StackItem* item, const void* prefix, size_t prefix_len, const TRIE_LETTER_TYPE* matched_letter) {
-    item->prefix = memory_realloc(item->prefix, (prefix_len + 1) * sizeof *(item->prefix));
+    memory_safefree(item->prefix);
+    item->prefix = malloc((prefix_len + 1) * sizeof *(item->prefix));
     if (item->prefix == NULL) {
         goto no_memory;
     }

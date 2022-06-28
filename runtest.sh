@@ -1,6 +1,10 @@
 #!/bin/bash
 
-TMPDIR=/dev/shm
+SHM_DIR=/dev/shm
+if [[ -d "${SHM_DIR}" ]]
+then
+  TMPDIR="${SHM_DIR}"
+fi
 
 if [[ ${PYTHON} == "" ]]
 then

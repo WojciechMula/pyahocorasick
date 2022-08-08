@@ -119,6 +119,10 @@ return_output:
                 // save the last node on the path
                 iter->last_node  = next;
                 iter->last_index = iter->index;
+            } else if (next->fail && next->fail != iter->automaton->root && next->fail->eow) {
+                iter->last_node  = next->fail;
+                iter->last_index = iter->index;
+                goto return_output;
             }
 
             iter->state = next;

@@ -14,7 +14,7 @@ provides an `ahocorasick` Python module that you can use as a plain dict-like
 Trie or convert a Trie to an automaton for efficient Aho-Corasick search.
 
 **pyahocorasick** is implemented in C and tested on Python 3.6 and up.
-It works on 64 bits Linux, maOS and Windows.
+It works on 64 bits Linux, macOS and Windows.
 
 The license_ is BSD-3-Clause. Some utilities, such as tests and the pure Python
 automaton are dedicated to the Public Domain.

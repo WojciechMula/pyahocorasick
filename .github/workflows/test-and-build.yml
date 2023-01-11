@@ -38,13 +38,13 @@ jobs:
             matrix:
                 os: [macos-10.15, windows-2019]
                 arch: [auto64]
-                build: ["cp{36,37,38,39}-*"]
+                build: ["cp{37,38,39,310,311}-*"]
 
                 include:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux1
-                      build: "cp{36,37,38,39}-*"
+                      build: "cp{37,38,39}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
 
                     - os: ubuntu-latest
@@ -53,13 +53,19 @@ jobs:
                       build: "cp310-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2010
 
+                    - os: ubuntu-latest
+                      arch: auto64
+                      type: manylinux2014
+                      build: "cp311-*"
+                      CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+
                     - os: macos-latest
                       arch: universal2
-                      build: "cp{36,37,38,39,310}-*"
+                      build: "cp{37,38,39,310,311}-*"
                  
                     - os: windows-latest
                       arch: auto64
-                      build: "cp{36,37,38,39,310}-*"
+                      build: "cp{37,38,39,310,311}-*"
 
         steps:
             - uses: actions/checkout@v2
@@ -113,7 +119,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: [ubuntu-18.04, ubuntu-20.04, macos-10.15, macos-11, windows-2019, windows-2022]
-                python: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+                python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
 
         steps:

@@ -24,6 +24,8 @@
 #else
 #   if defined(__CYGWIN__)
 #        include "cygwin.h"
+#   elif defined(__MINGW32__)
+#        include "mingw.h"
 #   else
 #        include "posix.h"
 #   endif

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+TMPDIR=/tmp
 SHM_DIR=/dev/shm
 if [[ -d "${SHM_DIR}" ]]
 then

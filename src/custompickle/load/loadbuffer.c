@@ -65,7 +65,7 @@ loadbuffer_init(LoadBuffer* input, CustompickleHeader* header, CustompickleFoote
         return 0;
     }
 
-    ret = fseek(input->file, -sizeof(CustompickleFooter), SEEK_END);
+    ret = fseek(input->file, -(long int)sizeof(CustompickleFooter), SEEK_END);
     if (UNLIKELY(ret < 0)) {
         PyErr_SetFromErrno(PyExc_IOError);
         return 0;

@@ -90,6 +90,7 @@ static PyObject*
 automaton_search_iter_long_next(PyObject* self) {
     PyObject* output;
     TrieNode* next;
+    TrieNode* next2;
 
     if (iter->version != iter->automaton->version) {
         PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
@@ -120,9 +121,17 @@ return_output:
                 iter->last_node  = next;
                 iter->last_index = iter->index;
             } else if (next->fail && next->fail != iter->automaton->root && next->fail->eow) {
-                iter->last_node  = next->fail;
-                iter->last_index = iter->index;
-                goto return_output;
+                // failover only if the next of next node exists
+                if (iter->index+1 >= iter->end) {
+                    next2 = NULL;
+                } else {
+                    next2 = trienode_get_next(next, iter->input.word[iter->index+1]);
+                }
+                if (!next2) {
+                    iter->last_node  = next->fail;
+                    iter->last_index = iter->index;
+                    goto return_output;
+                }
             }
 
             iter->state = next;

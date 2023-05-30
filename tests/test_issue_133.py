@@ -37,6 +37,19 @@ def test_issue133_iter_long_2():
     assert res == expected
 
 
+def test_issue133_iter_long_3():
+    automaton = ahocorasick.Automaton()
+    for word in ["trimethoprim", "sulfamethoxazole", "meth"]:
+        converted = conv(word)
+        automaton.add_word(converted, word)
+    automaton.make_automaton()
+
+    res = list(automaton.iter_long(conv("sulfamethoxazole and trimethoprim")))
+
+    expected = [(15, "sulfamethoxazole"), (32, "trimethoprim")]
+    assert res == expected
+
+
 def test_issue133_iter_long_with_multibyte_characters():
     automaton = ahocorasick.Automaton()
     for word in ["知识产权", "国家知识产权局"]:

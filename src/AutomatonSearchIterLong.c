@@ -90,6 +90,9 @@ static PyObject*
 automaton_search_iter_long_next(PyObject* self) {
     PyObject* output;
     TrieNode* next;
+    TrieNode* fail_node = NULL; //< the node to fail over
+    int fail_index = -1;        //< the index to fail over
+    uint8_t fail_flag = false;  //< whether this iteration is trigger by failover
 
     if (iter->version != iter->automaton->version) {
         PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
@@ -113,15 +116,24 @@ return_output:
 
     iter->index += 1;
     while (iter->index < iter->end) {
-        next = trienode_get_next(iter->state, iter->input.word[iter->index]);
+        if (fail_flag) {
+            // when failover start from fail node instead of next
+            next = fail_node->fail;
+            iter->index = fail_index;
+            fail_node = NULL;
+            fail_index = -1;
+            fail_flag = false;
+        } else {
+            next = trienode_get_next(iter->state, iter->input.word[iter->index]);
+        }
         if (next) {
             if (next->eow) {
                 // save the last node on the path
                 iter->last_node  = next;
                 iter->last_index = iter->index;
-            } else if (!iter->last_node && next->fail && next->fail != iter->automaton->root && next->fail->eow) {
-                iter->last_node = next->fail;
-                iter->last_index = iter->index;
+            } else if (!iter->last_node && !fail_node && next->fail && next->fail != iter->automaton->root && next->fail->eow) {
+                fail_node = next;
+                fail_index = iter->index;
             }
 
             iter->state = next;
@@ -130,6 +142,11 @@ return_output:
             if (iter->last_node) {
                 goto return_output;
             } else {
+                if (fail_node) {
+                  // failover
+                  fail_flag = true;
+                  continue;
+                }
                 while (true) {
                     iter->state = iter->state->fail;
                     if (iter->state == NULL) {

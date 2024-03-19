@@ -125,5 +125,5 @@ setup(
     extras_require={
         "testing": ["pytest", "twine", "setuptools", "wheel", ],
     },
-    python_requires=">=3.6",
+    python_requires=">=3.8",
 )

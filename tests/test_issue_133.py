@@ -37,14 +37,52 @@ def test_issue133_iter_long_2():
     assert res == expected
 
 
-def test_issue133_iter_long_with_multibyte_characters():
+def test_issue133_iter_long_3():
     automaton = ahocorasick.Automaton()
-    for word in ["知识产权", "国家知识产权局"]:
+    for word in ["trimethoprim", "sulfamethoxazole", "meth"]:
         converted = conv(word)
         automaton.add_word(converted, word)
     automaton.make_automaton()
 
-    res = list(automaton.iter_long(conv("国家知识产权")))
+    res = list(automaton.iter_long(conv("sulfamethoxazole and trimethoprim")))
+
+    expected = [(15, "sulfamethoxazole"), (32, "trimethoprim")]
+    assert res == expected
+
+def test_issue133_iter_long_4():
+    automaton = ahocorasick.Automaton()
+    for word in ["is", "this", "is this a dream?"]:
+        converted = conv(word)
+        automaton.add_word(converted, word)
+    automaton.make_automaton()
+
+    res = list(automaton.iter_long(conv("is this a test?")))
+
+    expected = [(1, "is"), (6, "this")]
+    assert res == expected
+
+def test_issue133_iter_long_5():
+    automaton = ahocorasick.Automaton()
+    for word in ["th", "this", "is this a dream?"]:
+        converted = conv(word)
+        automaton.add_word(converted, word)
+    automaton.make_automaton()
+
+    res = list(automaton.iter_long(conv("is this a test?")))
+
+    expected = [(6, "this")]
+    assert res == expected
+
+
+
+def test_issue133_iter_long_with_multibyte_characters():
+    automaton = ahocorasick.Automaton()
+    for word in ["知识产权", "国家知识产权局2"]:
+        converted = conv(word)
+        automaton.add_word(converted, word)
+    automaton.make_automaton()
+
+    res = list(automaton.iter_long(conv("国家知识产权局1")))
     if ahocorasick.unicode:
         expected = [(5, "知识产权")]
     else:

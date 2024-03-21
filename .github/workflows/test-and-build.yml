@@ -36,15 +36,15 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-10.15, windows-2019]
+                os: [macos-11, windows-2019]
                 arch: [auto64]
-                build: ["cp{37,38,39,310,311}-*"]
+                build: ["cp{38,39,310,311,312}-*"]
 
                 include:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux1
-                      build: "cp{37,38,39}-*"
+                      build: "cp{38,39}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
 
                     - os: ubuntu-latest
@@ -56,22 +56,22 @@ jobs:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux2014
-                      build: "cp311-*"
+                      build: "cp{311,312}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
                     - os: macos-latest
                       arch: universal2
-                      build: "cp{37,38,39,310,311}-*"
+                      build: "cp{38,39,310,311,312}-*"
                  
                     - os: windows-latest
                       arch: auto64
-                      build: "cp{37,38,39,310,311}-*"
+                      build: "cp{38,39,310,311,312}-*"
 
         steps:
             - uses: actions/checkout@v2
 
             - name: Build wheels and run tests
-              uses: pypa/cibuildwheel@v2.11.4
+              uses: pypa/cibuildwheel@v2.17.0
               env:
                   CIBW_BUILD: ${{ matrix.build }}
                   CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
@@ -89,7 +89,7 @@ jobs:
 
     build_sdist:
       name: Build source distribution
-      runs-on: ubuntu-20.04
+      runs-on: ubuntu-22.04
 
       steps:
           - uses: actions/checkout@v2
@@ -118,8 +118,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-18.04, ubuntu-20.04, macos-10.15, macos-11, windows-2019, windows-2022]
-                python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+                os: [ubuntu-20.04, ubuntu-22.04, macos-11, macos-12, windows-2019, windows-2022]
+                python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
 
         steps:

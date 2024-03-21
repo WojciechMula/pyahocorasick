@@ -87,7 +87,7 @@ module = Extension(
 
 setup(
     name="pyahocorasick",
-    version="2.0.0",
+    version="2.1.0",
     ext_modules=[module],
 
     description=(
@@ -125,5 +125,5 @@ setup(
     extras_require={
         "testing": ["pytest", "twine", "setuptools", "wheel", ],
     },
-    python_requires=">=3.6",
+    python_requires=">=3.8",
 )

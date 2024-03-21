@@ -23,9 +23,8 @@ typedef enum {
 } ItemsType;
 
 typedef enum {
-    MATCH_EXACT_LENGTH,
-    MATCH_AT_MOST_PREFIX,
-    MATCH_AT_LEAST_PREFIX
+    MATCH_PREFIX,
+    MATCH_WHOLE,
 } PatternMatchType;
 
 
@@ -38,15 +37,9 @@ typedef struct AutomatonItemsIter {
     TRIE_LETTER_TYPE letter;    ///< current letter
     List        stack;          ///< stack
     ItemsType   type;           ///< type of iterator (KEYS/VALUES/ITEMS)
-    TRIE_LETTER_TYPE* buffer;   ///< buffer to construct key representation
-#ifndef AHOCORASICK_UNICODE
-    char        *char_buffer;
-#endif
 
     size_t pattern_length;
     TRIE_LETTER_TYPE* pattern;  ///< pattern
-    bool use_wildcard;
-    TRIE_LETTER_TYPE wildcard;  ///< wildcard char
     PatternMatchType matchtype; ///< how pattern have to be handled
 } AutomatonItemsIter;
 
@@ -57,10 +50,6 @@ automaton_items_iter_new(
     Automaton* automaton,
     const TRIE_LETTER_TYPE* word,
     const Py_ssize_t wordlen,
-
-    const bool use_wildcard,
-    const TRIE_LETTER_TYPE wildcard,
-
     const PatternMatchType  matchtype
 );
 

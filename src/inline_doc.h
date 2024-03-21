@@ -136,10 +136,10 @@
 	"  pointer)."
 
 #define automaton_items_doc \
-	"items([prefix, [wildcard, [how]]])\n" \
+	"items([pattern, [how]])\n" \
 	"\n" \
 	"Return an iterator on tuples of (key, value). Keys are\n" \
-	"matched optionally to the prefix using the same logic and\n" \
+	"matched optionally to the pattern using the same logic and\n" \
 	"arguments as in the keys() method."
 
 #define automaton_iter_doc \
@@ -176,23 +176,26 @@
 	"the search to an input string slice as in string[start:end]."
 
 #define automaton_keys_doc \
-	"keys([prefix, [wildcard, [how]]])\n" \
+	"keys([pattern, [how]])\n" \
 	"\n" \
-	"Return an iterator on keys. If the optional prefix string is\n" \
-	"provided, only yield keys starting with this prefix.\n" \
+	"Return an iterator on keys. If the optional pattern string is\n" \
+	"provided, only yield keys starting with this pattern.\n" \
 	"\n" \
-	"If the optional wildcard is provided as a single character\n" \
-	"string, then the prefix is treated as a simple pattern using\n" \
-	"this character as a wildcard.\n" \
+	"The pattern can contain the following Unix shell-style wildcards:\n" \
+	"- ?: matches any single character.\n" \
+	"- *: matches everything.\n" \
 	"\n" \
-	"The optional how argument is used to control how strings are\n" \
+	"The '\\' character is reserved as the escape character. For example,\n" \
+	"r'\\*' matches the literal '*' character. Each literal backslash must\n" \
+	"be either expressed as '\\\\' or as a raw r'\\' string. For example,\n" \
+	"r'\\t' matches '\\t'.'\n" \
+	"\n" \
+	"The optional 'how' argument is used to control how patterns are\n" \
 	"matched using one of these possible values:\n" \
-	"- ahocorasick.MATCH_EXACT_LENGTH (default) Yield matches\n" \
-	"  that have the same exact length as the prefix length.\n" \
-	"- ahocorasick.MATCH_AT_LEAST_PREFIX Yield matches that have\n" \
-	"  a length greater or equal to the prefix length.\n" \
-	"- ahocorasick.MATCH_AT_MOST_PREFIX Yield matches that have a\n" \
-	"  length lesser or equal to the prefix length."
+	"- ahocorasick.MATCH_PREFIX (default): Yield keys with prefixes\n" \
+	"  that match the given pattern.\n" \
+	"- ahocorasick.MATCH_WHOLE: Yield keys that fully match\n" \
+	"  the given pattern."
 
 #define automaton_len_doc \
 	"len() -> integer\n" \
@@ -261,10 +264,10 @@
 	"for large strings in multiple smaller chunks."
 
 #define automaton_values_doc \
-	"values([prefix, [wildcard, [how]]])\n" \
+	"values([pattern, [how]])\n" \
 	"\n" \
 	"Return an iterator on values associated with each keys. Keys\n" \
-	"are matched optionally to the prefix using the same logic\n" \
+	"are matched optionally to the pattern using the same logic\n" \
 	"and arguments as in the keys() method."
 
 #define module_doc \

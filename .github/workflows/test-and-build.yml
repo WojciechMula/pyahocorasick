@@ -44,7 +44,7 @@ jobs:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux1
-                      build: "cp{38,39,310}-*"
+                      build: "cp{38,39}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
 
                     - os: ubuntu-latest
@@ -56,7 +56,7 @@ jobs:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux2014
-                      build: "cp311-*"
+                      build: "cp{311,312}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
                     - os: macos-latest
@@ -65,7 +65,7 @@ jobs:
                  
                     - os: windows-latest
                       arch: auto64
-                      build: "cp{37,38,39,310,311,312}-*"
+                      build: "cp{38,39,310,311,312}-*"
 
         steps:
             - uses: actions/checkout@v2

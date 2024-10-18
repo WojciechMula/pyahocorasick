@@ -31,19 +31,11 @@
 #   endif
 #endif
 
-#if PY_MAJOR_VERSION >= 3
-    #define PY3K
-    #if PY_MINOR_VERSION >= 3 || PY_MAJOR_VERSION > 3
-    #define PEP393
-    #ifdef AHOCORASICK_UNICODE
-        #define PEP393_UNICODE
-    #endif
-    #endif
-#else
-    #ifdef AHOCORASICK_UNICODE
-        #warning "No support for unicode in version for Python2"
-    #endif
-    #undef AHOCORASICK_UNICODE
+#if PY_MINOR_VERSION >= 3 || PY_MAJOR_VERSION > 3
+#define PEP393
+#ifdef AHOCORASICK_UNICODE
+    #define PEP393_UNICODE
+#endif
 #endif
 
 // setup supported character set
@@ -86,7 +78,7 @@
 #   define  ASSERT(expr)
 #endif
 
-#if defined(PYCALLS_INJECT_FAULTS) && defined(PY3K)
+#if defined(PYCALLS_INJECT_FAULTS)
 #   include "pycallfault/pycallfault.h"
 #else
 #   define F(name) name

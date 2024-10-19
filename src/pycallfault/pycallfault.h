@@ -28,6 +28,8 @@ int check_and_set_error(void);
 
 #define Py_BuildValue_custom(...) (check_and_set_error() ? NULL : Py_BuildValue(__VA_ARGS__))
 
+#define PyLong_FromVoidPtr_custom(arg) (check_and_set_error() ? NULL : PyLong_FromVoidPtr(arg))
+
 #define PyCallable_Check_custom(arg) (check() ? 0 : PyCallable_Check(arg))
 
 #define PyString_Check_custom(arg) (check() ? 0 : PyString_Check(arg))

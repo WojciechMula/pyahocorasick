@@ -890,7 +890,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
         return NULL;
     }
 
-    if (!F(PyArg_ParseTupleAndKeywords)(args, keywds, "O|iii", kwlist, &object, &start_tmp, &end_tmp, &ignore_white_space_tmp)) {
+    if (!F(PyArg_ParseTupleAndKeywords)(args, keywds, "O|nni", kwlist, &object, &start_tmp, &end_tmp, &ignore_white_space_tmp)) {
         return NULL;
     }
 

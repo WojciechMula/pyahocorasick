@@ -36,9 +36,9 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-11, windows-2019]
+                os: [macos-12, windows-2019]
                 arch: [auto64]
-                build: ["cp{38,39,310,311,312}-*"]
+                build: ["cp{38,39,310,311,312,313}-*"]
 
                 include:
                     - os: ubuntu-latest
@@ -56,22 +56,22 @@ jobs:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux2014
-                      build: "cp{311,312}-*"
+                      build: "cp{311,312,313}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
                     - os: macos-latest
                       arch: universal2
-                      build: "cp{38,39,310,311,312}-*"
+                      build: "cp{38,39,310,311,312,313}-*"
                  
                     - os: windows-latest
                       arch: auto64
-                      build: "cp{38,39,310,311,312}-*"
+                      build: "cp{38,39,310,311,312,313}-*"
 
         steps:
             - uses: actions/checkout@v2
 
             - name: Build wheels and run tests
-              uses: pypa/cibuildwheel@v2.17.0
+              uses: pypa/cibuildwheel@v2.21.3
               env:
                   CIBW_BUILD: ${{ matrix.build }}
                   CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
@@ -118,8 +118,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-20.04, ubuntu-22.04, macos-11, macos-12, windows-2019, windows-2022]
-                python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+                os: [ubuntu-20.04, ubuntu-22.04, macos-12, macos-13, windows-2019, windows-2022]
+                python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
 
         steps:

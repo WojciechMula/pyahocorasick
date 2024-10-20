@@ -83,7 +83,7 @@ jobs:
                   CIBW_SKIP: "pp*"
 
             - name: Collect built wheels
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
                   path: wheelhouse/*.whl
 
@@ -104,7 +104,7 @@ jobs:
                 twine check dist/*
 
           - name: Collect built sdist
-            uses: actions/upload-artifact@v2
+            uses: actions/upload-artifact@v4
             with:
                 path: dist/*.tar.gz
 

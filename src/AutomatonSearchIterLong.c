@@ -88,11 +88,11 @@ automaton_build_output_iter_long(PyObject* self) {
 
 static PyObject*
 automaton_search_iter_long_next(PyObject* self) {
-    PyObject* output;
+    PyObject* output = NULL;
     TrieNode* next;
     TrieNode* fail_node = NULL; //< the node to fail over
     int fail_index = -1;        //< the index to fail over
-    uint8_t fail_flag = false;  //< whether this iteration is trigger by failover
+    uint8_t fail_flag = false;  //< whether this iteration is triggered by failover
 
     if (iter->version != iter->automaton->version) {
         PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
@@ -101,6 +101,7 @@ automaton_search_iter_long_next(PyObject* self) {
 
 return_output:
     if (iter->last_node) {
+        Py_XDECREF(output); // Release any existing reference to avoid memory leak
         output = automaton_build_output_iter_long(self);
 
         // start over, as we don't want overlapped results

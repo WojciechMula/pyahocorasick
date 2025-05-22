@@ -16,6 +16,7 @@
 #include <structmember.h>   // PyMemberDef
 
 #include <iso646.h>
+#include <stdbool.h>
 
 #define DEBUG
 
@@ -91,9 +92,5 @@
 #else
 #   define F(name) name
 #endif
-
-typedef char    bool;
-#define true 1
-#define false 0
 
 #endif

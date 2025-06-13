@@ -36,15 +36,15 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-10.15, windows-2019]
+                os: [macos-13, windows-2022]
                 arch: [auto64]
-                build: ["cp{37,38,39,310,311}-*"]
+                build: ["cp{39,310,311,312,313}-*"]
 
                 include:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux1
-                      build: "cp{37,38,39}-*"
+                      build: "cp39-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
 
                     - os: ubuntu-latest
@@ -56,22 +56,22 @@ jobs:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux2014
-                      build: "cp311-*"
+                      build: "cp{311,312,313}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
                     - os: macos-latest
                       arch: universal2
-                      build: "cp{37,38,39,310,311}-*"
+                      build: "cp{39,310,311,312,313}-*"
                  
                     - os: windows-latest
                       arch: auto64
-                      build: "cp{37,38,39,310,311}-*"
+                      build: "cp{39,310,311,312,313}-*"
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
 
             - name: Build wheels and run tests
-              uses: pypa/cibuildwheel@v2.11.4
+              uses: pypa/cibuildwheel@v2.23.3
               env:
                   CIBW_BUILD: ${{ matrix.build }}
                   CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
@@ -83,20 +83,21 @@ jobs:
                   CIBW_SKIP: "pp*"
 
             - name: Collect built wheels
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v4
               with:
-                  path: wheelhouse/*.whl
+                  name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+                  path: ./wheelhouse/*.whl
 
     build_sdist:
       name: Build source distribution
-      runs-on: ubuntu-20.04
+      runs-on: ubuntu-24.04
 
       steps:
-          - uses: actions/checkout@v2
+          - uses: actions/checkout@v4
 
           - name: Checkout and install reqs
             run: |
-                pip install --upgrade --user build twine pip setuptools
+                pip install --upgrade --user build twine packaging pip setuptools
 
           - name: Build sdist
             run: |
@@ -104,7 +105,7 @@ jobs:
                 twine check dist/*
 
           - name: Collect built sdist
-            uses: actions/upload-artifact@v2
+            uses: actions/upload-artifact@v4
             with:
                 path: dist/*.tar.gz
 
@@ -118,17 +119,17 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-18.04, ubuntu-20.04, macos-10.15, macos-11, windows-2019, windows-2022]
-                python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+                os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, windows-2022, windows-2025]
+                python: ["3.9", "3.10", "3.11", "3.12", "3.13.3"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
 
         steps:
             - name: Set up Python
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v5
               with:
                 python-version: "${{ matrix.python }}"
 
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
 
             - name: Build, install and test
               run: >

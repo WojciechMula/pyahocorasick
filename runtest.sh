@@ -1,6 +1,11 @@
 #!/bin/bash
 
-TMPDIR=/dev/shm
+TMPDIR=/tmp
+SHM_DIR=/dev/shm
+if [[ -d "${SHM_DIR}" ]]
+then
+  TMPDIR="${SHM_DIR}"
+fi
 
 if [[ ${PYTHON} == "" ]]
 then
@@ -287,7 +292,7 @@ function handle_coverage
 
     export CFLAGS="--coverage"
     force_rebuild
-    run_unittests
+    make test
 
     local DIR=coverage
     local INDEX=pyahocorasick.html
@@ -312,7 +317,7 @@ function handle_release
         run_unpickletests
     fi
 
-    # 2. build with memory debug and run unit tests and unpickle tests
+    # 2. build with memory debug and run unit tests and unpickle tests separately
     if true
     then
         export CFLAGS="${MEMORY_DEBUG}"

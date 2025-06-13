@@ -11,8 +11,6 @@ Use this checklist to track the things to check before a release.
 action                       python3
 ---------------------------------------
 make test                           [ ]
-./runtest.sh unit                   [ ]
-./runtest.sh unpickle               [ ]
 ./runtest.sh valgrind               [ ]
 ./runtest.sh mallocfaults           [ ]
 ./runtest.sh reallocfaults          [ ]
@@ -20,15 +18,17 @@ make test                           [ ]
 ./runtest.sh coverage               [ ]
 
 
-Once you ran the coverage, copy and commit the coverage/report to etc/coverage
+Once you ran the coverage, copy and commit the coverage/ report files to etc/coverage
 
 
-3. marge and tag the release once everything is A-OK
+3. Merge and tag the release once everything is A-OK.
+
+This will trigger the build of wheels and source archives.
 
 
 4. Finally: 
 
-- collect the built wheels and sdist from the CI run for the tag run (artifact.zip)
-- extract the zip
-- run a clamscan and a twine check on these
-- publish on PyPI with twine upload.
+- Collect the built wheels and sdist from the CI run for the tag run (artifact.zip)
+- Extract the zip.
+- Run a clamscan and a "twine check" on these.
+- Publish on PyPI with "twine upload".

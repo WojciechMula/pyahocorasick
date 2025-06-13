@@ -22,17 +22,10 @@ automaton_save_load_parse_args(KeysStore store, PyObject* args, SaveLoadParamete
         return false;
     }
 
-#if defined(PY3K)
     if (UNLIKELY(!F(PyUnicode_Check)(string))) {
         PyErr_SetString(PyExc_TypeError, "the first argument must be a string");
         return false;
     }
-#else
-    if (UNLIKELY(!F(PyString_Check)(string))) {
-        PyErr_SetString(PyExc_TypeError, "the first argument must be a string");
-        return false;
-    }
-#endif
 
     if (store == STORE_ANY) {
         result->callback = F(PyTuple_GetItem)(args, 1);
@@ -46,12 +39,7 @@ automaton_save_load_parse_args(KeysStore store, PyObject* args, SaveLoadParamete
         }
     }
 
-#if defined(PY3K)
     result->path = F(PyUnicode_AsUTF8String)(string);
-#else
-    result->path = string;
-    Py_INCREF(string);
-#endif
     if (UNLIKELY(result->path == NULL)) {
         return false;
     }

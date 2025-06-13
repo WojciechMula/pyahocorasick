@@ -31,34 +31,12 @@
 #   endif
 #endif
 
-#if PY_MAJOR_VERSION >= 3
-    #define PY3K
-    #if PY_MINOR_VERSION >= 3 || PY_MAJOR_VERSION > 3
-    #define PEP393
-    #ifdef AHOCORASICK_UNICODE
-        #define PEP393_UNICODE
-    #endif
-    #endif
-#else
-    #ifdef AHOCORASICK_UNICODE
-        #warning "No support for unicode in version for Python2"
-    #endif
-    #undef AHOCORASICK_UNICODE
-#endif
-
 // setup supported character set
 #ifdef AHOCORASICK_UNICODE
-#       if defined PEP393_UNICODE || defined Py_UNICODE_WIDE
-        // Either Python uses UCS-4 or we don't know what Python uses,
-        // but we use UCS-4
-#       define TRIE_LETTER_TYPE uint32_t
-#       define TRIE_LETTER_SIZE 4
-#   else
-        // Python use UCS-2
-#       define TRIE_LETTER_TYPE uint16_t
-#       define TRIE_LETTER_SIZE 2
-#       define VARIABLE_LEN_CHARCODES 1
-#   endif
+    // Either Python uses UCS-4 or we don't know what Python uses,
+    // but we use UCS-4
+#   define TRIE_LETTER_TYPE uint32_t
+#   define TRIE_LETTER_SIZE 4
 #else
     // only bytes are supported
 #   define TRIE_LETTER_TYPE uint16_t
@@ -86,7 +64,7 @@
 #   define  ASSERT(expr)
 #endif
 
-#if defined(PYCALLS_INJECT_FAULTS) && defined(PY3K)
+#if defined(PYCALLS_INJECT_FAULTS)
 #   include "pycallfault/pycallfault.h"
 #else
 #   define F(name) name

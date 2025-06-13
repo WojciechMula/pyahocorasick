@@ -116,7 +116,6 @@ setup(
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "License :: OSI Approved :: BSD License",
         "Programming Language :: C",
         "Programming Language :: Python :: 3",
         "Topic :: Software Development :: Libraries",

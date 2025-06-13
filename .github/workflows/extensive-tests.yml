@@ -13,7 +13,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+                python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
                 include:
                     - os: ubuntu-latest
                       test: make test
@@ -46,7 +46,7 @@ jobs:
               run: sudo apt-get install -y gcovr valgrind
 
             - name: Set up Python
-              uses: actions/setup-python@v4
+              uses: actions/setup-python@v5
               with:
                 python-version: "${{ matrix.python }}"
 

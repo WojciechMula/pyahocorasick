@@ -3,7 +3,7 @@
 ========================================================================
 
 
-|build-appveyor| |build-ghactions| |docs|
+|build-ghactions| |docs|
 
 
 **pyahocorasick** is a fast and memory efficient library for exact or approximate
@@ -13,7 +13,7 @@ of time and saved (as a pickle) to disk to reload and reuse later.  The library
 provides an `ahocorasick` Python module that you can use as a plain dict-like
 Trie or convert a Trie to an automaton for efficient Aho-Corasick search.
 
-**pyahocorasick** is implemented in C and tested on Python 3.8 and up.
+**pyahocorasick** is implemented in C and tested on Python 3.9 and up.
 It works on 64 bits Linux, macOS and Windows.
 
 The license_ is BSD-3-Clause. Some utilities, such as tests and the pure Python
@@ -248,9 +248,10 @@ The initial author and maintainer is Wojciech Muła. `Philippe Ombredanne
 and rewrote documentation, setup CI servers and did a some work to make this
 module more accessible to end users.
 
-Alphabetic list of authors:
+Alphabetic list of authors and contributors:
 
 * **Andrew Grigorev**
+* **Ayan Mahapatra**
 * **Bogdan**
 * **David Woakes**
 * **Edward Betts**
@@ -326,10 +327,6 @@ for Python you may consider these other libraries:
  * seems unmaintained (last update in 2005).
  * GPL-licensed.
 
-
-.. |build-appveyor| image:: https://ci.appveyor.com/api/projects/status/github/WojciechMula/pyahocorasick?branch=master&svg=true
-   :target: https://ci.appveyor.com/project/WojciechMula/pyahocorasick
-   :alt: Appveyor Windows Master branch tests status
 
 .. |build-ghactions| image:: https://github.com/WojciechMula/pyahocorasick/actions/workflows/test-and-build.yml/badge.svg
    :target: https://github.com/WojciechMula/pyahocorasick/actions/workflows/test-and-build.yml

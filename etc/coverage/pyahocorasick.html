@@ -1,48 +1,321 @@
-------------------------------------------------------------------------------
-                           GCC Code Coverage Report
-Directory: None
-------------------------------------------------------------------------------
-File                                       Lines    Exec  Cover   Missing
-------------------------------------------------------------------------------
-/home/pombreda/w421/pyahocorasick/Automaton.c
-                                             440     408    92%   47,120-121,129-130,220-221,250-251,261-262,312-313,512,535-536,646-648,677-678,706-707,978-979,998-999,1026-1027,1174-1176
-/home/pombreda/w421/pyahocorasick/AutomatonItemsIter.c
-                                             106      95    89%   95-97,183-184,200-201,244-245,282-283
-/home/pombreda/w421/pyahocorasick/AutomatonSearchIter.c
-                                              80      77    96%   129,191-192
-/home/pombreda/w421/pyahocorasick/AutomatonSearchIterLong.c
-                                              87      54    62%   49,77,83-84,95-96,153,160-163,171-173,178-179,185-186,190-192,194-195,197-198,200-201,203-205,207-208,211
-/home/pombreda/w421/pyahocorasick/Automaton_pickle.c
-                                             161     125    77%   91-92,100,102-105,107,141-143,155-156,217,220-221,279,282-283,302,305,312,315,373,398,401,443,455,469,472-474,477,482-484
-/home/pombreda/w421/pyahocorasick/pyahocorasick.c
-                                              22      21    95%   107
-/home/pombreda/w421/pyahocorasick/slist.c
-                                              44      41    93%   30-32
-/home/pombreda/w421/pyahocorasick/src/custompickle/custompickle.c
-                                              23      23   100%   
-/home/pombreda/w421/pyahocorasick/src/custompickle/load/loadbuffer.c
-                                              76      48    63%   18-19,34-35,40-41,64-65,70-71,81-82,86-87,91-92,101-102,127-128,130-131,134,143,148-150,152
-/home/pombreda/w421/pyahocorasick/src/custompickle/load/module_automaton_load.c
-                                             102      84    82%   79-80,98-99,121-122,127-128,138-139,158,164,179-180,182,204,272-273
-/home/pombreda/w421/pyahocorasick/src/custompickle/pyhelpers.c
-                                              22      22   100%   
-/home/pombreda/w421/pyahocorasick/src/custompickle/save/automaton_save.c
-                                              44      40    90%   78,80,114-115
-/home/pombreda/w421/pyahocorasick/src/custompickle/save/savebuffer.c
-                                              53      39    73%   21-22,27-28,33-36,46,63,77-79,85
-/home/pombreda/w421/pyahocorasick/src/pickle/pickle_data.c
-                                              55      38    69%   21-22,24-26,43,72,74,76-77,81-82,86,90,110,120-121
-/home/pombreda/w421/pyahocorasick/trie.c      77      74    96%   38-39,115
-/home/pombreda/w421/pyahocorasick/trienode.c
-                                              57      57   100%   
-/home/pombreda/w421/pyahocorasick/utils.c
-                                             108     104    96%   172-173,246-247
-/usr/include/x86_64-linux-gnu/bits/stdio2.h
-                                               8       2    25%   97,288-293
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h
-                                               9       9   100%   
-/usr/include/x86_64-linux-gnu/bits/string3.h
-                                               1       1   100%   
-------------------------------------------------------------------------------
-TOTAL                                       1575    1362    86%
-------------------------------------------------------------------------------
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>GCC Code Coverage Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="pyahocorasick.css">
+  </head>
+
+  <body>
+    <h1>GCC Code Coverage Report</h1>
+
+    <hr/>
+
+    <div class="summary">
+<div>
+  <table class="legend">
+    <tr>
+      <th scope="row">Directory:</th>
+      <td>src/</td>
+    </tr>
+    <tr>
+      <th scope="row">Date:</th>
+      <td>2024-03-21 11:27:26</td>
+    </tr>
+    <tr>
+      <th scope="row">Legend:</th>
+      <td class="legend">
+        <span class="coverage-low">low: &gt;= 0%</span>
+        <span class="coverage-medium">medium: &gt;= 75.0%</span>
+        <span class="coverage-high">high: &gt;= 90.0%</span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div>
+  <table class="coverage">
+    <tr>
+      <th></th>
+      <th scope="col">Exec</th>
+      <th scope="col">Total</th>
+      <th scope="col">Coverage</th>
+    </tr>
+    <tr>
+      <th scope="row">Lines:</th>
+      <td>1619</td>
+      <td>1867</td>
+      <td class="coverage-medium">86.7%</td>
+    </tr>
+    <tr>
+      <th scope="row">Branches:</th>
+      <td>717</td>
+      <td>1052</td>
+      <td class="coverage-low">68.2%</td>
+    </tr>
+  </table>
+</div>
+    </div>
+
+    <hr/>
+
+<table class="file-list">
+  <col/>
+  <colgroup span="3"/>
+  <colgroup span="2"/>
+
+  <tr>
+    <th scope="col">File</th>
+    <th scope="colgroup" colspan=3>Lines</th>
+    <th scope="colgroup" colspan=2>Branches</th>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.Automaton.c.c8345a4704093bea965428069fe6b934.html">Automaton.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="92.0" title="92.0%">92.0</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">92.0%</td>
+    <td class="CoverValue line-coverage coverage-high">493 / 536</td>
+    <td class="CoverValue branch-coverage coverage-low">71.9%</td>
+    <td class="CoverValue branch-coverage coverage-low">233 / 324</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.AutomatonItemsIter.c.e60eac6e7d9845aeb8639f220bb7c510.html">AutomatonItemsIter.c</a>
+    </th>
+    <td>
+      <meter class="coverage-medium" min="0" max="100" value="87.1" title="87.1%">87.1</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-medium">87.1%</td>
+    <td class="CoverValue line-coverage coverage-medium">115 / 132</td>
+    <td class="CoverValue branch-coverage coverage-medium">78.9%</td>
+    <td class="CoverValue branch-coverage coverage-medium">45 / 57</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.AutomatonSearchIter.c.43e993850813aa24896eb703d07610cc.html">AutomatonSearchIter.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="93.8" title="93.8%">93.8</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">93.8%</td>
+    <td class="CoverValue line-coverage coverage-high">90 / 96</td>
+    <td class="CoverValue branch-coverage coverage-low">73.3%</td>
+    <td class="CoverValue branch-coverage coverage-low">33 / 45</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.AutomatonSearchIterLong.c.42fc3daf0fd157b3646557e37d6e2bba.html">AutomatonSearchIterLong.c</a>
+    </th>
+    <td>
+      <meter class="coverage-low" min="0" max="100" value="61.1" title="61.1%">61.1</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-low">61.1%</td>
+    <td class="CoverValue line-coverage coverage-low">66 / 108</td>
+    <td class="CoverValue branch-coverage coverage-low">50.0%</td>
+    <td class="CoverValue branch-coverage coverage-low">26 / 52</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.Automaton_pickle.c.7888c5d1fe9cf078591e4f7df5b00658.html">Automaton_pickle.c</a>
+    </th>
+    <td>
+      <meter class="coverage-medium" min="0" max="100" value="86.0" title="86.0%">86.0</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-medium">86.0%</td>
+    <td class="CoverValue line-coverage coverage-medium">178 / 207</td>
+    <td class="CoverValue branch-coverage coverage-medium">80.4%</td>
+    <td class="CoverValue branch-coverage coverage-medium">74 / 92</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.custompickle.c.5748ed398bc56548fc898e13ee070963.html">custompickle/custompickle.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="91.7" title="91.7%">91.7</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">91.7%</td>
+    <td class="CoverValue line-coverage coverage-high">22 / 24</td>
+    <td class="CoverValue branch-coverage coverage-low">50.0%</td>
+    <td class="CoverValue branch-coverage coverage-low">7 / 14</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.loadbuffer.c.ec3046f798dedd9319257f9ff52efe5d.html">custompickle/load/loadbuffer.c</a>
+    </th>
+    <td>
+      <meter class="coverage-low" min="0" max="100" value="65.9" title="65.9%">65.9</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-low">65.9%</td>
+    <td class="CoverValue line-coverage coverage-low">54 / 82</td>
+    <td class="CoverValue branch-coverage coverage-low">42.6%</td>
+    <td class="CoverValue branch-coverage coverage-low">23 / 54</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.module_automaton_load.c.70df758e59dfcbc671ae54e05518ae97.html">custompickle/load/module_automaton_load.c</a>
+    </th>
+    <td>
+      <meter class="coverage-medium" min="0" max="100" value="79.4" title="79.4%">79.4</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-medium">79.4%</td>
+    <td class="CoverValue line-coverage coverage-medium">108 / 136</td>
+    <td class="CoverValue branch-coverage coverage-low">66.3%</td>
+    <td class="CoverValue branch-coverage coverage-low">57 / 86</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.pyhelpers.c.df35bf0a97d8ab2154e98ab0df9353ab.html">custompickle/pyhelpers.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="95.7" title="95.7%">95.7</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">95.7%</td>
+    <td class="CoverValue line-coverage coverage-high">22 / 23</td>
+    <td class="CoverValue branch-coverage coverage-medium">83.3%</td>
+    <td class="CoverValue branch-coverage coverage-medium">15 / 18</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.automaton_save.c.e05b75f29d84181b0a80ab4b89d22304.html">custompickle/save/automaton_save.c</a>
+    </th>
+    <td>
+      <meter class="coverage-medium" min="0" max="100" value="89.3" title="89.3%">89.3</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-medium">89.3%</td>
+    <td class="CoverValue line-coverage coverage-medium">50 / 56</td>
+    <td class="CoverValue branch-coverage coverage-medium">75.0%</td>
+    <td class="CoverValue branch-coverage coverage-medium">21 / 28</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.savebuffer.c.9efecd6b1c5da5ba3b57cf0f265885c9.html">custompickle/save/savebuffer.c</a>
+    </th>
+    <td>
+      <meter class="coverage-low" min="0" max="100" value="73.7" title="73.7%">73.7</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-low">73.7%</td>
+    <td class="CoverValue line-coverage coverage-low">42 / 57</td>
+    <td class="CoverValue branch-coverage coverage-low">46.2%</td>
+    <td class="CoverValue branch-coverage coverage-low">12 / 26</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.pickle_data.c.dc2f1a872fa0ca8403b0af5b1fb178fb.html">pickle/pickle_data.c</a>
+    </th>
+    <td>
+      <meter class="coverage-low" min="0" max="100" value="70.5" title="70.5%">70.5</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-low">70.5%</td>
+    <td class="CoverValue line-coverage coverage-low">43 / 61</td>
+    <td class="CoverValue branch-coverage coverage-low">31.0%</td>
+    <td class="CoverValue branch-coverage coverage-low">13 / 42</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.pyahocorasick.c.366b69e06e390f1b09a74aab6f6ff11b.html">pyahocorasick.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="91.7" title="91.7%">91.7</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">91.7%</td>
+    <td class="CoverValue line-coverage coverage-high">22 / 24</td>
+    <td class="CoverValue branch-coverage coverage-low">33.3%</td>
+    <td class="CoverValue branch-coverage coverage-low">2 / 6</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.slist.c.149ada9d2428c0e7b1e0f8ca5c0fa042.html">slist.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="95.7" title="95.7%">95.7</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">95.7%</td>
+    <td class="CoverValue line-coverage coverage-high">45 / 47</td>
+    <td class="CoverValue branch-coverage coverage-low">70.8%</td>
+    <td class="CoverValue branch-coverage coverage-low">17 / 24</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.trie.c.56c6f58419c56e17780e32cd24faa4bf.html">trie.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="95.8" title="95.8%">95.8</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">95.8%</td>
+    <td class="CoverValue line-coverage coverage-high">91 / 95</td>
+    <td class="CoverValue branch-coverage coverage-medium">82.4%</td>
+    <td class="CoverValue branch-coverage coverage-medium">56 / 68</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.trienode.c.4bded5053f425136638fdfddc94e9519.html">trienode.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="100.0" title="100.0%">100.0</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">100.0%</td>
+    <td class="CoverValue line-coverage coverage-high">69 / 69</td>
+    <td class="CoverValue branch-coverage coverage-low">65.9%</td>
+    <td class="CoverValue branch-coverage coverage-low">29 / 44</td>
+  </tr>
+
+
+  <tr>
+    <th scope="row">
+      <a href="pyahocorasick.utils.c.74710e3ecbe94109f39de34133e1c8ca.html">utils.c</a>
+    </th>
+    <td>
+      <meter class="coverage-high" min="0" max="100" value="95.6" title="95.6%">95.6</meter>
+    </td>
+    <td class="CoverValue line-coverage coverage-high">95.6%</td>
+    <td class="CoverValue line-coverage coverage-high">109 / 114</td>
+    <td class="CoverValue branch-coverage coverage-medium">75.0%</td>
+    <td class="CoverValue branch-coverage coverage-medium">54 / 72</td>
+  </tr>
+
+</table>
+
+    <hr/>
+
+    <footer>
+      Generated by: <a href="http://gcovr.com">GCOVR (Version 5.0)</a>
+    </footer>
+  </body>
+</html>

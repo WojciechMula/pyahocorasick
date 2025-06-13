@@ -9,9 +9,7 @@
 
 # files
 MANIFEST
-runtest.sh
 tags
-release_checklist.txt
 .gdb_history
 
 # dirs
@@ -19,7 +17,7 @@ build/
 dist/
 /pyahocorasick.egg-info/
 /tmp/
-coverage/
+/coverage/
 /venv/
 /.python-version
 /automaton-wee.pickle

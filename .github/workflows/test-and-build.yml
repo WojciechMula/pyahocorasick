@@ -26,6 +26,7 @@ name: Run tests and build wheel and sdist on all supported OS and Python
 
 on: [push, pull_request, workflow_dispatch]
 
+permissions: {}
 jobs:
     build_wheels:
         name: Build unicode wheels ${{ matrix.type }} ${{ matrix.arch }} on ${{ matrix.os }}
@@ -47,6 +48,11 @@ jobs:
                       build: "cp{310,311,312,313,314}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
+                    - os: ubuntu-24.04-arm
+                      arch: aarch64
+                      build: "cp{310,311,312,313,314}-*"
+                      CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+
                     - os: macos-latest
                       arch: universal2
                       build: "cp{310,311,312,313,314}-*"
@@ -56,20 +62,22 @@ jobs:
                       build: "cp{310,311,312,313,314}-*"
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                persist-credentials: false
 
             - name: Build wheels and run tests
-              uses: pypa/cibuildwheel@v3.2.1
+              uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
               env:
                   CIBW_BUILD: ${{ matrix.build }}
-                  CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
                   CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
+                  CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.CIBW_MANYLINUX_AARCH64_IMAGE }}
                   CIBW_ARCHS: ${{ matrix.arch }}
                   CIBW_TEST_REQUIRES: pytest
                   CIBW_TEST_COMMAND: pytest -vvs {project}/tests
 
             - name: Collect built wheels
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
               with:
                   name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
                   path: ./wheelhouse/*.whl
@@ -84,17 +92,19 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-22.04, ubuntu-24.04, macos-14, macos-15, windows-2022, windows-2025]
+                os: [ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm, macos-14, macos-15, macos-15-intel, windows-2022, windows-2025]
                 python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
 
         steps:
             - name: Set up Python
-              uses: actions/setup-python@v5
+              uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
               with:
                 python-version: "${{ matrix.python }}"
 
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                persist-credentials: false
 
             - name: Build, install and test
               run: >

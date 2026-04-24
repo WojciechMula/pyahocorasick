@@ -18,6 +18,7 @@ on:
     tags:
       - "v*.*.*"
 
+permissions: {}
 jobs:
   build-wheels:
       name: Build unicode wheels ${{ matrix.type }} ${{ matrix.arch }} on ${{ matrix.os }}
@@ -39,6 +40,11 @@ jobs:
                     build: "cp{310,311,312,313,314}-*"
                     CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
+                  - os: ubuntu-24.04-arm
+                    arch: aarch64
+                    build: "cp{310,311,312,313,314}-*"
+                    CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+
                   - os: macos-latest
                     arch: universal2
                     build: "cp{310,311,312,313,314}-*"
@@ -48,18 +54,20 @@ jobs:
                     build: "cp{310,311,312,313,314}-*"
 
       steps:
-          - uses: actions/checkout@v4
+          - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+            with:
+              persist-credentials: false
 
           - name: Build wheels and run tests
-            uses: pypa/cibuildwheel@v3.2.1
+            uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
             env:
                 CIBW_BUILD: ${{ matrix.build }}
-                CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.CIBW_MANYLINUX_I686_IMAGE }}
                 CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
+                CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.CIBW_MANYLINUX_AARCH64_IMAGE }}
                 CIBW_ARCHS: ${{ matrix.arch }}
 
           - name: Collect built wheels
-            uses: actions/upload-artifact@v4
+            uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
             with:
                 name: pyahocorasick-wheels-${{ matrix.os }}-${{ strategy.job-index }}
                 path: ./wheelhouse/*.whl
@@ -69,7 +77,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+          with:
+            persist-credentials: false
 
         - name: Checkout and install reqs
           run: |
@@ -81,7 +91,7 @@ jobs:
               twine check dist/*
 
         - name: Collect built sdist
-          uses: actions/upload-artifact@v4
+          uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
           with:
               name: pyahocorasick-sdist
               path: dist/*.tar.gz
@@ -91,7 +101,7 @@ jobs:
     needs: [build-sdist, build-wheels]
     steps:
       - name: Merge created wheels and sdist in a single zip
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: pyahocorasick-build
           pattern: pyahocorasick-*
@@ -101,7 +111,7 @@ jobs:
     needs: merge
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           path: pyahocorasick-build
       - run: find . -ls
@@ -112,16 +122,18 @@ jobs:
     needs:
       - check-dist
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write 
 
     steps:
       - name: Download builds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: pyahocorasick-build
           path: pyahocorasick-build
 
       - name: Create GH release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
         with:
           draft: true
           files: pyahocorasick-build/*
@@ -136,7 +148,7 @@ jobs:
 
     steps:
       - name: Download builds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: pyahocorasick-build
           path: dist/
@@ -147,4 +159,4 @@ jobs:
 
       - name: Publish to PyPI
         if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b

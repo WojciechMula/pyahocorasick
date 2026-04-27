@@ -2,6 +2,14 @@
 Changelog
 =============
 
+2.3.1 (2026-04-27)
+--------------------------------------------------
+
+- Add support for linux arm wheels
+  https://github.com/WojciechMula/pyahocorasick/pull/217
+  https://github.com/WojciechMula/pyahocorasick/pull/215
+  https://github.com/WojciechMula/pyahocorasick/issues/200
+
 2.3.0 (2025-11-24)
 --------------------------------------------------
 

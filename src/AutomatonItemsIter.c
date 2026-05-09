@@ -15,21 +15,76 @@ static PyTypeObject automaton_items_iter_type;
 typedef struct AutomatonItemsStackItem {
     LISTITEM_data;
 
-    struct TrieNode*    node;
-    TRIE_LETTER_TYPE    letter;
+    struct TrieNode* node;
+    TRIE_LETTER_TYPE letter;
     size_t depth;
+    bool escaped;
+
+#ifdef AHOCORASICK_UNICODE
+    TRIE_LETTER_TYPE* prefix;   ///< buffer to construct key representation
+#else
+    char* prefix;
+#endif
+    size_t prefix_len;
+
 } AutomatonItemsStackItem;
 
 #define StackItem AutomatonItemsStackItem
+
+
+static StackItem *
+create_stack_item(Automaton* automaton) {
+    StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
+    if (UNLIKELY(new_item == NULL)) {
+        goto no_memory;
+    }
+
+    new_item->node = automaton->root;
+    new_item->depth = 0;
+    new_item->escaped = false;
+    new_item->prefix = NULL;
+    new_item->prefix_len = 0;
+    return new_item;
+
+no_memory:
+    PyErr_NoMemory();
+    return NULL;
+}
+
+
+static void
+memory_free_stack_item(StackItem *item) {
+    memory_safefree(item->prefix);
+    memory_free(item);
+}
+
+
+static void
+stack_item_set_prefix(StackItem* item, const void* prefix, size_t prefix_len, const TRIE_LETTER_TYPE* matched_letter) {
+    memory_safefree(item->prefix);
+    item->prefix = malloc((prefix_len + 1) * sizeof *(item->prefix));
+    if (item->prefix == NULL) {
+        goto no_memory;
+    }
+    memcpy(item->prefix, prefix, prefix_len * sizeof *(item->prefix));
+    item->prefix_len = prefix_len;
+
+    if (matched_letter != NULL) {
+        item->prefix[item->prefix_len] = *matched_letter;
+        item->prefix_len += 1;
+    }
+    return;
+
+no_memory:
+    PyErr_NoMemory();
+}
+
 
 static PyObject*
 automaton_items_iter_new(
     Automaton* automaton,
     const TRIE_LETTER_TYPE* word,
     const Py_ssize_t wordlen,
-
-    const bool use_wildcard,
-    const TRIE_LETTER_TYPE wildcard,
     const PatternMatchType matchtype
 ) {
     AutomatonItemsIter* iter;
@@ -43,29 +98,11 @@ automaton_items_iter_new(
     iter->version   = automaton->version;
     iter->state = NULL;
     iter->type = ITER_KEYS;
-    iter->buffer = NULL;
-#ifndef AHOCORASICK_UNICODE
-    iter->char_buffer = NULL;
-#endif
     iter->pattern = NULL;
-    iter->use_wildcard = use_wildcard;
-    iter->wildcard = wildcard;
     iter->matchtype = matchtype;
     list_init(&iter->stack);
 
     Py_INCREF((PyObject*)iter->automaton);
-
-    iter->buffer = memory_alloc((automaton->longest_word + 1) * TRIE_LETTER_SIZE);
-    if (iter->buffer == NULL) {
-        goto no_memory;
-    }
-
-#ifndef AHOCORASICK_UNICODE
-    iter->char_buffer = memory_alloc(automaton->longest_word + 1);
-    if (iter->char_buffer == NULL) {
-        goto no_memory;
-    }
-#endif
 
     if (word) {
         iter->pattern = (TRIE_LETTER_TYPE*)memory_alloc(wordlen * TRIE_LETTER_SIZE);
@@ -80,13 +117,10 @@ automaton_items_iter_new(
     else
         iter->pattern_length = 0;
 
-    new_item = (StackItem*)list_item_new(sizeof(StackItem));
+    new_item = create_stack_item(automaton);
     if (UNLIKELY(new_item == NULL)) {
         goto no_memory;
     }
-
-    new_item->node = automaton->root;
-    new_item->depth = 0;
     list_push_front(&iter->stack, (ListItem*)new_item);
 
     return (PyObject*)iter;
@@ -102,12 +136,15 @@ no_memory:
 
 static void
 automaton_items_iter_del(PyObject* self) {
-    memory_safefree(iter->buffer);
     memory_safefree(iter->pattern);
-#ifndef AHOCORASICK_UNICODE
-    memory_safefree(iter->char_buffer);
-#endif
 
+    while (true) {
+        StackItem* item = (StackItem*)list_pop_first(&iter->stack);
+        if (item == NULL) {
+            break;
+        }
+        memory_free_stack_item(item);
+    }
     list_delete(&iter->stack);
     Py_DECREF(iter->automaton);
 
@@ -124,11 +161,16 @@ automaton_items_iter_iter(PyObject* self) {
 
 static PyObject*
 automaton_items_iter_next(PyObject* self) {
-
-    bool output;
     TrieNode* node;
     TRIE_LETTER_TYPE letter;
     size_t depth;
+#ifdef AHOCORASICK_UNICODE
+    TRIE_LETTER_TYPE *prefix;
+#else
+    char *prefix;
+#endif
+    size_t prefix_len;
+    bool escaped;
 
     if (UNLIKELY(iter->version != iter->automaton->version)) {
         PyErr_SetString(PyExc_ValueError, "The underlying automaton has changed: this iterator is no longer valid.");
@@ -141,95 +183,173 @@ automaton_items_iter_next(PyObject* self) {
             return NULL; /* Stop iteration */
 
         if (top->node == NULL) {
-            memory_free(top);
+            memory_free_stack_item(top);
             return NULL; /* Stop iteration */
         }
 
-        node   = top->node;
+        node = top->node;
         letter = top->letter;
-        depth  = top->depth;
-        memory_free(top);
-
-        if (iter->matchtype != MATCH_AT_LEAST_PREFIX and depth > iter->pattern_length)
-            continue;
-
-        switch (iter->matchtype) {
-            case MATCH_EXACT_LENGTH:
-                output = (depth == iter->pattern_length);
-                break;
-
-            case MATCH_AT_MOST_PREFIX:
-                output = (depth <= iter->pattern_length);
-                break;
-
-            case MATCH_AT_LEAST_PREFIX:
-            default:
-                output = (depth >= iter->pattern_length);
-                break;
-
-        }
+        depth = top->depth;
+        escaped = top->escaped;
+        prefix = top->prefix;
+        prefix_len = top->prefix_len;
 
         iter->state  = node;
         iter->letter = letter;
-        if ((depth >= iter->pattern_length) or
-            (iter->use_wildcard and iter->pattern[depth] == iter->wildcard)) {
 
-            // process all
+        if ((iter->pattern_length == 0)
+            or (depth >= iter->pattern_length and iter->matchtype == MATCH_PREFIX)) {
+            // match all
             const int n = iter->state->n;
             int i;
             for (i=0; i < n; i++) {
-                StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
+                StackItem *new_item = create_stack_item(iter->automaton);
                 if (UNLIKELY(new_item == NULL)) {
+                    memory_free_stack_item(top);
+                    PyErr_NoMemory();
+                    return NULL;
+                }
+                new_item->node = trienode_get_ith_unsafe(iter->state, i);
+                new_item->letter = trieletter_get_ith_unsafe(iter->state, i);
+                new_item->depth = depth + 1;
+                new_item->escaped = false;
+                if (iter->type != ITER_VALUES) {
+                    stack_item_set_prefix(new_item, prefix, prefix_len, &new_item->letter);
+                }
+                list_push_front(&iter->stack, (ListItem*)new_item);
+            }
+        }
+        else if (depth < iter->pattern_length and iter->pattern[depth] == '\\' and !escaped) {
+            // Skip escape character and block next iteration from processing a wildcard
+            StackItem *new_item = create_stack_item(iter->automaton);
+            if (UNLIKELY(new_item == NULL)) {
+                memory_free_stack_item(top);
+                PyErr_NoMemory();
+                return NULL;
+            }
+
+            new_item->node = node;
+            new_item->letter = letter;
+            new_item->depth = depth + 1;
+            new_item->escaped = true;
+            if (iter->type != ITER_VALUES) {
+                stack_item_set_prefix(new_item, prefix, prefix_len, NULL);
+            }
+            list_push_front(&iter->stack, (ListItem*)new_item);
+
+        }
+        else if (depth < iter->pattern_length and iter->pattern[depth] == '?' and !escaped) {
+            // match any single character
+            const int n = iter->state->n;
+            if (n < 1) {
+                // no match
+                memory_free_stack_item(top);
+                continue;
+            }
+
+            int i;
+            for (i=0; i < n; i++) {
+                StackItem *new_item = create_stack_item(iter->automaton);
+                if (UNLIKELY(new_item == NULL)) {
+                    memory_free_stack_item(top);
                     PyErr_NoMemory();
                     return NULL;
                 }
 
-                new_item->node   = trienode_get_ith_unsafe(iter->state, i);
+                new_item->node = trienode_get_ith_unsafe(iter->state, i);
                 new_item->letter = trieletter_get_ith_unsafe(iter->state, i);
-                new_item->depth  = depth + 1;
+                new_item->depth = depth + 1;
+                new_item->escaped = false;
+                if (iter->type != ITER_VALUES) {
+                    stack_item_set_prefix(new_item, prefix, prefix_len, &new_item->letter);
+                }
                 list_push_front(&iter->stack, (ListItem*)new_item);
             }
         }
-        else {
-            // process single letter
+        else if (depth < iter->pattern_length and iter->pattern[depth] == '*' and !escaped) {
+            // match zero children and skip wildcard
+            StackItem *new_item = create_stack_item(iter->automaton);
+            if (UNLIKELY(new_item == NULL)) {
+                memory_free_stack_item(top);
+                PyErr_NoMemory();
+                return NULL;
+            }
+
+            new_item->node = node;
+            new_item->letter = letter;
+            new_item->depth = depth + 1;
+            new_item->escaped = false;
+            if (iter->type != ITER_VALUES) {
+                stack_item_set_prefix(new_item, prefix, prefix_len, NULL);
+            }
+            list_push_front(&iter->stack, (ListItem*)new_item);
+
+            // match all children and retain wildcard
+            const int n = iter->state->n;
+            int i;
+            for (i=0; i < n; i++) {
+                StackItem *new_item = create_stack_item(iter->automaton);
+                if (UNLIKELY(new_item == NULL)) {
+                    memory_free_stack_item(top);
+                    PyErr_NoMemory();
+                    return NULL;
+                }
+
+                new_item->node = trienode_get_ith_unsafe(iter->state, i);
+                new_item->letter = trieletter_get_ith_unsafe(iter->state, i);
+                new_item->depth = depth;
+                new_item->escaped = false;
+                if (iter->type != ITER_VALUES) {
+                    stack_item_set_prefix(new_item, prefix, prefix_len, &new_item->letter);
+                }
+                list_push_front(&iter->stack, (ListItem*)new_item);
+            }
+        }
+        else if (depth < iter->pattern_length) {
+            // match single letter
             TrieNode* node = trienode_get_next(iter->state, iter->pattern[depth]);
 
             if (node) {
-                StackItem* new_item = (StackItem*)list_item_new(sizeof(StackItem));
+                StackItem *new_item = create_stack_item(iter->automaton);
                 if (UNLIKELY(new_item == NULL)) {
+                    memory_free_stack_item(top);
                     PyErr_NoMemory();
                     return NULL;
                 }
 
-                new_item->node   = node;
+                new_item->node = node;
                 new_item->letter = iter->pattern[depth];
-                new_item->depth  = depth + 1;
+                new_item->depth = depth + 1;
+                new_item->escaped = false;
+                if (iter->type != ITER_VALUES) {
+                    stack_item_set_prefix(new_item, prefix, prefix_len, &new_item->letter);
+                }
                 list_push_front(&iter->stack, (ListItem*)new_item);
             }
         }
 
-        if (iter->type != ITER_VALUES) {
-            // update keys when needed
-            iter->buffer[depth] = iter->letter;
-#ifndef AHOCORASICK_UNICODE
-            iter->char_buffer[depth] = (char)iter->letter;
-#endif
-        }
-
-        if (output and iter->state->eow) {
+        if (depth >= iter->pattern_length and iter->state->eow) {
+            PyObject* result;
             PyObject* val;
 
             switch (iter->type) {
                 case ITER_KEYS:
 #if defined PEP393_UNICODE
-                    return F(PyUnicode_FromKindAndData)(PyUnicode_4BYTE_KIND, (void*)(iter->buffer + 1), depth);
+                    result = F(PyUnicode_FromKindAndData)(PyUnicode_4BYTE_KIND, (void*)(prefix), prefix_len);
+                    memory_free_stack_item(top);
+                    return result;
 #elif defined AHOCORASICK_UNICODE
-                    return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), depth);
+                    result = PyUnicode_FromUnicode((Py_UNICODE*)(prefix), prefix_len);
+                    memory_free_stack_item(top);
+                    return result;
 #else
-                    return PyBytes_FromStringAndSize(iter->char_buffer + 1, depth);
+                    result = PyBytes_FromStringAndSize(prefix, prefix_len);
+                    memory_free_stack_item(top);
+                    return result;
 #endif
 
                 case ITER_VALUES:
+                    memory_free_stack_item(top);
                     switch (iter->automaton->store) {
                         case STORE_ANY:
                             val = iter->state->output.object;
@@ -250,40 +370,48 @@ automaton_items_iter_next(PyObject* self) {
                 case ITER_ITEMS:
                     switch (iter->automaton->store) {
                         case STORE_ANY:
-                            return F(Py_BuildValue)(
+                            result = F(Py_BuildValue)(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-                                "(u#O)", /*key*/ iter->buffer + 1, depth,
+                                "(u#O)", /*key*/ prefix, prefix_len,
     #else
-                                "(y#O)", /*key*/ iter->buffer + 1, depth,
+                                "(y#O)", /*key*/ prefix, prefix_len,
     #endif
 #else
-                                "(s#O)", /*key*/ iter->char_buffer + 1, depth,
+                                "(s#O)", /*key*/ prefix, prefix_len,
 #endif
                                 /*val*/ iter->state->output.object
                             );
+                            memory_free_stack_item(top);
+                            return result;
 
                         case STORE_LENGTH:
                         case STORE_INTS:
-                            return F(Py_BuildValue)(
+                            result = F(Py_BuildValue)(
 #ifdef PY3K
     #ifdef AHOCORASICK_UNICODE
-                                "(u#i)", /*key*/ iter->buffer + 1, depth,
+                                "(u#i)", /*key*/ prefix, prefix_len,
     #else
-                                "(y#i)", /*key*/ iter->buffer + 1, depth,
+                                "(y#i)", /*key*/ prefix, prefix_len,
     #endif
 #else
-                                "(s#i)", /*key*/ iter->char_buffer + 1, depth,
+                                "(s#i)", /*key*/ prefix, prefix_len,
 #endif
                                 /*val*/ iter->state->output.integer
                             );
+                            memory_free_stack_item(top);
+                            return result;
 
                         default:
                             PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
+                            memory_free_stack_item(top);
                             return NULL;
                     } // switch
             }
         }
+
+        // done with top for this iteration, free it
+        memory_free_stack_item(top);
     }
 }
 

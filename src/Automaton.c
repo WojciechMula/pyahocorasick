@@ -723,19 +723,14 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 #define automaton ((Automaton*)self)
     PyObject* arg1 = NULL;
     PyObject* arg2 = NULL;
-    PyObject* arg3 = NULL;
     TRIE_LETTER_TYPE* word = NULL;
-    TRIE_LETTER_TYPE* tmp = NULL;
     Py_ssize_t wordlen = 0;
 
-    TRIE_LETTER_TYPE wildcard;
-    bool use_wildcard = false;
-    PatternMatchType matchtype = MATCH_AT_LEAST_PREFIX;
+    PatternMatchType matchtype = MATCH_PREFIX;
 
     AutomatonItemsIter* iter;
 
     bool word_is_copy = false;
-    bool tmp_is_copy = false;
 
     // arg 1: prefix/prefix pattern
     if (args)
@@ -754,81 +749,43 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
         wordlen = 0;
     }
 
-    // arg 2: wildcard
-    if (args)
-        arg2 = F(PyTuple_GetItem)(args, 1);
-    else
-        arg2 = NULL;
-
-    if (arg2) {
-        Py_ssize_t len = 0;
-
-        arg2 = pymod_get_string(arg2, &tmp, &len, &tmp_is_copy);
-        if (arg2 == NULL) {
-            goto error;
-        } else {
-            if (len == 1) {
-                wildcard = tmp[0];
-                use_wildcard = true;
-            }
-            else {
-                PyErr_SetString(PyExc_ValueError, "Wildcard must be a single character.");
-                goto error;
-            }
-        }
-    }
-    else {
-        PyErr_Clear();
-        wildcard = 0;
-        use_wildcard = false;
-    }
-
-    // arg3: matchtype
-    matchtype = MATCH_AT_LEAST_PREFIX;
+    // arg 2: matchtype
+    matchtype = MATCH_PREFIX;
     if (args) {
-        arg3 = F(PyTuple_GetItem)(args, 2);
-        if (arg3) {
-            Py_ssize_t val = F(PyNumber_AsSsize_t)(arg3, PyExc_OverflowError);
+        arg2 = F(PyTuple_GetItem)(args, 1);
+        if (arg2) {
+            Py_ssize_t val = F(PyNumber_AsSsize_t)(arg2, PyExc_OverflowError);
             if (val == -1 and PyErr_Occurred())
                 goto error;
 
             switch ((PatternMatchType)val) {
-                case MATCH_AT_LEAST_PREFIX:
-                case MATCH_AT_MOST_PREFIX:
-                case MATCH_EXACT_LENGTH:
+                case MATCH_PREFIX:
+                case MATCH_WHOLE:
                     matchtype = (PatternMatchType)val;
                     break;
 
                 default:
                     PyErr_SetString(PyExc_ValueError,
-                        "The optional how third argument must be one of: "
-                        "MATCH_EXACT_LENGTH, MATCH_AT_LEAST_PREFIX or MATCH_AT_LEAST_PREFIX"
+                        "The optional 'how' argument must be one of: "
+                        "MATCH_PREFIX or MATCH_WHOLE"
                     );
                     goto error;
             }
         }
         else {
             PyErr_Clear();
-            if (use_wildcard)
-                matchtype = MATCH_EXACT_LENGTH;
-            else
-                matchtype = MATCH_AT_LEAST_PREFIX;
+            matchtype = MATCH_PREFIX;
         }
     }
 
-    //
     iter = (AutomatonItemsIter*)automaton_items_iter_new(
                     automaton,
                     word,
                     wordlen,
-                    use_wildcard,
-                    wildcard,
                     matchtype);
 
     maybe_decref(word_is_copy, arg1)
-    maybe_decref(tmp_is_copy, arg2)
     maybe_free(word_is_copy, word)
-    maybe_free(tmp_is_copy, tmp)
 
     if (iter) {
         iter->type = type;
@@ -840,9 +797,7 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
 
 error:
     maybe_decref(word_is_copy, arg1)
-    maybe_decref(tmp_is_copy, arg2)
     maybe_free(word_is_copy, word)
-    maybe_free(tmp_is_copy, tmp)
     return NULL;
 #undef automaton
 }

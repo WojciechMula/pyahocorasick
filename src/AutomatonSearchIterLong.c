@@ -74,7 +74,7 @@ automaton_build_output_iter_long(PyObject* self) {
     switch (iter->automaton->store) {
         case STORE_LENGTH:
         case STORE_INTS:
-            return Py_BuildValue("ii", iter->shift + iter->last_index, iter->last_node->output.integer);
+            return Py_BuildValue("iN", iter->shift + iter->last_index, PyLong_FromVoidPtr((void *)iter->last_node->output.integer));
 
         case STORE_ANY:
             return Py_BuildValue("iO", iter->shift + iter->last_index, iter->last_node->output.object);

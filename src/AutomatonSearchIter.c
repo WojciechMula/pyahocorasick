@@ -180,11 +180,11 @@ automaton_build_output(PyObject* self, PyObject** result) {
         switch (iter->automaton->store) {
             case STORE_LENGTH:
             case STORE_INTS:
-                *result = F(Py_BuildValue)("ii", idx, node->output.integer);
+                *result = F(Py_BuildValue)("nN", idx, PyLong_FromVoidPtr((void *)node->output.integer));
                 return OutputValue;
 
             case STORE_ANY:
-                *result = F(Py_BuildValue)("iO", idx, node->output.object);
+                *result = F(Py_BuildValue)("nO", idx, node->output.object);
                 return OutputValue;
 
             default:

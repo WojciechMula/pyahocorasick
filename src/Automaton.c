@@ -525,7 +525,7 @@ automaton_get(PyObject* self, PyObject* args) {
         switch (automaton->store) {
             case STORE_INTS:
             case STORE_LENGTH:
-                return F(Py_BuildValue)("i", node->output.integer);
+                return F(PyLong_FromVoidPtr)((void *)node->output.integer);
 
             case STORE_ANY:
                 Py_INCREF(node->output.object);
@@ -890,7 +890,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
         return NULL;
     }
 
-    if (!F(PyArg_ParseTupleAndKeywords)(args, keywds, "O|iii", kwlist, &object, &start_tmp, &end_tmp, &ignore_white_space_tmp)) {
+    if (!F(PyArg_ParseTupleAndKeywords)(args, keywds, "O|nni", kwlist, &object, &start_tmp, &end_tmp, &ignore_white_space_tmp)) {
         return NULL;
     }
 
@@ -1084,7 +1084,7 @@ automaton_get_stats(PyObject* self, PyObject* args) {
         get_stats(automaton);
 
     dict = F(Py_BuildValue)(
-        "{s:k,s:k,s:k,s:k,s:i,s:k}",
+        "{s:n,s:n,s:n,s:n,s:n,s:n}",
         "nodes_count",  automaton->stats.nodes_count,
         "words_count",  automaton->stats.words_count,
         "longest_word", automaton->stats.longest_word,
@@ -1123,19 +1123,19 @@ dump_aux(TrieNode* node, const int depth, void* extra) {
 
 
     // 1.
-    tuple = F(Py_BuildValue)("ii", node, (int)(node->eow));
+    tuple = F(Py_BuildValue)("Ni", PyLong_FromVoidPtr(node), (int)(node->eow));
     append_tuple(Dump->nodes)
 
     // 2.
     for (i=0; i < node->n; i++) {
         child = trienode_get_ith_unsafe(node, i);
-        tuple = F(Py_BuildValue)("ici", node, trieletter_get_ith_unsafe(node, i), child);
+        tuple = F(Py_BuildValue)("NcN", PyLong_FromVoidPtr(node), (char)trieletter_get_ith_unsafe(node, i), PyLong_FromVoidPtr(child));
         append_tuple(Dump->edges)
     }
 
     // 3.
     if (node->fail) {
-        tuple = F(Py_BuildValue)("ii", node, node->fail);
+        tuple = F(Py_BuildValue)("NN", PyLong_FromVoidPtr(node), PyLong_FromVoidPtr(node->fail));
         append_tuple(Dump->fail);
     }
 
@@ -1193,7 +1193,7 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
         size += automaton->stats.total_size;
     }
 
-    return Py_BuildValue("i", size);
+    return PyLong_FromSsize_t(size);
 #undef automaton
 }
 

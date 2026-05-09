@@ -900,8 +900,7 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
 
     if (object) {
         if (automaton->key_type == KEY_STRING) {
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
+#ifdef AHOCORASICK_UNICODE
         if (F(PyUnicode_Check)(object)) {
             start   = 0;
             #if PY_MINOR_VERSION >= 3
@@ -914,22 +913,13 @@ automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
             PyErr_SetString(PyExc_TypeError, "string required");
             return NULL;
         }
-    #else
+#else
         if (F(PyBytes_Check)(object)) {
             start   = 0;
             end     = PyBytes_GET_SIZE(object);
         }
         else {
             PyErr_SetString(PyExc_TypeError, "bytes required");
-            return NULL;
-        }
-    #endif
-#else
-        if (F(PyString_Check)(object)) {
-            start   = 0;
-            end     = PyString_GET_SIZE(object);
-        } else {
-            PyErr_SetString(PyExc_TypeError, "string required");
             return NULL;
         }
 #endif
@@ -984,8 +974,7 @@ automaton_iter_long(PyObject* self, PyObject* args) {
         return NULL;
 
     if (automaton->key_type == KEY_STRING) {
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
+#ifdef AHOCORASICK_UNICODE
         if (F(PyUnicode_Check)(object)) {
             start   = 0;
             #if PY_MINOR_VERSION >= 3
@@ -998,22 +987,13 @@ automaton_iter_long(PyObject* self, PyObject* args) {
             PyErr_SetString(PyExc_TypeError, "string required");
             return NULL;
         }
-    #else
+#else
         if (F(PyBytes_Check)(object)) {
             start   = 0;
             end     = PyBytes_GET_SIZE(object);
         }
         else {
             PyErr_SetString(PyExc_TypeError, "bytes required");
-            return NULL;
-        }
-    #endif
-#else
-        if (F(PyString_Check)(object)) {
-            start   = 0;
-            end     = PyString_GET_SIZE(object);
-        } else {
-            PyErr_SetString(PyExc_TypeError, "string required");
             return NULL;
         }
 #endif

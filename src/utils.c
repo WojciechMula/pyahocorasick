@@ -125,32 +125,24 @@ void memory_safefree(void* ptr) {
 }
 
 
-#if !defined(PY3K) || !defined(AHOCORASICK_UNICODE)
-//  define when pymod_get_string makes a copy of string
-#   define INPUT_KEEPS_COPY
-#endif
-
-#if defined INPUT_KEEPS_COPY
+#ifndef AHOCORASICK_UNICODE
 #    define maybe_free(flag, word) memory_free(word);
 #    define maybe_decref(flag, ref)
-#elif defined PEP393_UNICODE
+#else
 #    define maybe_free(flag, word) if (flag) { memory_free(word); }
 #    define maybe_decref(flag, ref) if (ref && !flag) { Py_DECREF(ref); }
-#else
-#    define maybe_free(flag, word)
-#    define maybe_decref(flag, ref) if (ref) { Py_DECREF(ref); }
 #endif
 
 /* returns bytes or unicode internal buffer */
 static PyObject*
 pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, Py_ssize_t* wordlen, bool* is_copy) {
 
-#ifdef INPUT_KEEPS_COPY
+#ifndef AHOCORASICK_UNICODE
     Py_ssize_t i;
     char* bytes;
 #endif
 
-#if defined PEP393_UNICODE
+#if defined AHOCORASICK_UNICODE
     if (F(PyUnicode_Check)(obj)) {
     PyUnicode_READY(obj);
     if (PyUnicode_KIND(obj) == PyUnicode_4BYTE_KIND) {
@@ -172,64 +164,24 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, Py_ssize_t* wordlen, bo
     PyErr_SetString(PyExc_TypeError, "string expected");
     return NULL;
     }
-#elif defined PY3K
-#   ifdef AHOCORASICK_UNICODE
-        if (F(PyUnicode_Check)(obj)) {
-            *word = (TRIE_LETTER_TYPE*)(PyUnicode_AS_UNICODE(obj));
-            *wordlen = PyUnicode_GET_SIZE(obj);
-            Py_INCREF(obj);
-            return obj;
-        }
-        else {
-            PyErr_SetString(PyExc_TypeError, "string expected");
-            return NULL;
-        }
-#   else
-#       ifndef INPUT_KEEPS_COPY
-#           error "defines inconsistency"
-#       endif
-        if (F(PyBytes_Check)(obj)) {
-            *wordlen = PyBytes_GET_SIZE(obj);
-            *word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
-            if (*word == NULL) {
-                PyErr_NoMemory();
-                return NULL;
-            }
-
-            bytes = PyBytes_AS_STRING(obj);
-            for (i=0; i < *wordlen; i++) {
-                (*word)[i] = bytes[i];
-            }
-            // Note: there is no INCREF
-            return obj;
-        }
-        else {
-            PyErr_SetString(PyExc_TypeError, "bytes expected");
-            return NULL;
-        }
-#   endif
-#else // PY_MAJOR_VERSION == 3
-#       ifndef INPUT_KEEPS_COPY
-#           error "defines inconsistency"
-#       endif
-    if (F(PyString_Check)(obj)) {
-        *wordlen = PyString_GET_SIZE(obj);
+#else
+    if (F(PyBytes_Check)(obj)) {
+        *wordlen = PyBytes_GET_SIZE(obj);
         *word    = (TRIE_LETTER_TYPE*)memory_alloc(*wordlen * TRIE_LETTER_SIZE);
         if (*word == NULL) {
             PyErr_NoMemory();
             return NULL;
         }
 
-
-        bytes = PyString_AS_STRING(obj);
+        bytes = PyBytes_AS_STRING(obj);
         for (i=0; i < *wordlen; i++) {
             (*word)[i] = bytes[i];
-        };
-
-        Py_INCREF(obj);
+        }
+        // Note: there is no INCREF
         return obj;
-    } else {
-        PyErr_SetString(PyExc_TypeError, "string required");
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "bytes expected");
         return NULL;
     }
 #endif

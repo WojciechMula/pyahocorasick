@@ -221,10 +221,8 @@ automaton_items_iter_next(PyObject* self) {
 
             switch (iter->type) {
                 case ITER_KEYS:
-#if defined PEP393_UNICODE
+#if defined AHOCORASICK_UNICODE
                     return F(PyUnicode_FromKindAndData)(PyUnicode_4BYTE_KIND, (void*)(iter->buffer + 1), depth);
-#elif defined AHOCORASICK_UNICODE
-                    return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), depth);
 #else
                     return PyBytes_FromStringAndSize(iter->char_buffer + 1, depth);
 #endif
@@ -251,14 +249,10 @@ automaton_items_iter_next(PyObject* self) {
                     switch (iter->automaton->store) {
                         case STORE_ANY:
                             return F(Py_BuildValue)(
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
+#ifdef AHOCORASICK_UNICODE
                                 "(u#O)", /*key*/ iter->buffer + 1, depth,
-    #else
-                                "(y#O)", /*key*/ iter->buffer + 1, depth,
-    #endif
 #else
-                                "(s#O)", /*key*/ iter->char_buffer + 1, depth,
+                                "(y#O)", /*key*/ iter->buffer + 1, depth,
 #endif
                                 /*val*/ iter->state->output.object
                             );
@@ -266,14 +260,10 @@ automaton_items_iter_next(PyObject* self) {
                         case STORE_LENGTH:
                         case STORE_INTS:
                             return F(Py_BuildValue)(
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
+#ifdef AHOCORASICK_UNICODE
                                 "(u#i)", /*key*/ iter->buffer + 1, depth,
-    #else
-                                "(y#i)", /*key*/ iter->buffer + 1, depth,
-    #endif
 #else
-                                "(s#i)", /*key*/ iter->char_buffer + 1, depth,
+                                "(y#i)", /*key*/ iter->buffer + 1, depth,
 #endif
                                 /*val*/ iter->state->output.integer
                             );

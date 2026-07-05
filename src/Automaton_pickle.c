@@ -261,16 +261,16 @@ automaton___reduce__(PyObject* self, PyObject* args) {
         data.values
     );
 
-    if (data.values == Py_None) {
-        data.values = NULL;
-    }
-
     if (UNLIKELY(tuple == NULL)) {
         goto exception;
     }
 
     // revert all changes
     trie_traverse(automaton->root, pickle_dump_undo_replace, NULL);
+
+    // Py_BuildValue's "O" format took its own references to bytes_list and
+    // values; release ours, otherwise every pickle leaks the whole dump.
+    pickle_data__cleanup(&data);
 
     return tuple;
 

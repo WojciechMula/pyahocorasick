@@ -44,6 +44,10 @@ pickle_data__add_next_buffer(PickleData* data) {
 		return false;
 	}
 
+	// PyList_Append took its own reference; drop ours, otherwise every
+	// chunk buffer leaks. The list keeps the object alive.
+	Py_DECREF(bytes);
+
 	raw = PyBytes_AS_STRING(bytes);
 
 	data->count 	= (Py_ssize_t*)raw;

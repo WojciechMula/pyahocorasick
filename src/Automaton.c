@@ -744,9 +744,20 @@ automaton_items_create(PyObject* self, PyObject* args, const ItemsType type) {
         arg1 = NULL;
 
     if (arg1) {
-        arg1 = pymod_get_string(arg1, &word, &wordlen, &word_is_copy);
-        if (arg1 == NULL)
-            goto error;
+        if (automaton->key_type == KEY_STRING) {
+            arg1 = pymod_get_string(arg1, &word, &wordlen, &word_is_copy);
+            if (arg1 == NULL)
+                goto error;
+        }
+        else {
+            // KEY_SEQUENCE: the prefix is a tuple of integers, not a string,
+            // so it has to go through pymod_get_sequence like add_word/get/etc do.
+            word_is_copy = true;
+            if (!pymod_get_sequence(arg1, &word, &wordlen)) {
+                arg1 = NULL;
+                goto error;
+            }
+        }
     }
     else {
         PyErr_Clear();

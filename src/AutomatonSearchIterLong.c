@@ -68,6 +68,20 @@ automaton_search_iter_long_iter(PyObject* self) {
 }
 
 
+static bool
+trienode_has_output_on_fail_path(TrieNode* node, TrieNode* root) {
+    node = node->fail;
+    while (node && node != root) {
+        if (node->eow)
+            return true;
+
+        node = node->fail;
+    }
+
+    return false;
+}
+
+
 static PyObject*
 automaton_build_output_iter_long(PyObject* self) {
 
@@ -116,7 +130,17 @@ return_output:
     }
 
     iter->index += 1;
-    while (iter->index < iter->end) {
+    while (true) {
+        if (iter->index >= iter->end) {
+            if (iter->last_node) {
+                goto return_output;
+            } else if (fail_node) {
+                fail_flag = true;
+            } else {
+                break;
+            }
+        }
+
         if (fail_flag) {
             // when failover start from fail node instead of next
             next = fail_node->fail;
@@ -132,7 +156,8 @@ return_output:
                 // save the last node on the path
                 iter->last_node  = next;
                 iter->last_index = iter->index;
-            } else if (!iter->last_node && !fail_node && next->fail && next->fail != iter->automaton->root && next->fail->eow) {
+            } else if (!iter->last_node && !fail_node &&
+                       trienode_has_output_on_fail_path(next, iter->automaton->root)) {
                 fail_node = next;
                 fail_index = iter->index;
             }
@@ -160,11 +185,7 @@ return_output:
                 }
             }
         }
-    } // while 
-
-    if (iter->last_node) {
-        goto return_output;
-    }
+    } // while
     
     return NULL;    // StopIteration
 }

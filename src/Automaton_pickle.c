@@ -290,7 +290,9 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
 
     PyObject* bytes;
     Py_ssize_t k;
+    Py_ssize_t size;
     Py_ssize_t nodes_count;
+    size_t max_nodes;
     const uint8_t* data;
 
     size_t count = 0;
@@ -300,8 +302,18 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
         bytes = PyList_GET_ITEM(bytes_list, k);
         if (UNLIKELY(!F(PyBytes_CheckExact)(bytes))) {
             PyErr_Format(PyExc_ValueError,
-                         "Item #%lu on the bytes list is not a bytes object",
+                         "Item #%zd on the bytes list is not a bytes object",
                          k);
+            return false;
+        }
+
+        // the chunk must be long enough to hold its own node counter
+        size = PyBytes_GET_SIZE(bytes);
+        if (UNLIKELY(size < (Py_ssize_t)PICKLE_CHUNK_COUNTER_SIZE)) {
+            PyErr_Format(PyExc_ValueError,
+                         "Item #%zd on the bytes list is too short (%zd bytes), "
+                         "expected at least %zu bytes",
+                         k, size, PICKLE_CHUNK_COUNTER_SIZE);
             return false;
         }
 
@@ -310,12 +322,41 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
         nodes_count = *((Py_ssize_t*)data);
         if (UNLIKELY(nodes_count <= 0)) {
             PyErr_Format(PyExc_ValueError,
-                         "Nodes count for item #%lu on the bytes list is not positive (%lu)",
+                         "Nodes count for item #%zd on the bytes list is not positive (%zd)",
                          k, nodes_count);
             return false;
         }
 
-        count += nodes_count;
+        // Each node occupies at least PICKLE_TRIENODE_SIZE bytes of the chunk
+        // payload (more, if it has any children), thus the declared number of
+        // nodes can never exceed that bound. Without this check a crafted
+        // pickle may declare an arbitrary nodes count, which then overflows
+        // the (count + 1) * sizeof(TrieNode*) computation used to size the
+        // id2node lookup table, yielding a tiny allocation that the
+        // node-creation loop happily writes past.
+        max_nodes = ((size_t)size - PICKLE_CHUNK_COUNTER_SIZE) / PICKLE_TRIENODE_SIZE;
+        if (UNLIKELY((size_t)nodes_count > max_nodes)) {
+            PyErr_Format(PyExc_ValueError,
+                         "Nodes count for item #%zd on the bytes list is %zd, "
+                         "but at most %zu nodes can be stored in %zd bytes",
+                         k, nodes_count, max_nodes, size);
+            return false;
+        }
+
+        count += (size_t)nodes_count;
+    }
+
+    if (UNLIKELY(count == 0)) {
+        // a non-empty automaton must have at least the root node
+        PyErr_SetString(PyExc_ValueError, "The bytes list is empty");
+        return false;
+    }
+
+    // Defensive guard: the per-chunk bound above already keeps count below
+    // the total size of the pickled data, but do not rely on that alone.
+    if (UNLIKELY(count > SIZE_MAX / sizeof(TrieNode*) - 1)) {
+        PyErr_NoMemory();
+        return false;
     }
 
     *result = count;

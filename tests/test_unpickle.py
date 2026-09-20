@@ -277,13 +277,18 @@ class TestUnpickleRaw(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.create_automaton()
 
+    # A chunk declaring more nodes than its payload can possibly hold is
+    # rejected up-front (see test__nodes_count_exceeds_chunk_size); data that
+    # is truncated in the middle of a node is still caught by the parsing loop.
+    TRUNCATED_DATA_REGEX = r"(Data truncated|Nodes count for item #\d+ on the bytes list is \d+, but at most).*"
+
     def test__truncated_raw__case_1(self):
 
         self.count = 1  # we're saying this is a non-empty trie, but given empty data
         self.raw = b''
         self.kind = ahocorasick.TRIE
 
-        with self.assertRaisesRegex(ValueError, r"Data truncated \[parsing header of node #0\].*"):
+        with self.assertRaisesRegex(ValueError, self.TRUNCATED_DATA_REGEX):
             self.create_automaton()
 
     def test__truncated_raw__case_2(self):
@@ -303,7 +308,7 @@ class TestUnpickleRaw(unittest.TestCase):
 
         for length in range(len(raw)):
             self.raw = raw[:length]  # truncate data and expect fail
-            with self.assertRaisesRegex(ValueError, "Data truncated.*"):
+            with self.assertRaisesRegex(ValueError, self.TRUNCATED_DATA_REGEX):
                 self.create_automaton()
 
     @skipIf(not ahocorasick.unicode, "Run only with unicode build")
@@ -424,6 +429,75 @@ class TestUnpickleRaw(unittest.TestCase):
             A = self.create_automaton(USE_EXACT_RAW)
         except ValueError as e:
             assert str(e).startswith("Nodes count for item #0 on the bytes list is not positive")
+
+    def test__nodes_count_exceeds_chunk_size(self):
+        """
+        A chunk declares more nodes than its payload can possibly hold.
+
+        Each node needs at least PICKLE_TRIENODE_SIZE (24 bytes on a 64-bit
+        build) of payload, so a chunk of N*24 + 8 bytes can hold at most N
+        nodes. Before the count was validated against the chunk size, a huge
+        declared count made the `(count + 1) * sizeof(TrieNode*)` expression
+        used to size the id2node lookup table overflow, which produced a tiny
+        allocation that the node-creation loop then wrote past (heap
+        out-of-bounds write).
+        """
+
+        nodes = 16
+        # (2**62 + 1) * 8 == 2**65 + 8, which wraps to 8 in 64-bit arithmetic
+        self.raw = [self.create_raw_count(2 ** 62) + self.create_raw_node(0, []) * nodes]
+        self.kind = ahocorasick.TRIE
+        self.values = None
+
+        with self.assertRaisesRegex(ValueError, "Nodes count for item #0 on the bytes list is .*, but at most 16 nodes can be stored in .* bytes"):
+            self.create_automaton(USE_EXACT_RAW)
+
+    def test__nodes_count_maximum_for_chunk_size(self):
+        """
+        The boundary case of the check above: a chunk that declares exactly as
+        many nodes as fit in its payload must still be accepted, and declaring
+        one more must be rejected.
+        """
+
+        # a chunk of 8 + 1*24 bytes holds exactly one (childless) node
+        chunk = self.create_raw_count(1) + self.create_raw_node(0, [])
+        self.raw = [chunk]
+        self.kind = ahocorasick.TRIE
+        self.values = None
+
+        A = self.create_automaton(USE_EXACT_RAW)
+        self.assertTrue(A.kind == ahocorasick.TRIE)
+
+        # the very same chunk, but declaring one node too many
+        self.raw = [self.create_raw_count(2) + self.create_raw_node(0, [])]
+        with self.assertRaisesRegex(ValueError, "Nodes count for item #0 on the bytes list is 2, but at most 1 nodes can be stored in 32 bytes"):
+            self.create_automaton(USE_EXACT_RAW)
+
+    def test__chunk_shorter_than_the_counter(self):
+        """
+        A chunk must be long enough to hold its own 8-byte node counter;
+        reading the counter from a shorter chunk was an out-of-bounds read.
+        """
+
+        self.raw = [b'\x01\x02\x03']
+        self.kind = ahocorasick.TRIE
+        self.values = None
+
+        with self.assertRaisesRegex(ValueError, "Item #0 on the bytes list is too short"):
+            self.create_automaton(USE_EXACT_RAW)
+
+    def test__empty_bytes_list(self):
+        """
+        A non-empty automaton needs at least the root node; an empty bytes list
+        used to leave the id2node table empty and then read id2node[1].
+        """
+
+        self.raw = []
+        self.kind = ahocorasick.TRIE
+        self.values = None
+
+        with self.assertRaisesRegex(ValueError, "The bytes list is empty"):
+            self.create_automaton(USE_EXACT_RAW)
 
 
 if __name__ == '__main__':

@@ -61,6 +61,11 @@ jobs:
                       arch: auto64
                       build: "cp{310,311,312,313,314}-*"
 
+                    # CPython ships Windows ARM64 binaries only from 3.11 on
+                    - os: windows-11-arm
+                      arch: ARM64
+                      build: "cp{311,312,313,314}-*"
+
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
@@ -92,9 +97,13 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm, macos-14, macos-15, macos-15-intel, windows-2022, windows-2025]
+                os: [ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm, macos-14, macos-15, macos-15-intel, windows-2022, windows-2025, windows-11-arm]
                 python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
+                exclude:
+                    # CPython ships Windows ARM64 binaries only from 3.11 on
+                    - os: windows-11-arm
+                      python: "3.10"
 
         steps:
             - name: Set up Python

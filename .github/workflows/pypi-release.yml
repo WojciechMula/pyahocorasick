@@ -53,6 +53,11 @@ jobs:
                     arch: auto64
                     build: "cp{310,311,312,313,314}-*"
 
+                  # CPython ships Windows ARM64 binaries only from 3.11 on
+                  - os: windows-11-arm
+                    arch: ARM64
+                    build: "cp{311,312,313,314}-*"
+
       steps:
           - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
             with:

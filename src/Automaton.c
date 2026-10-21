@@ -16,6 +16,19 @@
 
 static PyTypeObject automaton_type;
 
+static AutomatonKind
+automaton_get_kind(Automaton* automaton) {
+    AutomatonKind kind;
+    Py_BEGIN_CRITICAL_SECTION(automaton);
+    kind = automaton->kind;
+    Py_END_CRITICAL_SECTION();
+    return kind;
+}
+
+static PyObject*
+automaton_kind(PyObject* self, void* closure) {
+    return PyLong_FromLong(automaton_get_kind((Automaton*)self));
+}
 
 static bool
 check_store(const int store) {
@@ -131,12 +144,33 @@ automaton_new(PyTypeObject* self, PyObject* args, PyObject* kwargs) {
         }
 
         if (kind != EMPTY) {
+            PyObject* bytes_copy;
+            PyObject* values_copy = NULL;
+            bool loaded;
             if (values == Py_None) {
-                Py_XDECREF(values);
                 values = NULL;
             }
 
-            if (automaton_unpickle(automaton, bytes_list, values)) {
+            /* The caller may retain and mutate either list in another thread. */
+            bytes_copy = PyList_GetSlice(bytes_list, 0, PY_SSIZE_T_MAX);
+            if (bytes_copy == NULL)
+                goto error;
+            if (values != NULL) {
+                if (!PyList_Check(values)) {
+                    Py_DECREF(bytes_copy);
+                    PyErr_SetString(PyExc_TypeError, "Expected a list of values");
+                    goto error;
+                }
+                values_copy = PyList_GetSlice(values, 0, PY_SSIZE_T_MAX);
+                if (values_copy == NULL) {
+                    Py_DECREF(bytes_copy);
+                    goto error;
+                }
+            }
+            loaded = automaton_unpickle(automaton, bytes_copy, values_copy);
+            Py_DECREF(bytes_copy);
+            Py_XDECREF(values_copy);
+            if (loaded) {
                 automaton->kind     = kind;
                 automaton->store    = store;
                 automaton->key_type = key_type;
@@ -184,7 +218,8 @@ error:
 static void
 automaton_del(PyObject* self) {
 #define automaton ((Automaton*)self)
-    automaton_clear(self, NULL);
+    PyObject* result = automaton_clear(self, NULL);
+    Py_XDECREF(result);
     PyObject_Del(self);
 #undef automaton
 }
@@ -193,7 +228,11 @@ automaton_del(PyObject* self) {
 static Py_ssize_t
 automaton_len(PyObject* self) {
 #define automaton ((Automaton*)self)
-    return automaton->count;
+    Py_ssize_t count;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    count = automaton->count;
+    Py_END_CRITICAL_SECTION();
+    return count;
 #undef automaton
 }
 
@@ -203,11 +242,13 @@ automaton_add_word(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
     // argument
     PyObject* py_value = NULL;
+    PyObject* old_value = NULL;
     struct Input input;
 
     Py_ssize_t integer = 0;
     TrieNode* node;
     bool new_word;
+    bool default_integer = false;
 
     if (!prepare_input_from_tuple(self, args, 0, &input)) {
         return NULL;
@@ -238,7 +279,7 @@ automaton_add_word(PyObject* self, PyObject* args) {
             else {
                 // default
                 PyErr_Clear();
-                integer = automaton->count + 1;
+                default_integer = true;
             }
             break;
 
@@ -254,23 +295,19 @@ automaton_add_word(PyObject* self, PyObject* args) {
     node = NULL;
     new_word = false;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (default_integer)
+        integer = automaton->count + 1;
     if (input.wordlen > 0) {
         node = trie_add_word(automaton, input.word, input.wordlen, &new_word);
-
-        if (node == NULL) {
-            PyErr_NoMemory();
-            goto py_exception;
-        }
     }
-
-    destroy_input(&input);
 
     if (node) {
         switch (automaton->store) {
             case STORE_ANY:
                 if (not new_word and node->eow)
                     // replace
-                    Py_DECREF(node->output.object);
+                    old_value = node->output.object;
 
                 Py_INCREF(py_value);
                 node->output.object = py_value;
@@ -285,14 +322,18 @@ automaton_add_word(PyObject* self, PyObject* args) {
             if (input.wordlen > automaton->longest_word)
                 automaton->longest_word = (int)input.wordlen;
 
-            Py_RETURN_TRUE;
-        }
-        else {
-            Py_RETURN_FALSE;
         }
     }
+    Py_END_CRITICAL_SECTION();
 
-    Py_RETURN_FALSE;
+    /* Destructors may re-enter the automaton; publish all changes first. */
+    Py_XDECREF(old_value);
+    if (node == NULL && input.wordlen > 0) {
+        PyErr_NoMemory();
+        goto py_exception;
+    }
+    destroy_input(&input);
+    return PyBool_FromLong(new_word);
 
 py_exception:
     destroy_input(&input);
@@ -313,7 +354,13 @@ automaton_remove_word_aux(PyObject* self, PyObject* args, PyObject** value) {
         return FALSE;
     }
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     *value = trie_remove_word(automaton, input.word, input.wordlen);
+    if (*value != NULL) {
+        automaton->version += 1;
+        automaton->count -= 1;
+    }
+    Py_END_CRITICAL_SECTION();
     destroy_input(&input);
 
     if (UNLIKELY(PyErr_Occurred() != NULL)) {
@@ -334,13 +381,8 @@ automaton_remove_word(PyObject* self, PyObject* args) {
             break;
 
         case TRUE:
-            if (automaton->store == STORE_ANY) {
-                // value is meaningful
-                Py_DECREF(value);
-            }
+            Py_DECREF(value);
 
-            automaton->version += 1;
-            automaton->count   -= 1;
             Py_RETURN_TRUE;
             break;
 
@@ -361,8 +403,6 @@ automaton_pop(PyObject* self, PyObject* args) {
             return NULL;
 
         case TRUE:
-            automaton->version += 1;
-            automaton->count   -= 1;
             return value; // there's no need to increase refcount, the value was removed
 
         case MEMORY_ERROR:
@@ -405,12 +445,17 @@ clear_aux(TrieNode* node, KeysStore store) {
 static PyObject*
 automaton_clear(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
-    clear_aux(automaton->root, automaton->store);
+    TrieNode* root;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    root = automaton->root;
     automaton->count = 0;
     automaton->longest_word = 0;
     automaton->kind = EMPTY;
     automaton->root = NULL;
     automaton->version += 1;
+    Py_END_CRITICAL_SECTION();
+
+    clear_aux(root, automaton->store);
 
     Py_RETURN_NONE;
 #undef automaton
@@ -422,16 +467,20 @@ automaton_contains(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
     TrieNode* node;
     struct Input input;
+    int found;
 
     if (!prepare_input(self, args, &input)) {
         return -1;
     }
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     node = trie_find(automaton->root, input.word, input.wordlen);
+    found = node && node->eow;
+    Py_END_CRITICAL_SECTION();
 
     destroy_input(&input);
 
-    return (node and node->eow);
+    return found;
 #undef automaton
 }
 
@@ -467,7 +516,9 @@ automaton_match(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    node = trie_find(automaton->root, input.word, input.wordlen);;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    node = trie_find(automaton->root, input.word, input.wordlen);
+    Py_END_CRITICAL_SECTION();
 
     destroy_input(&input);
 
@@ -489,7 +540,9 @@ automaton_longest_prefix(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    len = trie_longest(automaton->root, input.word, input.wordlen);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    len = automaton->root ? trie_longest(automaton->root, input.word, input.wordlen) : 0;
+    Py_END_CRITICAL_SECTION();
 
     destroy_input(&input);
 
@@ -505,6 +558,9 @@ automaton_get(PyObject* self, PyObject* args) {
     PyObject* py_def;
     Py_ssize_t k;
     TrieNode* node;
+    PyObject* value = NULL;
+    Py_ssize_t integer = 0;
+    bool found;
 
     k = PyTuple_GET_SIZE(args);
 
@@ -517,19 +573,29 @@ automaton_get(PyObject* self, PyObject* args) {
         return NULL;
     }
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     node = trie_find(automaton->root, input.word, input.wordlen);
+    found = node && node->eow;
+    if (found) {
+        if (automaton->store == STORE_ANY) {
+            value = node->output.object;
+            Py_INCREF(value);
+        } else {
+            integer = node->output.integer;
+        }
+    }
+    Py_END_CRITICAL_SECTION();
 
     destroy_input(&input);
 
-    if (node and node->eow) {
+    if (found) {
         switch (automaton->store) {
             case STORE_INTS:
             case STORE_LENGTH:
-                return F(Py_BuildValue)("i", node->output.integer);
+                return PyLong_FromSsize_t(integer);
 
             case STORE_ANY:
-                Py_INCREF(node->output.object);
-                return node->output.object;
+                return value;
 
             default:
                 PyErr_SetNone(PyExc_ValueError);
@@ -558,7 +624,7 @@ typedef struct AutomatonQueueItem {
 
 
 static PyObject*
-automaton_make_automaton(PyObject* self, PyObject* args) {
+automaton_make_automaton_impl(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
     AutomatonQueueItem* item;
@@ -648,73 +714,58 @@ no_mem:
     return NULL;
 }
 
+static PyObject*
+automaton_make_automaton(PyObject* self, PyObject* args) {
+    PyObject* result;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    result = automaton_make_automaton_impl(self, args);
+    Py_END_CRITICAL_SECTION();
+    return result;
+}
+
 
 static PyObject*
 automaton_find_all(PyObject* self, PyObject* args) {
-#define automaton ((Automaton*)self)
-
+    Automaton* automaton = (Automaton*)self;
     struct Input input;
-    Py_ssize_t start;
-    Py_ssize_t end;
+    Py_ssize_t start, end;
     PyObject* callback;
-    PyObject* callback_ret;
+    PyObject* iterator;
+    PyObject* match;
+    PyObject* result;
 
-    Py_ssize_t i;
-    TrieNode* state;
-    TrieNode* tmp;
-
-    if (automaton->kind != AHOCORASICK)
+    if (automaton_get_kind(automaton) != AHOCORASICK)
         Py_RETURN_NONE;
-
-    // arg 1
-    if (!prepare_input_from_tuple(self, args, 0, &input)) {
+    if (!prepare_input_from_tuple(self, args, 0, &input))
         return NULL;
-    }
-
-    // arg 2
     callback = F(PyTuple_GetItem)(args, 1);
-    if (callback == NULL) {
+    if (callback == NULL || !F(PyCallable_Check)(callback)) {
         destroy_input(&input);
+        if (callback != NULL)
+            PyErr_SetString(PyExc_TypeError, "The callback argument must be a callable such as a function.");
         return NULL;
     }
-    else
-    if (not F(PyCallable_Check)(callback)) {
-        PyErr_SetString(PyExc_TypeError, "The callback argument must be a callable such as a function.");
-        destroy_input(&input);
-        return NULL;
-    }
-
-    // parse start/end
     if (pymod_parse_start_end(args, 2, 3, 0, input.wordlen, &start, &end)) {
         destroy_input(&input);
         return NULL;
     }
 
-    state = automaton->root;
-    for (i=start; i < end; i++) {
-        state = tmp = ahocorasick_next(state, automaton->root, input.word[i]);
-
-        // return output
-        while (tmp) {
-            if (tmp->eow) {
-                if (automaton->store == STORE_ANY)
-                    callback_ret = F(PyObject_CallFunction)(callback, "iO", i, tmp->output.object);
-                else
-                    callback_ret = F(PyObject_CallFunction)(callback, "ii", i, tmp->output.integer);
-
-                if (callback_ret == NULL) {
-                    destroy_input(&input);
-                    return NULL;
-                } else
-                    Py_DECREF(callback_ret);
-            }
-
-            tmp = tmp->fail;
+    /* The iterator owns input, and checks invalidation after each callback. */
+    iterator = automaton_search_iter_create(automaton, &input, start, end, false);
+    if (iterator == NULL)
+        return NULL;
+    while ((match = PyIter_Next(iterator)) != NULL) {
+        result = PyObject_CallObject(callback, match);
+        Py_DECREF(match);
+        if (result == NULL) {
+            Py_DECREF(iterator);
+            return NULL;
         }
+        Py_DECREF(result);
     }
-#undef automaton
-
-    destroy_input(&input);
+    Py_DECREF(iterator);
+    if (PyErr_Occurred())
+        return NULL;
     Py_RETURN_NONE;
 }
 
@@ -874,97 +925,55 @@ automaton_items(PyObject* self, PyObject* args) {
 
 static PyObject*
 automaton_iter(PyObject* self, PyObject* args, PyObject* keywds) {
-#define automaton ((Automaton*)self)
+    Automaton* automaton = (Automaton*)self;
     static char *kwlist[] = {"string", "start", "end", "ignore_white_space", NULL};
-
     PyObject* object;
-    Py_ssize_t start, start_tmp = -1;
-    Py_ssize_t end, end_tmp = -1;
-    int ignore_white_space_tmp = -1;
-    bool ignore_white_space = false;
+    struct Input input;
+    Py_ssize_t start, end;
+    int start_arg = -1, end_arg = -1;
+    int ignore_white_space = 0;
 
-    if (automaton->kind != AHOCORASICK) {
+    if (automaton_get_kind(automaton) != AHOCORASICK) {
         PyErr_SetString(PyExc_AttributeError,"Not an Aho-Corasick automaton yet: "
             "call add_word to add some keys and call make_automaton to "
             "convert the trie to an automaton.");
         return NULL;
     }
 
-    if (!F(PyArg_ParseTupleAndKeywords)(args, keywds, "O|iii", kwlist, &object, &start_tmp, &end_tmp, &ignore_white_space_tmp)) {
+    if (!F(PyArg_ParseTupleAndKeywords)(args, keywds, "O|iii", kwlist,
+            &object, &start_arg, &end_arg, &ignore_white_space))
         return NULL;
-    }
-
-    if (ignore_white_space_tmp == 1) {
-        ignore_white_space = true;
-    }
-
-    if (object) {
-        if (automaton->key_type == KEY_STRING) {
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
-        if (F(PyUnicode_Check)(object)) {
-            start   = 0;
-            #if PY_MINOR_VERSION >= 3
-                end = PyUnicode_GET_LENGTH(object);
-            #else
-                end = PyUnicode_GET_SIZE(object);
-            #endif
-        }
-        else {
+    /* Keep iter()'s existing argument errors while sharing input preparation. */
+    if (automaton->key_type == KEY_STRING) {
+#ifdef AHOCORASICK_UNICODE
+        if (!F(PyUnicode_Check)(object)) {
             PyErr_SetString(PyExc_TypeError, "string required");
             return NULL;
         }
-    #else
-        if (F(PyBytes_Check)(object)) {
-            start   = 0;
-            end     = PyBytes_GET_SIZE(object);
-        }
-        else {
+#else
+        if (!F(PyBytes_Check)(object)) {
             PyErr_SetString(PyExc_TypeError, "bytes required");
             return NULL;
         }
-    #endif
-#else
-        if (F(PyString_Check)(object)) {
-            start   = 0;
-            end     = PyString_GET_SIZE(object);
-        } else {
-            PyErr_SetString(PyExc_TypeError, "string required");
-            return NULL;
-        }
 #endif
-        }
-        else {
-        if (F(PyTuple_Check)(object)) {
-            start = 0;
-            end = PyTuple_GET_SIZE(object);
-        } else {
-            PyErr_SetString(PyExc_TypeError, "tuple required");
-            return NULL;
-        }
-        }
+    } else if (!F(PyTuple_Check)(object)) {
+        PyErr_SetString(PyExc_TypeError, "tuple required");
+        return NULL;
     }
-    else
+    if (!prepare_input(self, object, &input))
         return NULL;
 
-    if (start_tmp != -1) {
-        start = start_tmp;
-    }
-
-    if (end_tmp != -1) {
-        end = end_tmp;
-    }
-
-    return automaton_search_iter_new(
-        automaton,
-        object,
-        (int)start,
-        (int)end,
-        ignore_white_space
-    );
-#undef automaton
+    /* Historically -1 means the default bound, including when explicit.
+     * Clip only bounds that could otherwise read outside the input buffer. */
+    start = start_arg == -1 ? 0 : start_arg;
+    end = end_arg == -1 ? input.wordlen : end_arg;
+    if (start < 0)
+        start = 0;
+    if (end > input.wordlen)
+        end = input.wordlen;
+    return automaton_search_iter_create(automaton, &input, start, end,
+                                        ignore_white_space == 1);
 }
-
 
 static PyObject*
 automaton_iter_long(PyObject* self, PyObject* args) {
@@ -974,7 +983,7 @@ automaton_iter_long(PyObject* self, PyObject* args) {
 	Py_ssize_t start;
 	Py_ssize_t end;
 
-	if (automaton->kind != AHOCORASICK) {
+	if (automaton_get_kind(automaton) != AHOCORASICK) {
 		PyErr_SetString(PyExc_AttributeError, "not an automaton yet; add some words and call make_automaton");
 		return NULL;
 	}
@@ -1079,18 +1088,22 @@ automaton_get_stats(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
 
     PyObject* dict;
+    AutomatonStatistics stats;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     if (automaton->stats.version != automaton->version)
         get_stats(automaton);
+    stats = automaton->stats;
+    Py_END_CRITICAL_SECTION();
 
     dict = F(Py_BuildValue)(
         "{s:k,s:k,s:k,s:k,s:i,s:k}",
-        "nodes_count",  automaton->stats.nodes_count,
-        "words_count",  automaton->stats.words_count,
-        "longest_word", automaton->stats.longest_word,
-        "links_count",  automaton->stats.links_count,
-        "sizeof_node",  automaton->stats.sizeof_node,
-        "total_size",   automaton->stats.total_size
+        "nodes_count",  stats.nodes_count,
+        "words_count",  stats.words_count,
+        "longest_word", stats.longest_word,
+        "links_count",  stats.links_count,
+        "sizeof_node",  stats.sizeof_node,
+        "total_size",   stats.total_size
     );
     return dict;
 #undef automaton
@@ -1101,47 +1114,44 @@ typedef struct DumpAux {
     PyObject*   nodes;
     PyObject*   edges;
     PyObject*   fail;
-    char        error;
 } DumpAux;
 
 static int
-dump_aux(TrieNode* node, const int depth, void* extra) {
-#define Dump ((DumpAux*)extra)
+dump_aux(TrieNode* node, const TrieNode* original, DumpAux* dump) {
     PyObject* tuple;
     TrieNode* child;
     unsigned i;
 
 #define append_tuple(list) \
     if (tuple == NULL) { \
-        Dump->error = 1; \
         return 0; \
     } \
     else if (PyList_Append(list, tuple) < 0) { \
-        Dump->error = 1; \
+        Py_DECREF(tuple); \
         return 0; \
-    }
+    } \
+    Py_DECREF(tuple);
 
 
     // 1.
-    tuple = F(Py_BuildValue)("ii", node, (int)(node->eow));
-    append_tuple(Dump->nodes)
+    tuple = F(Py_BuildValue)("ii", original, (int)(node->eow));
+    append_tuple(dump->nodes)
 
     // 2.
     for (i=0; i < node->n; i++) {
         child = trienode_get_ith_unsafe(node, i);
-        tuple = F(Py_BuildValue)("ici", node, trieletter_get_ith_unsafe(node, i), child);
-        append_tuple(Dump->edges)
+        tuple = F(Py_BuildValue)("ici", original, trieletter_get_ith_unsafe(node, i), child);
+        append_tuple(dump->edges)
     }
 
     // 3.
     if (node->fail) {
-        tuple = F(Py_BuildValue)("ii", node, node->fail);
-        append_tuple(Dump->fail);
+        tuple = F(Py_BuildValue)("ii", original, node->fail);
+        append_tuple(dump->fail);
     }
 
     return 1;
 #undef append_tuple
-#undef Dump
 }
 
 
@@ -1149,14 +1159,16 @@ static PyObject*
 automaton_dump(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
     DumpAux dump;
+    AutomatonSnapshot snapshot;
+    PyObject* result = NULL;
+    size_t i;
 
-    if (automaton->kind == EMPTY)
+    if (!automaton_snapshot(automaton, &snapshot))
+        return NULL;
+    if (snapshot.kind == EMPTY) {
+        automaton_snapshot_clear(&snapshot);
         Py_RETURN_NONE;
-
-    dump.nodes = 0;
-    dump.edges = 0;
-    dump.fail  = 0;
-    dump.error = 0;
+    }
 
     dump.nodes = F(PyList_New)(0);
     dump.edges = F(PyList_New)(0);
@@ -1164,17 +1176,18 @@ automaton_dump(PyObject* self, PyObject* args) {
     if (dump.edges == NULL or dump.fail == NULL or dump.nodes == NULL)
         goto error;
 
-    trie_traverse(automaton->root, dump_aux, &dump);
-    if (dump.error)
-        goto error;
-    else
-        return F(Py_BuildValue)("OOO", dump.nodes, dump.edges, dump.fail);
+    for (i = 0; i < snapshot.size; i++) {
+        if (!dump_aux(&snapshot.nodes[i].node, snapshot.nodes[i].original, &dump))
+            goto error;
+    }
+    result = F(Py_BuildValue)("OOO", dump.nodes, dump.edges, dump.fail);
 
 error:
     Py_XDECREF(dump.nodes);
     Py_XDECREF(dump.edges);
     Py_XDECREF(dump.fail);
-    return NULL;
+    automaton_snapshot_clear(&snapshot);
+    return result;
 
 #undef automaton
 }
@@ -1185,6 +1198,7 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
 #define automaton ((Automaton*)self)
     Py_ssize_t size = sizeof(Automaton);
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     if (automaton->kind != EMPTY) {
         if (automaton->stats.version != automaton->version) {
             get_stats(automaton);
@@ -1192,6 +1206,7 @@ automaton___sizeof__(PyObject* self, PyObject* args) {
 
         size += automaton->stats.total_size;
     }
+    Py_END_CRITICAL_SECTION();
 
     return Py_BuildValue("i", size);
 #undef automaton
@@ -1237,14 +1252,6 @@ PySequenceMethods automaton_as_sequence;
 static
 PyMemberDef automaton_members[] = {
     {
-        "kind",
-        T_INT,
-        offsetof(Automaton, kind),
-        READONLY,
-        "Read-only attribute maintained automatically.\nKind for this Automaton instance.\nOne of ahocorasick.EMPTY, TRIE or AHOCORASICK."
-    },
-
-    {
         "store",
         T_INT,
         offsetof(Automaton, store),
@@ -1252,6 +1259,12 @@ PyMemberDef automaton_members[] = {
         "Read-only attribute set when creating an Automaton().\nType of values accepted by this Automaton.\nOne of ahocorasick.STORE_ANY, STORE_INTS or STORE_LEN."
     },
 
+    {NULL}
+};
+
+static PyGetSetDef automaton_getset[] = {
+    {"kind", automaton_kind, NULL,
+     "Read-only attribute maintained automatically.\nKind for this Automaton instance.\nOne of ahocorasick.EMPTY, TRIE or AHOCORASICK.", NULL},
     {NULL}
 };
 
@@ -1285,7 +1298,7 @@ static PyTypeObject automaton_type = {
     0,                                          /* tp_iternext */
     automaton_methods,                          /* tp_methods */
     automaton_members,                          /* tp_members */
-    0,                                          /* tp_getset */
+    automaton_getset,                           /* tp_getset */
     0,                                          /* tp_base */
     0,                                          /* tp_dict */
     0,                                          /* tp_descr_get */

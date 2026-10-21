@@ -63,36 +63,42 @@ automaton_search_iter_substring_index(struct Input* input, int position) {
 
 
 static PyObject*
-automaton_search_iter_new(
+automaton_search_iter_create(
     Automaton* automaton,
-    PyObject* object,
-    int start,
-    int end,
+    struct Input* input,
+    Py_ssize_t start,
+    Py_ssize_t end,
     bool ignore_white_space
 ) {
     AutomatonSearchIter* iter;
+    bool compiled;
 #ifdef VARIABLE_LEN_CHARCODES
     int tmp;
 #endif
 
     iter = (AutomatonSearchIter*)F(PyObject_New)(AutomatonSearchIter, &automaton_search_iter_type);
-    if (iter == NULL)
+    if (iter == NULL) {
+        destroy_input(input);
         return NULL;
+    }
 
 
     iter->automaton = automaton;
-    iter->version   = automaton->version;
-
-    iter->state = automaton->root;
     iter->output= NULL;
     iter->shift = 0;
     iter->ignore_white_space = ignore_white_space;
 
-    init_input(&iter->input);
+    iter->input = *input;
 
     Py_INCREF(iter->automaton);
 
-    if (!prepare_input((PyObject*)automaton, object, &iter->input)) {
+    Py_BEGIN_CRITICAL_SECTION(automaton);
+    compiled = automaton->kind == AHOCORASICK;
+    iter->version = automaton->version;
+    iter->state = automaton->root;
+    Py_END_CRITICAL_SECTION();
+    if (!compiled) {
+        PyErr_SetString(PyExc_AttributeError, "Not an Aho-Corasick automaton yet: call make_automaton first.");
         goto error;
     }
 
@@ -155,7 +161,7 @@ enum {
 
 
 static int
-automaton_build_output(PyObject* self, PyObject** result) {
+automaton_build_output(PyObject* self, SearchResult* result) {
     TrieNode* node;
     Py_ssize_t idx = 0;
 
@@ -180,11 +186,14 @@ automaton_build_output(PyObject* self, PyObject** result) {
         switch (iter->automaton->store) {
             case STORE_LENGTH:
             case STORE_INTS:
-                *result = F(Py_BuildValue)("ii", idx, node->output.integer);
+                result->index = idx;
+                result->integer = (Py_ssize_t)node->output.integer;
                 return OutputValue;
 
             case STORE_ANY:
-                *result = F(Py_BuildValue)("iO", idx, node->output.object);
+                result->index = idx;
+                result->value = node->output.object;
+                Py_INCREF(result->value);
                 return OutputValue;
 
             default:
@@ -240,30 +249,29 @@ automaton_search_iter_advance_index(PyObject* self) {
 }
 #endif
 
-static PyObject*
-automaton_search_iter_next(PyObject* self) {
-    PyObject* output;
+static int
+automaton_search_iter_next_locked(PyObject* self, SearchResult* output) {
 
     if (iter->version != iter->automaton->version) {
         PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
-        return NULL;
+        return OutputError;
     }
 
 return_output:
-    switch (automaton_build_output(self, &output)) {
+    switch (automaton_build_output(self, output)) {
         case OutputValue:
-            return output;
+            return OutputValue;
 
         case OutputNone:
             break;
 
         case OutputError:
-            return NULL;
+            return OutputError;
     }
 
 #ifdef VARIABLE_LEN_CHARCODES
     if (!automaton_search_iter_advance_index(self)) {
-        return NULL;
+        return OutputError;
     }
 #else
     iter->index += 1;
@@ -288,7 +296,7 @@ return_output:
 
 #ifdef VARIABLE_LEN_CHARCODES
         if (!automaton_search_iter_advance_index(self)) {
-            return NULL;
+            return OutputError;
         }
 #else
         iter->index += 1;
@@ -296,7 +304,17 @@ return_output:
 
     } // while
 
-    return NULL;    // StopIteration
+    return OutputNone;
+}
+
+static PyObject*
+automaton_search_iter_next(PyObject* self) {
+    SearchResult output = {0, NULL, 0};
+    int status;
+    Py_BEGIN_CRITICAL_SECTION2(self, iter->automaton);
+    status = automaton_search_iter_next_locked(self, &output);
+    Py_END_CRITICAL_SECTION2();
+    return status == OutputValue ? search_result_build(&output) : NULL;
 }
 
 
@@ -307,6 +325,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
     Py_ssize_t position;
     bool reset;
     struct Input new_input;
+    struct Input old_input;
 
     // first argument - required string or buffer
     object = F(PyTuple_GetItem)(args, 0);
@@ -330,6 +349,7 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
                 reset = true;
                 break;
             default:
+                destroy_input(&new_input);
                 return NULL;
         }
     }
@@ -338,8 +358,9 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
         reset = false;
     }
 
-    destroy_input(&iter->input);
-    assign_input(&iter->input, &new_input);
+    Py_BEGIN_CRITICAL_SECTION2(self, iter->automaton);
+    old_input = iter->input;
+    iter->input = new_input;
 
     if (!reset) {
         position = iter->index;
@@ -363,6 +384,9 @@ automaton_search_iter_set(PyObject* self, PyObject* args) {
         iter->expected = pyaho_UCS2_Any;
 #endif
     }
+    Py_END_CRITICAL_SECTION2();
+    /* set() never refreshes the version: next() still rejects invalidation. */
+    destroy_input(&old_input);
 
     Py_RETURN_NONE;
 }

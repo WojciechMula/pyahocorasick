@@ -8,157 +8,40 @@
     License   : BSD-3-Clause (see LICENSE)
 */
 
-/*
-Pickling (automaton___reduce__):
-
-1. assign sequential numbers to nodes in order to replace
-   address with these numbers
-   (pickle_dump_replace_fail_with_id)
-2. save in array all nodes data in the same order as numbers,
-   also replace fail and next links with numbers; collect on
-   a list all values (python objects) stored in a trie
-   (pickle_dump_save);
-
-   Before we start, all nodes of trie are visited and total
-   size of pickled data is calculated. If it is small enough
-   (less than given threshold), all data is saved in a single
-   byte array. Otherwise, data is saved in several byte arrays.
-
-   In either case, the format of byte array is the same:
-   * 8 first bytes is number of nodes stored in this
-     chunk of memory
-   * the number if followed by some raw data.
-
-   When there is just one byte array, it's size is fit to
-   needs. If data is split, then each array has exactly the
-   same size of bytes, but not all might be used (only the
-   last array is fit).
-
-3. clean up
-   (pickle_dump_undo_replace or pickle_dump_revert_replace)
-
-Unpickling (automaton_unpickle, called in Automaton constructor)
-1. load all nodes from array
-2. make number->node lookup table
-3. replace numbers stored in fail and next pointers with
-   real pointers, reassign python objects as values
-*/
-
+/* Serialize a private snapshot; never replace live trie failure links. */
 
 #include <string.h>
 #include "pickle/pickle_data.c"
 
-typedef struct NodeID {
-    TrieNode* fail;         ///< original fail value
-    Py_uintptr_t id;        ///< id
-} NodeID;
-
-typedef struct DumpState {
-    Py_uintptr_t id;        ///< next id
-    size_t total_size;      ///< number of nodes
-    TrieNode* failed_on;    ///< if fail while numerating, save node in order
-                            ///  to revert changes made in trie
-} DumpState;
-
-
-static size_t
-get_pickled_size(TrieNode* node) {
-    ASSERT(node != NULL);
-    return PICKLE_TRIENODE_SIZE + node->n * sizeof(Pair);
-}
-
-// replace fail with pairs (fail, id)
 static int
-pickle_dump_replace_fail_with_id(TrieNode* node, const int depth, void* extra) {
-
-    NodeID* repl;
-
-    ASSERT(sizeof(NodeID*) <= sizeof(TrieNode*));
-#define state ((DumpState*)extra)
-    repl = (NodeID*)memory_alloc(sizeof(NodeID));
-    if (LIKELY(repl != NULL)) {
-        state->id += 1;
-        state->total_size += get_pickled_size(node);
-
-        repl->id   = state->id;
-        repl->fail = node->fail;
-
-        node->fail = (TrieNode*)repl;
-        return 1;
-    }
-    else {
-        // error, revert is needed!
-        state->failed_on = node;
-        return 0;
-    }
-#undef state
-}
-
-
-// revert changes in trie (in case of error)
-static int
-pickle_dump_revert_replace(TrieNode* node, const int depth, void* extra) {
-#define state ((DumpState*)extra)
-    if (state->failed_on != node) {
-        NodeID* repl = (NodeID*)(node->fail);
-        node->fail = repl->fail;
-        memory_free(repl);
-
-        return 1;
-    }
-    else
-        return 0;
-#undef state
-}
-
-
-// revert changes in trie
-static int
-pickle_dump_undo_replace(TrieNode* node, const int depth, void* extra) {
-#define state ((DumpState*)extra)
-    NodeID* repl = (NodeID*)(node->fail);
-    node->fail = repl->fail;
-    memory_free(repl);
-
-    return 1;
-#undef state
-}
-
-
-static int
-pickle_dump_save(TrieNode* node, const int depth, void* extra) {
-#define self ((PickleData*)extra)
-#define NODEID(object) ((NodeID*)((TrieNode*)object)->fail)
+pickle_dump_save(const AutomatonSnapshot* snapshot, TrieNode* node, PickleData* data) {
 
     TrieNode* dump;
-    TrieNode* tmp;
     Pair* arr;
     unsigned i;
     size_t size;
 
-    size = get_pickled_size(node);
-    if (UNLIKELY(self->top + size > self->size)) {
-        if (UNLIKELY(!pickle_data__add_next_buffer(self))) {
-            self->error = true;
+    size = PICKLE_TRIENODE_SIZE + node->n * sizeof(Pair);
+    if (UNLIKELY(data->top + size > data->size)) {
+        if (UNLIKELY(!pickle_data__add_next_buffer(data))) {
             return 0;
         }
     }
 
-    dump = (TrieNode*)(self->data + self->top);
+    dump = (TrieNode*)(data->data + data->top);
 
     // we do not save the last pointer in array
-    arr = (Pair*)(self->data + self->top + PICKLE_TRIENODE_SIZE);
+    arr = (Pair*)(data->data + data->top + PICKLE_TRIENODE_SIZE);
 
     // append the python object to the list
-    if (node->eow and self->values) {
-        if (PyList_Append(self->values, node->output.object) == -1) {
-            self->error = true;
+    if (node->eow and data->values) {
+        if (PyList_Append(data->values, node->output.object) == -1) {
             return 0;
         }
     }
 
     // save node data
-    if (self->values)
+    if (data->values)
         dump->output.integer = 0;
     else
         dump->output.integer = node->output.integer;
@@ -166,122 +49,62 @@ pickle_dump_save(TrieNode* node, const int depth, void* extra) {
     dump->n         = node->n;
     dump->eow       = node->eow;
 
-    tmp = NODEID(node)->fail;
-    if (tmp)
-        dump->fail  = (TrieNode*)(NODEID(tmp)->id);
-    else
-        dump->fail  = NULL;
+    dump->fail = (TrieNode*)automaton_snapshot_id(snapshot, node->fail);
 
     // save array of pointers
     for (i=0; i < node->n; i++) {
         TrieNode* child = trienode_get_ith_unsafe(node, i);
         ASSERT(child);
-        arr[i].child  = (TrieNode*)(NODEID(child)->id);    // save the id of child node
+        arr[i].child  = (TrieNode*)automaton_snapshot_id(snapshot, child);    // save the id of child node
         arr[i].letter = trieletter_get_ith_unsafe(node, i);
     }
 
-    self->top       += size;
-    (*self->count)  += 1;
+    data->top       += size;
+    (*data->count)  += 1;
     return 1;
-#undef NODEID
-#undef self
 }
 
 
 static PyObject*
 automaton___reduce__(PyObject* self, PyObject* args) {
-#define automaton ((Automaton*)self)
+    const size_t array_size = 16 * 1024 * 1024;
+    AutomatonSnapshot snapshot;
+    PickleData data;
+    PyObject* tuple = NULL;
+    size_t i;
 
-#define MB ((size_t)(1024*1024))
-
-    const size_t array_size = 16*MB;
-
-    DumpState   state;
-    PickleData  data;
-    PyObject*   tuple;
-
-    // 0. for an empty automaton do nothing
-    if (automaton->count == 0) {
-        // the class constructor feed with an empty argument build an empty automaton
-        return F(Py_BuildValue)("O()", Py_TYPE(self));
-    }
-
-    // 1. numerate nodes
-    state.id        = 0;
-    state.failed_on = NULL;
-    state.total_size = 0;
-
-    trie_traverse(automaton->root, pickle_dump_replace_fail_with_id, &state);
-    if (state.failed_on) {
-        // revert changes (partial)
-        trie_traverse(automaton->root, pickle_dump_revert_replace, &state);
-
-        // and set error
-        PyErr_NoMemory();
+    if (!automaton_snapshot((Automaton*)self, &snapshot))
         return NULL;
+    pickle_data__init_default(&data);
+
+    if (snapshot.count == 0) {
+        tuple = F(Py_BuildValue)("O()", Py_TYPE(self));
+        goto done;
     }
+    if (!automaton_snapshot_index(&snapshot) ||
+        !pickle_data__init(&data, snapshot.store,
+                           snapshot.size * PICKLE_TRIENODE_SIZE + snapshot.edges_size,
+                           array_size))
+        goto done;
 
-    // 2. gather data
-    if (!pickle_data__init(&data, automaton->store, state.total_size, array_size))
-        goto exception;
-
-    trie_traverse(automaton->root, pickle_dump_save, &data);
-    if (UNLIKELY(data.error)) {
-        goto exception;
+    for (i = 0; i < snapshot.size; i++) {
+        if (!pickle_dump_save(&snapshot, &snapshot.nodes[i].node, &data))
+            goto done;
     }
-
-    if (UNLIKELY(!pickle_data__shrink_last_buffer(&data))) {
-        goto exception;
-    }
-
-    if (automaton->store != STORE_ANY) { // always pickle a Python object
-        data.values = Py_None;
-        Py_INCREF(data.values);
-    }
-
-    /* 3: save tuple:
-        * binary data
-        * automaton->kind
-        * automaton->store
-        * automaton->key_type
-        * automaton->count
-        * automaton->longest_word
-        * list of values
-    */
+    if (!pickle_data__shrink_last_buffer(&data))
+        goto done;
 
     tuple = F(Py_BuildValue)(
-        "O(OiiiiiO)",
-        Py_TYPE(self),
-        data.bytes_list,
-        automaton->kind,
-        automaton->store,
-        automaton->key_type,
-        automaton->count,
-        automaton->longest_word,
-        data.values
+        "O(OiiiiiO)", Py_TYPE(self), data.bytes_list,
+        snapshot.kind, snapshot.store, snapshot.key_type,
+        snapshot.count, snapshot.longest_word,
+        data.values ? data.values : Py_None
     );
 
-    if (data.values == Py_None) {
-        data.values = NULL;
-    }
-
-    if (UNLIKELY(tuple == NULL)) {
-        goto exception;
-    }
-
-    // revert all changes
-    trie_traverse(automaton->root, pickle_dump_undo_replace, NULL);
-
-    return tuple;
-
-exception:
-    // revert all changes
-    trie_traverse(automaton->root, pickle_dump_undo_replace, NULL);
-
-    // and free memory
+done:
     pickle_data__cleanup(&data);
-    return NULL;
-#undef automaton
+    automaton_snapshot_clear(&snapshot);
+    return tuple;
 }
 
 
@@ -304,6 +127,10 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
                          k);
             return false;
         }
+        if (PyBytes_GET_SIZE(bytes) < (Py_ssize_t)PICKLE_CHUNK_COUNTER_SIZE) {
+            PyErr_SetString(PyExc_ValueError, "Data truncated: missing node count");
+            return false;
+        }
 
         data = (const uint8_t*)PyBytes_AS_STRING(bytes);
 
@@ -318,6 +145,10 @@ automaton_unpickle__validate_bytes_list(PyObject* bytes_list, size_t* result) {
         count += nodes_count;
     }
 
+    if (count == 0) {
+        PyErr_SetString(PyExc_ValueError, "Expected at least one node");
+        return false;
+    }
     *result = count;
     return true;
 }

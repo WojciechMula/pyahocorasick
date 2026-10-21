@@ -39,27 +39,19 @@ jobs:
             matrix:
                 os: [macos-latest, windows-latest]
                 arch: [auto64]
-                build: ["cp{310,311,312,313,314}-*"]
 
                 include:
                     - os: ubuntu-latest
                       arch: auto64
                       type: manylinux2014
-                      build: "cp{310,311,312,313,314}-*"
                       CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
                     - os: ubuntu-24.04-arm
                       arch: aarch64
-                      build: "cp{310,311,312,313,314}-*"
                       CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
 
                     - os: macos-latest
                       arch: universal2
-                      build: "cp{310,311,312,313,314}-*"
-
-                    - os: windows-latest
-                      arch: auto64
-                      build: "cp{310,311,312,313,314}-*"
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -67,14 +59,14 @@ jobs:
                 persist-credentials: false
 
             - name: Build wheels and run tests
-              uses: pypa/cibuildwheel@8d2b08b68458a16aeb24b64e68a09ab1c8e82084
+              uses: pypa/cibuildwheel@8c2dcd2e96041a619f5ff03c9638d7941e2553a4 # v4.3.3
               env:
-                  CIBW_BUILD: ${{ matrix.build }}
+                  CIBW_BUILD: "cp{310,311,312,313,314,315,315t}-*"
                   CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.CIBW_MANYLINUX_X86_64_IMAGE }}
                   CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.CIBW_MANYLINUX_AARCH64_IMAGE }}
                   CIBW_ARCHS: ${{ matrix.arch }}
                   CIBW_TEST_REQUIRES: pytest
-                  CIBW_TEST_COMMAND: pytest -vvs {project}/tests
+                  CIBW_TEST_COMMAND: python -m pytest -vvs {project}/tests
 
             - name: Collect built wheels
               uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
@@ -93,7 +85,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: [ubuntu-22.04, ubuntu-24.04, ubuntu-22.04-arm, ubuntu-24.04-arm, macos-14, macos-15, macos-15-intel, windows-2022, windows-2025]
-                python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                python: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.15t"]
                 build_type: ["AHOCORASICK_UNICODE", "AHOCORASICK_BYTES"]
 
         steps:
@@ -109,7 +101,6 @@ jobs:
             - name: Build, install and test
               run: >
                   export ${{ matrix.build_type }}=yes &&
-                  set ${{ matrix.build_type }}=yes &&
-                  pip install .[testing] &&
-                  pytest -vvs
+                  python -m pip install .[testing] &&
+                  python -m pytest -vvs
 

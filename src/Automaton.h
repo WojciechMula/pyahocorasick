@@ -52,6 +52,13 @@ struct Input {
     bool is_copy;
 };
 
+/* A search step owns its value before releasing the automaton/iterator locks. */
+typedef struct SearchResult {
+    Py_ssize_t index;
+    PyObject* value;
+    Py_ssize_t integer;
+} SearchResult;
+
 
 typedef struct AutomatonStatistics {
     int         version;

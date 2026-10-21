@@ -9,11 +9,13 @@ WWW       : http://0x80.pl/proj/pyahocorasick/
 License   : public domain
 """
 
+import gc
 import os
 import pickle
 import sys
 import tempfile
 import unittest
+import weakref
 
 import pytest
 
@@ -83,6 +85,30 @@ class TestTrieMethods(TestTrieStorePyObjectsBase):
 
         self.assertEqual(len(self.A), 0)
         self.assertEqual(self.A.kind, ahocorasick.EMPTY)
+
+    def test_add_word_retry_after_allocation_failure(self):
+        # runtest.sh mallocfaults/reallocfaults exercise the exception path.
+        for compiled in (False, True):
+            automaton = ahocorasick.Automaton()
+            if compiled:
+                automaton.add_word(conv("prefix"), "old")
+                automaton.make_automaton()
+            kind = automaton.kind
+            expected = list(automaton.items())
+            items = automaton.items()
+            search = automaton.iter(conv("prefix")) if compiled else None
+            try:
+                automaton.add_word(conv("prefix-suffix"), "new")
+            except MemoryError:
+                self.assertEqual(automaton.kind, kind)
+                self.assertEqual(len(automaton), len(expected))
+                self.assertEqual(list(automaton.items()), expected)
+                self.assertEqual(list(items), expected)
+                if search is not None:
+                    self.assertEqual(list(search), [(5, "old")])
+                automaton.add_word(conv("prefix-suffix"), "new")
+            self.assertEqual(automaton.get(conv("prefix-suffix")), "new")
+            self.assertEqual(len(automaton), len(expected) + 1)
 
     def test_clear(self):
         A = self.A
@@ -434,9 +460,6 @@ class TestTrieIterators(TestTrieStorePyObjectsBase):
 
         L = sorted(A.items())
         assert sorted(set(L)) == sorted(set(I))
-
-    if not ahocorasick.unicode or (ahocorasick.unicode and on_windows):
-        test_items = pytest.mark.xfail(test_items, reason="Bytes fail everywher. Windows fails on unicode too")
 
     def test_items_with_prefix_valid(self):
         A = self.A
@@ -1351,15 +1374,11 @@ class TestIssue68(TestCase):
 
 class TestLoadSave(TestAutomatonBase):
 
-    def __init__(self, *args):
-        super(TestAutomatonBase, self).__init__(*args)
-
-        if os.path.isdir("/dev/shm"):
-            tmp = "/dev/shm"
-        else:
-            tmp = tempfile.gettempdir()
-
-        self.path = os.path.join(tmp, "test.dat")
+    def setUp(self):
+        super().setUp()
+        directory = tempfile.TemporaryDirectory(prefix="ahocorasick-test-")
+        self.addCleanup(directory.cleanup)
+        self.path = os.path.join(directory.name, "test.dat")
 
     def test_save__invalid_number_of_arguments(self):
         A = self.add_words_and_make_automaton();
@@ -1391,6 +1410,23 @@ class TestLoadSave(TestAutomatonBase):
     def test_save(self):
         A = self.add_words_and_make_automaton();
         A.save(self.path, pickle.dumps)
+
+    def test_save_releases_invalid_serializer_result(self):
+        A = self.add_words_and_make_automaton()
+        results = []
+
+        class InvalidResult:
+            pass
+
+        def serialize(value):
+            result = InvalidResult()
+            results.append(weakref.ref(result))
+            return result
+
+        with self.assertRaisesRegex(TypeError, "serializer must return bytes"):
+            A.save(self.path, serialize)
+        gc.collect()
+        self.assertIsNone(results[0]())
 
     def test_save_and_load_empty(self):
         A = ahocorasick.Automaton()

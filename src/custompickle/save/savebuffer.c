@@ -102,13 +102,14 @@ savebuffer_store_pointer(SaveBuffer* save, void* ptr) {
 void
 savebuffer_finalize(SaveBuffer* output) {
 
-    if (output->buffer != NULL && output->file != NULL && output->size > 0) {
+    if (!PyErr_Occurred() && output->buffer != NULL && output->file != NULL && output->size > 0) {
         savebuffer_flush(output);
     }
 
     memory_safefree(output->buffer);
 
     if (output->file != NULL) {
-        fclose(output->file);
+        if (fclose(output->file) != 0 && !PyErr_Occurred())
+            PyErr_SetFromErrno(PyExc_IOError);
     }
 }

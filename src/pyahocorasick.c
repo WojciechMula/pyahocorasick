@@ -26,6 +26,8 @@
 #include "trienode.c"
 #include "trie.c"
 #include "slist.c"
+#include "pickle/pickle.h"
+#include "AutomatonSnapshot.c"
 #include "Automaton.c"
 #include "AutomatonItemsIter.c"
 #include "AutomatonSearchIter.c"
@@ -103,12 +105,24 @@ init_function(void) {
         init_return(NULL);
 
 
-    if (PyType_Ready(&automaton_type) < 0) {
+    if (PyType_Ready(&automaton_type) < 0 ||
+        PyType_Ready(&automaton_items_iter_type) < 0 ||
+        PyType_Ready(&automaton_search_iter_type) < 0 ||
+        PyType_Ready(&automaton_search_iter_long_type) < 0) {
         Py_DECREF(module);
         init_return(NULL);
     }
-    else
-        PyModule_AddObject(module, "Automaton", (PyObject*)&automaton_type);
+    Py_INCREF(&automaton_type);
+    if (PyModule_AddObject(module, "Automaton", (PyObject*)&automaton_type) < 0) {
+        Py_DECREF(&automaton_type);
+        Py_DECREF(module);
+        init_return(NULL);
+    }
+
+#if defined(Py_GIL_DISABLED) && !defined(MEMORY_DEBUG) && !defined(PYCALLS_INJECT_FAULTS)
+    /* Fault-injection builds keep the GIL for their process-wide counters. */
+    PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED);
+#endif
 
 #define add_enum_const(name) PyModule_AddIntConstant(module, #name, name)
     add_enum_const(TRIE);

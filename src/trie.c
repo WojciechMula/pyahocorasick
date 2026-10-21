@@ -14,41 +14,51 @@
 static TrieNode*
 trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t wordlen, bool* new_word) {
 
+    TrieNode* root = automaton->root;
     TrieNode* node;
     TrieNode* child;
-    unsigned i;
+    TrieNode* suffix = NULL;
+    TrieNode* tail;
+    size_t i;
+    size_t j;
 
-    if (automaton->kind == EMPTY) {
-        ASSERT(automaton->root == NULL);
-        automaton->root = trienode_new(false);
-        if (automaton->root == NULL)
+    if (root == NULL) {
+        root = trienode_new(false);
+        if (root == NULL)
             return NULL;
     }
 
-    node = automaton->root;
+    node = root;
 
     for (i=0; i < wordlen; i++) {
-        const TRIE_LETTER_TYPE letter = word[i];
-
-        child = trienode_get_next(node, letter);
-        if (child == NULL) {
-            child = trienode_new(false);
-            if (LIKELY(child != NULL)) {
-                if (UNLIKELY(trienode_set_next(node, letter, child) == NULL)) {
-                    memory_free(child);
-                    return NULL;
-                }
-            } else {
-                // Note: in case of memory error, the already allocate nodes
-                //       are still reachable from the root and will be free
-                //       upon automaton destruction.
-                return NULL;
-            }
-        }
-
+        child = trienode_get_next(node, word[i]);
+        if (child == NULL)
+            break;
         node = child;
     }
 
+    /* Build the missing suffix privately so allocation failure leaves the
+     * trie, its failure links, and existing iterators unchanged. */
+    if (i < wordlen) {
+        suffix = tail = trienode_new(false);
+        if (suffix == NULL)
+            goto no_memory;
+        for (j = i + 1; j < wordlen; j++) {
+            child = trienode_new(false);
+            if (child == NULL)
+                goto no_memory;
+            if (trienode_set_next(tail, word[j], child) == NULL) {
+                trienode_free(child);
+                goto no_memory;
+            }
+            tail = child;
+        }
+        if (trienode_set_next(node, word[i], suffix) == NULL)
+            goto no_memory;
+        node = tail;
+    }
+
+    automaton->root = root;
     if (node->eow == false) {
         node->eow = true;
         *new_word = true;
@@ -60,6 +70,16 @@ trie_add_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_t w
     automaton->kind = TRIE;
 
     return node;
+
+no_memory:
+    while (suffix != NULL) {
+        child = suffix->n ? suffix->next[0].child : NULL;
+        trienode_free(suffix);
+        suffix = child;
+    }
+    if (root != automaton->root)
+        trienode_free(root);
+    return NULL;
 }
 
 
@@ -101,7 +121,13 @@ trie_remove_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_
         return NULL;
     }
 
-    object = node->output.object;
+    if (automaton->store == STORE_ANY) {
+        object = node->output.object;
+    } else {
+        object = PyLong_FromSsize_t((Py_ssize_t)node->output.integer);
+        if (object == NULL)
+            return NULL;
+    }
 
     if (trienode_is_leaf(node)) {
         // Remove a linear list that starts at the last_multiway node
@@ -112,6 +138,8 @@ trie_remove_word(Automaton* automaton, const TRIE_LETTER_TYPE* word, const size_
         ASSERT(node != NULL);
 
         if (UNLIKELY(trienode_unset_next_pointer(last_multiway, node) == MEMORY_ERROR)) {
+            if (automaton->store != STORE_ANY)
+                Py_DECREF(object);
             PyErr_NoMemory();
             return NULL;
         }
@@ -213,7 +241,7 @@ trie_traverse_aux(
 }
 
 
-static void
+static int
 trie_traverse(
     TrieNode* root,
     trie_traverse_callback callback,
@@ -221,7 +249,7 @@ trie_traverse(
 ) {
     ASSERT(root);
     ASSERT(callback);
-    trie_traverse_aux(root, 0, callback, extra);
+    return trie_traverse_aux(root, 0, callback, extra);
 }
 
 

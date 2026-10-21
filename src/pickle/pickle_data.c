@@ -7,13 +7,11 @@ pickle_data__init_default(PickleData* data) {
 	ASSERT(data != NULL);
 
 	data->bytes_list	= NULL;
-	data->chunked		= false;
 	data->size			= 0;
 	data->data			= NULL;
 	data->count			= NULL;
 	data->top			= 0;
 	data->values		= 0;
-	data->error			= false;
 }
 
 
@@ -43,6 +41,7 @@ pickle_data__add_next_buffer(PickleData* data) {
 		Py_DECREF(bytes);
 		return false;
 	}
+	Py_DECREF(bytes); /* The private list owns the buffer. */
 
 	raw = PyBytes_AS_STRING(bytes);
 
@@ -107,18 +106,15 @@ pickle_data__init(PickleData* data, KeysStore store, size_t total_size, size_t m
 	if (store == STORE_ANY) {
 		data->values = F(PyList_New)(0);
 		if (UNLIKELY(data->values == NULL)) {
-			Py_DECREF(data->bytes_list);
 			return false;
 		}
 	}
 
 	if (total_size <= max_array_size) {
 		data->size = total_size + PICKLE_CHUNK_COUNTER_SIZE;
-		data->chunked = false;
 	} else {
 		// TODO: more heuristic here: what if total_size > 100MB? what if > 1GB, > 10GB?
 		data->size = max_array_size;
-		data->chunked = true;
 	}
 
 	return pickle_data__add_next_buffer(data);

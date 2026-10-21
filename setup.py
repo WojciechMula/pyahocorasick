@@ -9,6 +9,7 @@ License   : BSD-3-Clause (see LICENSE)
 """
 
 import os
+import sysconfig
 
 from setuptools import setup
 from setuptools import Extension
@@ -33,6 +34,10 @@ if build_as_unicode:
 else:
     macros = []
 
+# Windows does not define this macro in pyconfig.h for free-threaded builds.
+if sysconfig.get_config_var("Py_GIL_DISABLED"):
+    macros.append(("Py_GIL_DISABLED", "1"))
+
 
 def get_long_description():
     import io
@@ -50,6 +55,7 @@ module = Extension(
         "src/common.h",
         "src/Automaton.c",
         "src/Automaton.h",
+        "src/AutomatonSnapshot.c",
         "src/Automaton_pickle.c",
         "src/AutomatonItemsIter.c",
         "src/AutomatonItemsIter.h",

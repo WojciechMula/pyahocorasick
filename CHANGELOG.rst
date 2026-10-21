@@ -2,6 +2,20 @@
 Changelog
 =============
 
+Unreleased
+--------------------------------------------------
+
+- Support Python 3.15 and publish Python 3.15 free-threaded wheels.
+- Protect shared automatons and iterators when the GIL is disabled, and take
+  consistent snapshots for pickling, saving, and dumping automatons.
+- Detect automaton mutation during find_all callbacks.
+- Fix items() key construction, integer pop/remove values, and input ownership
+  when resetting search iterators.
+- Keep iter() searches within the input bounds while preserving the historical
+  -1 defaults, and preserve full-width integer values in get().
+- Report buffered save() write failures and release invalid serializer results.
+- Leave the trie and existing iterators unchanged if add_word() runs out of memory.
+
 2.3.1 (2026-04-27)
 --------------------------------------------------
 

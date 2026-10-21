@@ -162,6 +162,8 @@ pymod_get_string(PyObject* obj, TRIE_LETTER_TYPE** word, Py_ssize_t* wordlen, bo
         return obj;
     } else {
         *word = PyUnicode_AsUCS4Copy(obj);
+        if (*word == NULL)
+            return NULL;
         *wordlen = PyUnicode_GET_LENGTH(obj);
         *is_copy = true;
         // No INCREF - we have our copy
@@ -360,8 +362,10 @@ pymod_parse_start_end(
 
 
 void init_input(struct Input* input) {
+    input->wordlen = 0;
     input->word = NULL;
     input->py_word = NULL;
+    input->is_copy = false;
 }
 
 
@@ -401,9 +405,13 @@ void destroy_input(struct Input* input) {
 }
 
 
-void assign_input(struct Input* dst, struct Input* src) {
-
-    dst->wordlen    = src->wordlen;
-    dst->word       = src->word;
-    dst->py_word    = src->py_word; // Note: there is no INCREF
+static PyObject*
+search_result_build(SearchResult* result) {
+    PyObject* output;
+    if (result->value) {
+        output = F(Py_BuildValue)("nO", result->index, result->value);
+        Py_DECREF(result->value);
+        return output;
+    }
+    return F(Py_BuildValue)("nn", result->index, result->integer);
 }

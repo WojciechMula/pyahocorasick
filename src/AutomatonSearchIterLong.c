@@ -19,16 +19,14 @@ automaton_search_iter_long_new(
     int end
 ) {
     AutomatonSearchIterLong* iter;
+    bool compiled;
 
     iter = (AutomatonSearchIterLong*)PyObject_New(AutomatonSearchIterLong, &automaton_search_iter_long_type);
     if (iter == NULL)
         return NULL;
 
     iter->automaton = automaton;
-    iter->version   = automaton->version;
-    iter->object    = object;
 
-    iter->state = automaton->root;
     iter->shift = 0;
     iter->index = start - 1;    // -1 because first instruction in next() increments index
     iter->end   = end;
@@ -37,10 +35,19 @@ automaton_search_iter_long_new(
     iter->last_node  = NULL;
 
     Py_INCREF(iter->automaton);
-    Py_INCREF(iter->object);
 
     init_input(&iter->input);
     if (!prepare_input((PyObject*)automaton, object, &iter->input)) {
+        goto error;
+    }
+
+    Py_BEGIN_CRITICAL_SECTION(automaton);
+    compiled = automaton->kind == AHOCORASICK;
+    iter->version = automaton->version;
+    iter->state = automaton->root;
+    Py_END_CRITICAL_SECTION();
+    if (!compiled) {
+        PyErr_SetString(PyExc_AttributeError, "Not an Aho-Corasick automaton yet: call make_automaton first.");
         goto error;
     }
 
@@ -55,7 +62,6 @@ error:
 static void
 automaton_search_iter_long_del(PyObject* self) {
     Py_DECREF(iter->automaton);
-    Py_DECREF(iter->object);
     destroy_input(&iter->input);
     PyObject_Del(self);
 }
@@ -68,27 +74,31 @@ automaton_search_iter_long_iter(PyObject* self) {
 }
 
 
-static PyObject*
-automaton_build_output_iter_long(PyObject* self) {
+static int
+automaton_build_output_iter_long(PyObject* self, SearchResult* output) {
+
+    output->index = iter->shift + iter->last_index;
 
     switch (iter->automaton->store) {
         case STORE_LENGTH:
         case STORE_INTS:
-            return Py_BuildValue("ii", iter->shift + iter->last_index, iter->last_node->output.integer);
+            output->integer = (Py_ssize_t)iter->last_node->output.integer;
+            return 1;
 
         case STORE_ANY:
-            return Py_BuildValue("iO", iter->shift + iter->last_index, iter->last_node->output.object);
+            output->value = iter->last_node->output.object;
+            Py_INCREF(output->value);
+            return 1;
 
         default:
             PyErr_SetString(PyExc_ValueError, "inconsistent internal state!");
-            return NULL;
+            return -1;
     }
 }
 
 
-static PyObject*
-automaton_search_iter_long_next(PyObject* self) {
-    PyObject* output = NULL;
+static int
+automaton_search_iter_long_next_locked(PyObject* self, SearchResult* output) {
     TrieNode* next;
     TrieNode* fail_node = NULL; //< the node to fail over
     int fail_index = -1;        //< the index to fail over
@@ -96,13 +106,12 @@ automaton_search_iter_long_next(PyObject* self) {
 
     if (iter->version != iter->automaton->version) {
         PyErr_SetString(PyExc_ValueError, "underlaying automaton has changed, iterator is not valid anymore");
-        return NULL;
+        return -1;
     }
 
 return_output:
     if (iter->last_node) {
-        Py_XDECREF(output); // Release any existing reference to avoid memory leak
-        output = automaton_build_output_iter_long(self);
+        int status = automaton_build_output_iter_long(self, output);
 
         // start over, as we don't want overlapped results
         // Note: this leads to quadratic complexity in the worst case
@@ -112,7 +121,7 @@ return_output:
         iter->last_node  = NULL;
         iter->last_index = -1;
 
-        return output;
+        return status;
     }
 
     iter->index += 1;
@@ -166,7 +175,17 @@ return_output:
         goto return_output;
     }
     
-    return NULL;    // StopIteration
+    return 0;    // StopIteration
+}
+
+static PyObject*
+automaton_search_iter_long_next(PyObject* self) {
+    SearchResult output = {0, NULL, 0};
+    int status;
+    Py_BEGIN_CRITICAL_SECTION2(self, iter->automaton);
+    status = automaton_search_iter_long_next_locked(self, &output);
+    Py_END_CRITICAL_SECTION2();
+    return status == 1 ? search_result_build(&output) : NULL;
 }
 
 
@@ -176,6 +195,7 @@ automaton_search_iter_long_set(PyObject* self, PyObject* args) {
     PyObject* flag;
     bool reset;
     struct Input new_input;
+    struct Input old_input;
 
     // first argument - required string or buffer
     object = PyTuple_GetItem(args, 0);
@@ -199,6 +219,7 @@ automaton_search_iter_long_set(PyObject* self, PyObject* args) {
                 reset = true;
                 break;
             default:
+                destroy_input(&new_input);
                 return NULL;
         }
     }
@@ -208,12 +229,9 @@ automaton_search_iter_long_set(PyObject* self, PyObject* args) {
     }
 
     // update internal state
-    Py_XDECREF(iter->object);
-    Py_INCREF(object);
-    iter->object    = object;
-
-    destroy_input(&iter->input);
-    assign_input(&iter->input, &new_input);
+    Py_BEGIN_CRITICAL_SECTION2(self, iter->automaton);
+    old_input = iter->input;
+    iter->input = new_input;
 
     if (!reset)
         iter->shift += (iter->index >= 0) ? iter->index : 0;
@@ -228,6 +246,9 @@ automaton_search_iter_long_set(PyObject* self, PyObject* args) {
         iter->last_node  = NULL;
         iter->last_index = -1;
     }
+    Py_END_CRITICAL_SECTION2();
+    /* set() never refreshes the version: next() still rejects invalidation. */
+    destroy_input(&old_input);
 
     Py_RETURN_NONE;
 }

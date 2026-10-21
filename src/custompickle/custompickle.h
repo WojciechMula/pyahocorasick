@@ -23,7 +23,6 @@ typedef struct CustompickleFooter {
 } CustompickleFooter;
 
 
-void custompickle_initialize_header(CustompickleHeader* header, Automaton* automaton);
 void custompickle_initialize_footer(CustompickleFooter* footer, size_t nodescount);
 int custompickle_validate_header(CustompickleHeader* header);
 int custompickle_validate_footer(CustompickleFooter* footer);

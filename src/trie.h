@@ -36,7 +36,7 @@ typedef int (*trie_traverse_callback)(TrieNode* node, const int depth, void* ext
 
 /* traverse trie in DFS order, for each node callback is called
    if callback returns false, then traversing stop */
-static void
+static int
 trie_traverse(
     TrieNode* root,
     trie_traverse_callback callback,

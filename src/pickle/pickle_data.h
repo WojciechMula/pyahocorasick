@@ -2,14 +2,12 @@
 
 typedef struct PickleData {
 	PyObject*	bytes_list;	///< PyList of PyBytes
-	bool		chunked;	///< bytes_list has more than one element
 	size_t		size;		///< size of single array
 	uint8_t*	data;		///< current array
 	Py_ssize_t*	count;		///< ptr to number of nodes stored in the current array
 	size_t		top;		///< first free address in the current array
 
 	PyObject* 	values;		///< a list (if store == STORE_ANY)
-	bool		error;		///< error occurred during pickling
 } PickleData;
 
 

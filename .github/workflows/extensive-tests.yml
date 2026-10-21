@@ -6,39 +6,27 @@ on: [workflow_dispatch]
 permissions: {}
 jobs:
     extensive_tests:
-        name: Run test ${{ matrix.test }} on ${{ matrix.os }} and Python ${{ matrix.python }}
-        runs-on: ${{ matrix.os }}
+        name: Run test ${{ matrix.test }} on Linux and Python ${{ matrix.python }}
+        runs-on: ubuntu-latest
         defaults:
           run:
             shell: bash
         strategy:
             fail-fast: false
             matrix:
-                python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-                include:
-                    - os: ubuntu-latest
-                      test: make test
+                python: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.15t"]
+                test:
+                    - make test
+                    - ./runtest.sh unit
+                    - ./runtest.sh unpickle
+                    - ./runtest.sh mallocfaults
+                    - ./runtest.sh reallocfaults
+                    - ./runtest.sh pycallfaults
+                    - ./runtest.sh coverage
+                    - ./runtest.sh valgrind
 
-                    - os: ubuntu-latest
-                      test: ./runtest.sh unit
-
-                    - os: ubuntu-latest
-                      test: ./runtest.sh unpickle
-
-                    - os: ubuntu-latest
-                      test: ./runtest.sh mallocfaults
-
-                    - os: ubuntu-latest
-                      test: ./runtest.sh reallocfaults
-
-                    - os: ubuntu-latest
-                      test: ./runtest.sh pycallfaults
-
-                    - os: ubuntu-latest
-                      test: ./runtest.sh coverage
-
-                    - os: ubuntu-latest
-                      test: ./runtest.sh valgrind
+        env:
+            PYTHON: venv/bin/python
 
         steps:
             - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -52,6 +40,11 @@ jobs:
               uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
               with:
                 python-version: "${{ matrix.python }}"
+
+            - name: Install test dependencies
+              run: |
+                  python -m venv venv
+                  venv/bin/python -m pip install --upgrade pip setuptools pytest
 
             - name: Run tests
               run: ${{ matrix.test }}

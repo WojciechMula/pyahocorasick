@@ -8,13 +8,14 @@
 // --- public -----------------------------------------------------------
 
 static bool
-automaton_save_impl(Automaton* automaton, const char* path, PyObject* serializer);
+automaton_save_impl(AutomatonSnapshot* snapshot, const char* path, PyObject* serializer);
 
 PyObject*
 automaton_save(PyObject* self, PyObject* args) {
 
     SaveLoadParameters params;
     Automaton* automaton;
+    AutomatonSnapshot snapshot;
     int ret;
 
     automaton = (Automaton*)self;
@@ -23,8 +24,13 @@ automaton_save(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    ret = automaton_save_impl(automaton, PyBytes_AsString(params.path), params.callback);
+    if (!automaton_snapshot(automaton, &snapshot)) {
+        Py_DECREF(params.path);
+        return NULL;
+    }
+    ret = automaton_save_impl(&snapshot, PyBytes_AsString(params.path), params.callback);
     Py_DECREF(params.path);
+    automaton_snapshot_clear(&snapshot);
 
     if (LIKELY(ret))
         Py_RETURN_NONE;
@@ -35,34 +41,39 @@ automaton_save(PyObject* self, PyObject* args) {
 // --- private ----------------------------------------------------------
 
 static int
-automaton_save_node(TrieNode* node, const int depth, void* extra);
+automaton_save_node(SnapshotNode* entry, SaveBuffer* output);
 
 static bool
-automaton_save_impl(Automaton* automaton, const char* path, PyObject* serializer) {
+automaton_save_impl(AutomatonSnapshot* snapshot, const char* path, PyObject* serializer) {
 
     CustompickleHeader header;
     CustompickleFooter footer;
     SaveBuffer         output;
     int                ret;
+    size_t             i;
 
     ret = savebuffer_init(&output,
                           serializer,
-                          automaton->store,
+                          snapshot->store,
                           path,
                           SAVEBUFFER_DEFAULT_SIZE);
     if (!ret)
         return false;
 
-    custompickle_initialize_header(&header, automaton);
+    memcpy(header.magick, CUSTOMPICKLE_MAGICK, sizeof(CUSTOMPICKLE_MAGICK));
+    header.data.kind = snapshot->kind;
+    header.data.store = snapshot->store;
+    header.data.key_type = snapshot->key_type;
+    header.data.words_count = snapshot->count;
+    header.data.longest_word = snapshot->longest_word;
 
     // 1. save header
     savebuffer_store(&output, (const char*)&header, sizeof(header));
 
     // 2. save nodes
-    if (automaton->kind != EMPTY) {
-        trie_traverse(automaton->root, automaton_save_node, &output);
-        if (UNLIKELY(PyErr_Occurred() != NULL)) {
-            goto exception;
+    for (i = 0; i < snapshot->size; i++) {
+        if (!automaton_save_node(&snapshot->nodes[i], &output)) {
+            goto done;
         }
     }
 
@@ -70,31 +81,26 @@ automaton_save_impl(Automaton* automaton, const char* path, PyObject* serializer
     custompickle_initialize_footer(&footer, output.nodes_count);
     savebuffer_store(&output, (const char*)&footer, sizeof(footer));
 
+done:
     savebuffer_finalize(&output);
-
-    return true;
-
-exception:
-    savebuffer_finalize(&output);
-
-    return false;
+    return PyErr_Occurred() == NULL;
 }
 
 
 static int
-automaton_save_node(TrieNode* node, const int depth, void* extra) {
+automaton_save_node(SnapshotNode* entry, SaveBuffer* output) {
 
-    SaveBuffer* output;
+    TrieNode* node = &entry->node;
     TrieNode* dump;
     PyObject* bytes;
 
-    output = (SaveBuffer*)extra;
-
     // 1. save actual address of node
-    savebuffer_store_pointer(output, (void*)node);
+    savebuffer_store_pointer(output, (void*)entry->original);
 
     // 2. obtain buffer
     dump = (TrieNode*)savebuffer_acquire(output, PICKLE_TRIENODE_SIZE);
+    if (PyErr_Occurred())
+        return 0;
 
     if (output->store != STORE_ANY)
         dump->output.integer = node->output.integer;
@@ -111,6 +117,7 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
         }
 
         if (UNLIKELY(!F(PyBytes_CheckExact)(bytes))) {
+            Py_DECREF(bytes);
             PyErr_SetString(PyExc_TypeError, "serializer must return bytes object");
             return 0;
         }
@@ -128,11 +135,12 @@ automaton_save_node(TrieNode* node, const int depth, void* extra) {
 
     // 5. save pickled data, if any
     if (bytes) {
-        savebuffer_store(output, PyBytes_AS_STRING(bytes), PyBytes_GET_SIZE(bytes));
+        if (!PyErr_Occurred())
+            savebuffer_store(output, PyBytes_AS_STRING(bytes), PyBytes_GET_SIZE(bytes));
         Py_DECREF(bytes);
     }
 
     output->nodes_count += 1;
 
-    return 1;
+    return PyErr_Occurred() == NULL;
 }

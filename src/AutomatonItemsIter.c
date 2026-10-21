@@ -23,7 +23,7 @@ typedef struct AutomatonItemsStackItem {
 #define StackItem AutomatonItemsStackItem
 
 static PyObject*
-automaton_items_iter_new(
+automaton_items_iter_new_locked(
     Automaton* automaton,
     const TRIE_LETTER_TYPE* word,
     const Py_ssize_t wordlen,
@@ -98,6 +98,19 @@ no_memory:
 }
 
 
+static PyObject*
+automaton_items_iter_new(Automaton* automaton,
+                         const TRIE_LETTER_TYPE* word, const Py_ssize_t wordlen,
+                         const bool use_wildcard, const TRIE_LETTER_TYPE wildcard,
+                         const PatternMatchType matchtype) {
+    PyObject* result;
+    Py_BEGIN_CRITICAL_SECTION(automaton);
+    result = automaton_items_iter_new_locked(automaton, word, wordlen,
+                                             use_wildcard, wildcard, matchtype);
+    Py_END_CRITICAL_SECTION();
+    return result;
+}
+
 #define iter ((AutomatonItemsIter*)self)
 
 static void
@@ -123,7 +136,7 @@ automaton_items_iter_iter(PyObject* self) {
 
 
 static PyObject*
-automaton_items_iter_next(PyObject* self) {
+automaton_items_iter_next_locked(PyObject* self, PyObject** value) {
 
     bool output;
     TrieNode* node;
@@ -217,74 +230,56 @@ automaton_items_iter_next(PyObject* self) {
         }
 
         if (output and iter->state->eow) {
-            PyObject* val;
-
-            switch (iter->type) {
-                case ITER_KEYS:
-#if defined PEP393_UNICODE
-                    return F(PyUnicode_FromKindAndData)(PyUnicode_4BYTE_KIND, (void*)(iter->buffer + 1), depth);
-#elif defined AHOCORASICK_UNICODE
-                    return PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), depth);
-#else
-                    return PyBytes_FromStringAndSize(iter->char_buffer + 1, depth);
-#endif
-
-                case ITER_VALUES:
-                    switch (iter->automaton->store) {
-                        case STORE_ANY:
-                            val = iter->state->output.object;
-                            Py_INCREF(val);
-                            break;
-
-                        case STORE_LENGTH:
-                        case STORE_INTS:
-                            return F(Py_BuildValue)("i", iter->state->output.integer);
-
-                        default:
-                            PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
-                            return NULL;
-                    }
-
-                    return val;
-
-                case ITER_ITEMS:
-                    switch (iter->automaton->store) {
-                        case STORE_ANY:
-                            return F(Py_BuildValue)(
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
-                                "(u#O)", /*key*/ iter->buffer + 1, depth,
-    #else
-                                "(y#O)", /*key*/ iter->buffer + 1, depth,
-    #endif
-#else
-                                "(s#O)", /*key*/ iter->char_buffer + 1, depth,
-#endif
-                                /*val*/ iter->state->output.object
-                            );
-
-                        case STORE_LENGTH:
-                        case STORE_INTS:
-                            return F(Py_BuildValue)(
-#ifdef PY3K
-    #ifdef AHOCORASICK_UNICODE
-                                "(u#i)", /*key*/ iter->buffer + 1, depth,
-    #else
-                                "(y#i)", /*key*/ iter->buffer + 1, depth,
-    #endif
-#else
-                                "(s#i)", /*key*/ iter->char_buffer + 1, depth,
-#endif
-                                /*val*/ iter->state->output.integer
-                            );
-
-                        default:
-                            PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
-                            return NULL;
-                    } // switch
+            PyObject* key;
+            if (iter->type != ITER_KEYS) {
+                switch (iter->automaton->store) {
+                    case STORE_ANY:
+                        *value = iter->state->output.object;
+                        Py_INCREF(*value);
+                        break;
+                    case STORE_LENGTH:
+                    case STORE_INTS:
+                        *value = PyLong_FromSsize_t((Py_ssize_t)iter->state->output.integer);
+                        break;
+                    default:
+                        PyErr_SetString(PyExc_SystemError, "Incorrect 'store' attribute.");
+                        return NULL;
+                }
+                if (*value == NULL)
+                    return NULL;
+                if (iter->type == ITER_VALUES) {
+                    PyObject* result = *value;
+                    *value = NULL;
+                    return result;
+                }
             }
+#if defined PEP393_UNICODE
+            key = F(PyUnicode_FromKindAndData)(PyUnicode_4BYTE_KIND,
+                                               iter->buffer + 1, depth);
+#elif defined AHOCORASICK_UNICODE
+            key = PyUnicode_FromUnicode((Py_UNICODE*)(iter->buffer + 1), depth);
+#else
+            key = PyBytes_FromStringAndSize(iter->char_buffer + 1, depth);
+#endif
+            return key;
         }
     }
+}
+
+static PyObject*
+automaton_items_iter_next(PyObject* self) {
+    PyObject* key;
+    PyObject* value = NULL;
+    PyObject* result;
+    Py_BEGIN_CRITICAL_SECTION2(self, iter->automaton);
+    key = automaton_items_iter_next_locked(self, &value);
+    Py_END_CRITICAL_SECTION2();
+    if (value == NULL)
+        return key;
+    result = key ? PyTuple_Pack(2, key, value) : NULL;
+    Py_XDECREF(key);
+    Py_DECREF(value);
+    return result;
 }
 
 #undef StackItem

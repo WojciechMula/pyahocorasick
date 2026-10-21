@@ -18,6 +18,14 @@
 #include <iso646.h>
 #include <stdbool.h>
 
+/* Critical sections were added in Python 3.13. Older interpreters use the GIL. */
+#if PY_VERSION_HEX < 0x030D0000
+#   define Py_BEGIN_CRITICAL_SECTION(obj) {
+#   define Py_END_CRITICAL_SECTION() }
+#   define Py_BEGIN_CRITICAL_SECTION2(a, b) {
+#   define Py_END_CRITICAL_SECTION2() }
+#endif
+
 #define DEBUG
 
 #if defined(_MSC_VER)       // Visual Studio compiler

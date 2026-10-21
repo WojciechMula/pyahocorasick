@@ -13,7 +13,7 @@ of time and saved (as a pickle) to disk to reload and reuse later.  The library
 provides an `ahocorasick` Python module that you can use as a plain dict-like
 Trie or convert a Trie to an automaton for efficient Aho-Corasick search.
 
-**pyahocorasick** is implemented in C and tested on Python 3.9 and up.
+**pyahocorasick** is implemented in C and tested on Python 3.10 and up.
 It works on 64 bits Linux, macOS and Windows.
 
 The license_ is BSD-3-Clause. Some utilities, such as tests and the pure Python
@@ -198,6 +198,32 @@ On Python 3, unicode is the default.
     4 bytes per letter, depending on your Python installation. When built
     for bytes, only one byte per letter is needed.
 
+
+Thread safety
+-------------
+
+Free-threaded CPython builds are supported, with pre-built wheels for Python
+3.15t. Importing the extension does not enable the GIL in a normal build.
+Diagnostic builds using ``MEMORY_DEBUG`` or ``PYCALLS_INJECT_FAULTS`` retain
+the GIL for their global fault-injection counters.
+
+Individual operations on an automaton or iterator are synchronized. Operations
+on separate automatons can run concurrently; trie access on the same automaton
+is serialized. A sequence of operations, such as adding words and then calling
+``make_automaton()``, still needs application-level synchronization if another
+thread may modify that automaton.
+
+Changing an automaton invalidates its existing iterators. A concurrent change
+may therefore cause iteration to raise ``ValueError``. Calling ``set()`` does
+not make an invalidated iterator usable again. The same invalidation check
+applies to mutation from a ``find_all()`` callback. Callbacks run without holding
+the automaton lock.
+
+``pickle``, ``save()``, and ``dump()`` capture a consistent snapshot of the trie.
+This requires temporary memory proportional to the trie size. Stored Python
+values are retained by reference, so their own mutable contents remain the
+application's responsibility. A ``save()`` serializer may modify the original
+automaton without changing the snapshot being saved.
 
 Build and install from PyPi
 ===========================

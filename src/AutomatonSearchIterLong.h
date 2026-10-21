@@ -20,7 +20,6 @@ typedef struct AutomatonSearchIterLong {
 
     Automaton*  automaton;
     int         version;    ///< automaton version
-    PyObject*   object;     ///< unicode or buffer
     struct Input input;     ///< input string
     TrieNode*   state;      ///< current state of automaton
     TrieNode*   last_node;  ///< last node on trie path

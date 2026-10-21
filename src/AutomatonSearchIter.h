@@ -44,11 +44,11 @@ typedef struct AutomatonSearchIter {
 
 
 static PyObject*
-automaton_search_iter_new(
+automaton_search_iter_create(
     Automaton* automaton,
-    PyObject* object,
-    int start,
-    int end,
+    struct Input* input,
+    Py_ssize_t start,
+    Py_ssize_t end,
     bool ignore_white_space
 );
 
